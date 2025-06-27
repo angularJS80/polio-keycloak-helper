@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider, fastAuthApiRequest } from '../fast-auth-with-keycloak';
 import { getAccessToken } from '../fast-auth-with-keycloak/token';
 import { setupAutoRefresh } from '../fast-auth-with-keycloak';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import LockIcon from '@mui/icons-material/Lock';
 
 const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
 
@@ -59,25 +64,34 @@ export default function LoginPage() {
   }, []);
 
   return (
-    <div style={{ maxWidth: 400, margin: '40px auto', padding: 20, border: '1px solid #ddd', borderRadius: 8 }}>
-      <h2>로그인</h2>
-      <label style={{ fontWeight: 'bold' }}>아이디</label>
-      <input
-        style={{ width: '100%', marginBottom: 8 }}
-        placeholder="아이디"
+    <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <LockIcon sx={{ mr: 1, color: 'primary.main', fontSize: 32 }} />
+        <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 700 }}>로그인</Typography>
+      </Box>
+      <TextField
+        fullWidth
+        label="아이디"
+        variant="outlined"
+        margin="normal"
         value={loginState.username}
         onChange={e => setLoginState({ ...loginState, username: e.target.value })}
       />
-      <label style={{ fontWeight: 'bold' }}>비밀번호</label>
-      <input
+      <TextField
+        fullWidth
+        label="비밀번호"
         type="password"
-        style={{ width: '100%', marginBottom: 8 }}
-        placeholder="비밀번호"
+        variant="outlined"
+        margin="normal"
         value={loginState.password}
         onChange={e => setLoginState({ ...loginState, password: e.target.value })}
       />
-      <button
-        style={{ width: '100%', padding: 10, background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4 }}
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        size="large"
+        sx={{ mt: 2, mb: 1, fontWeight: 700 }}
         disabled={loginState.loading}
         onClick={async () => {
           setLoginState(s => ({ ...s, loading: true, error: '' }));
@@ -98,8 +112,8 @@ export default function LoginPage() {
         }}
       >
         {loginState.loading ? '로그인 중...' : '로그인'}
-      </button>
-      {loginState.error && <div style={{ color: 'red', marginTop: 8 }}>{loginState.error}</div>}
-    </div>
+      </Button>
+      {loginState.error && <Typography color="error" sx={{ mt: 1 }}>{loginState.error}</Typography>}
+    </Box>
   );
 } 
