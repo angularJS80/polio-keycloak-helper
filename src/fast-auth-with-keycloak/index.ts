@@ -181,15 +181,25 @@ function logAccessTokenExpiry() {
     const remain = Math.max(0, Math.floor((exp - now) / 1000));
     const alertBeforeSec = getSessionExpiryAlertSec();
     const msToAlert = exp - now - alertBeforeSec * 1000;
-    console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`, {
-      exp,
-      now,
-      alertBeforeSec,
-      msToAlert
-    });
-    if (!alertShown && remain <= alertBeforeSec) {
-      alertShown = true;
-      showSessionExpiryAlert();
+    const config = FastAuthProvider.getConfig();
+    if (config.autoRefresh) {
+      console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`, {
+        exp,
+        now,
+        alertBeforeSec,
+        msToAlert
+      });
+    } else {
+      console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`, {
+        exp,
+        now,
+        alertBeforeSec,
+        msToAlert
+      });
+      if (!alertShown && remain <= alertBeforeSec) {
+        alertShown = true;
+        showSessionExpiryAlert();
+      }
     }
     if (remain <= 0) {
       clearInterval(expiryLogInterval!);

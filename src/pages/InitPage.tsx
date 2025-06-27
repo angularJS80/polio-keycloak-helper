@@ -38,8 +38,9 @@ export default function InitPage() {
   return (
     <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <SettingsIcon sx={{ mr: 1, color: 'primary.main', fontSize: 32 }} />
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>fast-auth-with-keycloak 설정</Typography>
+        <SettingsIcon sx={{ mr: 1, color: '#009e6d', fontSize: 32 }} />
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>인증 엄청 귀찮지? 한방에!</Typography>
+        <span style={{ fontSize: 28, marginLeft: 8 }}>🔫</span>
       </Box>
       <TextField
         fullWidth

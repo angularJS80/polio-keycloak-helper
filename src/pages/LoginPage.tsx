@@ -66,8 +66,10 @@ export default function LoginPage() {
   return (
     <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <LockIcon sx={{ mr: 1, color: 'primary.main', fontSize: 32 }} />
-        <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 700 }}>로그인</Typography>
+        <LockIcon sx={{ mr: 1, color: '#b04a5a', fontSize: 32 }} />
+        <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 700, display: 'inline-flex', alignItems: 'center' }}>
+          인증이 뭔지 보여줄게 <span style={{ fontSize: 28, marginLeft: 8 }}>🕶️</span>
+        </Typography>
       </Box>
       <TextField
         fullWidth
