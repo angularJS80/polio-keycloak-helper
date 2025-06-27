@@ -1,29 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import LoginForm from './LoginForm';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import InitPage from './pages/InitPage';
+import LoginPage from './pages/LoginPage';
+import WelcomePage from './pages/WelcomePage';
 
 function App() {
-  const [token, setToken] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (token) {
-      fetch('http://localhost:8080/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((user) => setUsername(user.username));
-    }
-  }, [token]);
-
-  if (!token) {
-    return <LoginForm onLogin={setToken} />;
-  }
+  const [username, setUsername] = useState<string | null>(sessionStorage.getItem('fast-auth-username'));
 
   return (
-    <div>
-      <h1>환영합니다, {username}님!</h1>
-      <button onClick={() => setToken(null)}>로그아웃</button>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/init" element={<InitPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/welcome" element={<WelcomePage />} />
+        {/* 필요시 환영 페이지 등 추가 라우트 */}
+      </Routes>
+    </Router>
   );
 }
 
