@@ -1,3 +1,10 @@
+## 최근 변경사항
+
+- React 공식 사이트 톤(React Blue, 연회색, 연보라 등) 테마 적용
+- 설정(초기화) 화면 상단에 머터리얼 톱니바퀴(Settings) 아이콘 추가
+- 로그인 화면 상단에 머터리얼 자물쇠(Lock) 아이콘 추가
+- 초기화 버튼 텍스트를 '저장'으로 변경
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
