@@ -52,14 +52,52 @@ export default function InitPage() {
         value={initConfig.refreshEndpoint}
         onChange={e => setInitConfig({ ...initConfig, refreshEndpoint: e.target.value })}
       />
-      <label style={{ fontWeight: 'bold' }}>자동 토큰 연장</label>
+      <label style={{ fontWeight: 'bold' }}>토큰 자동 갱신</label>
       <label style={{ display: 'block', marginBottom: 8 }}>
         <input
           type="checkbox"
           checked={initConfig.autoRefresh}
           onChange={e => setInitConfig({ ...initConfig, autoRefresh: e.target.checked })}
-        /> 자동 토큰 연장
+        /> 토큰 자동 갱신
       </label>
+      {initConfig.autoRefresh && (
+        <>
+          <label style={{ fontWeight: 'bold' }}>토큰 만료 갱신 시점(초 전)</label>
+          <input
+            type="number"
+            min={1}
+            style={{ width: '100%', marginBottom: 8 }}
+            placeholder="만료 몇 초 전에 갱신할지 입력 (예: 1)"
+            value={initConfig.refreshBeforeExpirySec || 1}
+            onChange={e => setInitConfig({ ...initConfig, refreshBeforeExpirySec: Number(e.target.value) })}
+          />
+        </>
+      )}
+      {!initConfig.autoRefresh && (
+        <>
+          <label style={{ fontWeight: 'bold' }}>토큰 만료 전 알림</label>
+          <label style={{ display: 'block', marginBottom: 8 }}>
+            <input
+              type="checkbox"
+              checked={initConfig.sessionExpiryAlertEnabled || false}
+              onChange={e => setInitConfig({ ...initConfig, sessionExpiryAlertEnabled: e.target.checked })}
+            /> 토큰 만료 전 알림 활성화
+          </label>
+          {initConfig.sessionExpiryAlertEnabled && (
+            <>
+              <label style={{ fontWeight: 'bold' }}>토큰 만료 전 알림 시간(초)</label>
+              <input
+                type="number"
+                min={1}
+                style={{ width: '100%', marginBottom: 8 }}
+                placeholder="만료 몇 초 전에 알림을 띄울지 입력 (예: 30)"
+                value={initConfig.sessionExpiryAlertSec || 30}
+                onChange={e => setInitConfig({ ...initConfig, sessionExpiryAlertSec: Number(e.target.value) })}
+              />
+            </>
+          )}
+        </>
+      )}
       <label style={{ fontWeight: 'bold' }}>만료시 리다이렉트 경로</label>
       <input
         style={{ width: '100%', marginBottom: 8 }}
@@ -105,15 +143,6 @@ export default function InitPage() {
           />
         </>
       )}
-      <label style={{ fontWeight: 'bold' }}>토큰 만료 갱신 시점(초 전)</label>
-      <input
-        type="number"
-        min={1}
-        style={{ width: '100%', marginBottom: 8 }}
-        placeholder="만료 몇 초 전에 갱신할지 입력 (예: 1)"
-        value={initConfig.refreshBeforeExpirySec || 1}
-        onChange={e => setInitConfig({ ...initConfig, refreshBeforeExpirySec: Number(e.target.value) })}
-      />
       <button
         style={{ width: '100%', padding: 10, background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4 }}
         onClick={() => {

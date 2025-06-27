@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider, fastAuthApiRequest } from '../fast-auth-with-keycloak';
+import { getAccessToken } from '../fast-auth-with-keycloak/token';
+import { setupAutoRefresh } from '../fast-auth-with-keycloak';
 
 const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
 
@@ -47,6 +49,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     ensureInit();
+    const token = getAccessToken();
+    if (token) {
+      try {
+        FastAuthProvider.getConfig();
+        setupAutoRefresh();
+      } catch {}
+    }
   }, []);
 
   return (
