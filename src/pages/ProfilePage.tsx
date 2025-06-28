@@ -11,6 +11,8 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
+import Layout from '../components/Layout';
+import PageHeader from '../components/PageHeader';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -37,10 +39,8 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, position: 'relative' }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>
-        프로필
-      </Typography>
+    <Layout>
+      <PageHeader icon={PersonIcon} title="프로필" iconColor='#424242' />
       
       <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
         {displayName && (
@@ -69,7 +69,7 @@ const ProfilePage: React.FC = () => {
       >
         뒤로가기
       </Button>
-    </Box>
+    </Layout>
   );
 };
 

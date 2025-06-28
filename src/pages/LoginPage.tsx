@@ -9,58 +9,61 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import LockIcon from '@mui/icons-material/Lock';
 import Alert from '@mui/material/Alert';
+import Layout from '../components/Layout';
+import { ensureInit, getProfileConfig, getRedirectConfig, getJoinEndpoint } from '../utils/authConfig'; // authConfig 함수들 임포트
+import PageHeader from '../components/PageHeader'; // PageHeader 컴포넌트 임포트
 
-const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
+// const LOCAL_STORAGE_KEY = 'fast-auth-init-config'; // 제거
 
-function ensureInit() {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      FastAuthProvider.init(JSON.parse(saved));
-    } catch {}
-  }
-}
+// function ensureInit() { // 제거
+//   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+//   if (saved) {
+//     try {
+//       FastAuthProvider.init(JSON.parse(saved));
+//     } catch {}
+//   }
+// }
 
-function getProfileConfig() {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return {
-        profileAfterLogin: !!config.profileAfterLogin,
-        profileEndpoint: config.profileEndpoint || '/me',
-      };
-    } catch {}
-  }
-  return { profileAfterLogin: false, profileEndpoint: '/me' };
-}
+// function getProfileConfig() { // 제거
+//   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+//   if (saved) {
+//     try {
+//       const config = JSON.parse(saved);
+//       return {
+//         profileAfterLogin: !!config.profileAfterLogin,
+//         profileEndpoint: config.profileEndpoint || '/me',
+//       };
+//     } catch {}
+//   }
+//   return { profileAfterLogin: false, profileEndpoint: '/me' };
+// }
 
-function getRedirectConfig() {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return {
-        redirectAfterLogin: !!config.redirectAfterLogin,
-        redirectPath: config.redirectPath || '/welcome',
-      };
-    } catch {}
-  }
-  return { redirectAfterLogin: false, redirectPath: '/welcome' };
-}
+// function getRedirectConfig() { // 제거
+//   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+//   if (saved) {
+//     try {
+//       const config = JSON.parse(saved);
+//       return {
+//         redirectAfterLogin: !!config.redirectAfterLogin,
+//         redirectPath: config.redirectPath || '/welcome',
+//       };
+//     } catch {}
+//   }
+//   return { redirectAfterLogin: false, redirectPath: '/welcome' };
+// }
 
-function getJoinEndpoint() {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return config.joinEndpoint || '';
-    } catch {
-      return '';
-    }
-  }
-  return '';
-}
+// function getJoinEndpoint() { // 제거
+//   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+//   if (saved) {
+//     try {
+//       const config = JSON.parse(saved);
+//       return config.joinEndpoint || '';
+//     } catch {
+//       return '';
+//     }
+//   }
+//   return '';
+// }
 
 export default function LoginPage() {
   const [loginState, setLoginState] = useState({ username: '', password: '', loading: false, error: '' });
@@ -78,13 +81,8 @@ export default function LoginPage() {
   }, []);
 
   return (
-    <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <LockIcon sx={{ mr: 1, color: '#b04a5a', fontSize: 32 }} />
-        <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 700, display: 'inline-flex', alignItems: 'center' }}>
-          인증이 뭔지 보여줄게 
-        </Typography>
-      </Box>
+    <Layout>
+      <PageHeader icon={LockIcon} title="인증이 뭔지 보여줄게" iconColor='#b04a5a' />
       {alertMessage && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           {alertMessage}
@@ -153,6 +151,6 @@ export default function LoginPage() {
         계정 등록
       </Button>
       {loginState.error && <Typography color="error" sx={{ mt: 1 }}>{loginState.error}</Typography>}
-    </Box>
+    </Layout>
   );
 } 

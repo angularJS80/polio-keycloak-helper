@@ -12,6 +12,9 @@ import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { getAccessToken, decodeToken } from 'fast-auth-with-keycloak/token';
 import { useNavigate } from 'react-router-dom';
 import Stack from '@mui/material/Stack';
+import Layout from '../components/Layout';
+import PageHeader from '../components/PageHeader';
+import { Rocket } from '@mui/icons-material';
 
 export default function WelcomePage() {
   const [displayName, setDisplayName] = useState<string | null>(null);
@@ -87,17 +90,12 @@ export default function WelcomePage() {
   }, []);
 
   return (
-    <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, position: 'relative', overflow: 'hidden' }}>
+    <Layout>
       <Confetti width={window.innerWidth} height={window.innerHeight} numberOfPieces={120} recycle={false} />
       <ReactCanvasConfetti ref={refAnimationInstance} style={{ position: 'fixed', pointerEvents: 'none', width: '100vw', height: '100vh', top: 0, left: 0 }} />
       
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <WavingHandIcon sx={{ mr: 1, color: '#ffc107', fontSize: 32 }} />
-        
-        <Typography variant="h5" sx={{ fontWeight: 700, zIndex: 2, position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-          환영합니다{displayName ? `, ${displayName}` : ''}님!
-        </Typography>
-      </Box>
+      <PageHeader icon={Rocket} title={`환영합니다${displayName ? `, ${displayName}` : ''}님!`} iconColor='#DAA520' />
+
       {getAccessToken() && (
         <>
           <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 3 }}>
@@ -146,6 +144,6 @@ export default function WelcomePage() {
           </Stack>
         </>
       )}
-    </Box>
+    </Layout>
   );
 } 
