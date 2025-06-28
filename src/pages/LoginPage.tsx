@@ -82,7 +82,7 @@ export default function LoginPage() {
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <LockIcon sx={{ mr: 1, color: '#b04a5a', fontSize: 32 }} />
         <Typography variant="h5" sx={{ color: 'text.primary', fontWeight: 700, display: 'inline-flex', alignItems: 'center' }}>
-          인증이 뭔지 보여줄게 <span style={{ fontSize: 28, marginLeft: 8 }}>🕶️</span>
+          인증이 뭔지 보여줄게 
         </Typography>
       </Box>
       {alertMessage && (

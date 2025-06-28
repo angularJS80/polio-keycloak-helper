@@ -6,9 +6,12 @@ import ReactCanvasConfetti from 'react-canvas-confetti';
 import Button from '@mui/material/Button';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import WavingHandIcon from '@mui/icons-material/WavingHand';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { getAccessToken, decodeToken } from 'fast-auth-with-keycloak/token';
 import { useNavigate } from 'react-router-dom';
+import Stack from '@mui/material/Stack';
 
 export default function WelcomePage() {
   const [displayName, setDisplayName] = useState<string | null>(null);
@@ -87,31 +90,60 @@ export default function WelcomePage() {
     <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2, position: 'relative', overflow: 'hidden' }}>
       <Confetti width={window.innerWidth} height={window.innerHeight} numberOfPieces={120} recycle={false} />
       <ReactCanvasConfetti ref={refAnimationInstance} style={{ position: 'fixed', pointerEvents: 'none', width: '100vw', height: '100vh', top: 0, left: 0 }} />
-      <Typography variant="h4" sx={{ fontWeight: 700, zIndex: 2, position: 'relative' }}>
-        환영합니다{displayName ? `, ${displayName}` : ''}님!
-      </Typography>
+      
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <WavingHandIcon sx={{ mr: 1, color: '#ffc107', fontSize: 32 }} />
+        
+        <Typography variant="h5" sx={{ fontWeight: 700, zIndex: 2, position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+          환영합니다{displayName ? `, ${displayName}` : ''}님!
+        </Typography>
+      </Box>
       {getAccessToken() && (
         <>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={handleLogout}
-            sx={{ mt: 3, zIndex: 2, position: 'relative' }}
-            startIcon={<ExitToAppIcon />}
-            disabled={loading}
-          >
-            {loading ? '로그아웃 중...' : '로그아웃'}
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={() => navigate('/password-change')}
-            sx={{ mt: 2, zIndex: 2, position: 'relative' }}
-            startIcon={<VpnKeyIcon />}
-            disabled={loading}
-          >
-            비밀번호 변경
-          </Button>
+          <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 3 }}>
+            <Button
+              onClick={() => navigate('/profile')}
+              variant="contained"
+              sx={{
+                minWidth: 40,
+                width: 40,
+                height: 40,
+                padding: 0,
+                borderRadius: 2,
+                bgcolor: '#5f4b8b',
+              }}
+            >
+              <AccountCircleIcon 
+                sx={{
+                  fontSize: 40, 
+                  color: 'white',
+                  display: 'block',
+                  opacity: 1
+                }}
+              />
+            </Button>
+          </Box>
+
+          <Stack direction="row" spacing={2} sx={{ mt: 3, zIndex: 2, position: 'relative' }}>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleLogout}
+              startIcon={<ExitToAppIcon />}
+              disabled={loading}
+            >
+              {loading ? '로그아웃 중...' : '로그아웃'}
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => navigate('/password-change')}
+              startIcon={<VpnKeyIcon />}
+              disabled={loading}
+            >
+              비밀번호 변경
+            </Button>
+          </Stack>
         </>
       )}
     </Box>

@@ -44,7 +44,6 @@ export default function InitPage() {
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <SettingsIcon sx={{ mr: 1, color: '#009e6d', fontSize: 32 }} />
         <Typography variant="h5" sx={{ fontWeight: 700 }}>인증 엄청 귀찮지? 한방에!</Typography>
-        <span style={{ fontSize: 28, marginLeft: 8 }}>🔫</span>
       </Box>
       <TextField
         fullWidth

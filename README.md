@@ -26,6 +26,10 @@ yarn add fast-auth-with-keycloak
 - **비밀번호 변경 페이지 구현**: 현재 비밀번호 없이 토큰의 `sub` 항목을 `userId`로 사용하여 새 비밀번호를 설정할 수 있는 페이지가 추가되었습니다.
 - **API 응답 처리 로직 개선**: `fastAuthApiRequest` 함수가 서버 응답 본문이 비어있거나 유효하지 않은 JSON일 경우에도 클라이언트에서 오류 없이 처리하도록 개선되었습니다.
 - **토큰 파싱 기능 재사용성 강화**: JWT 토큰 파싱(`decodeToken`) 기능이 `fast-auth-with-keycloak` 패키지 내부로 이동하여 애플리케이션 전반에서 재사용할 수 있게 개선되었습니다.
+- **WelcomePage 프로필 아이콘 버튼 수정**: 마우스를 올릴 때만 보이던 프로필 아이콘 버튼을 항상 보이도록 수정하고, Material-UI Button 컴포넌트의 variant를 `contained`로, 배경색을 보라색으로, 크기를 정사각형으로 조정했습니다.
+- **ProfilePage 디자인 개선**: 사용자 프로필 페이지에서 이름과 이메일 정보가 입력 필드처럼 보이지 않도록 List, ListItem, ListItemIcon, ListItemText 컴포넌트를 활용하여 목록 형태로 표시하고, 각 정보 앞에 아이콘을 추가하여 조회 전용 느낌을 강화했습니다.
+- **모든 화면 상단 제목 글자 크기 통일**: WelcomePage, LoginPage, InitPage, ProfilePage의 상단 제목 Typography 컴포넌트 `variant`를 모두 `h5`로 통일하여 일관성을 확보했습니다.
+- **WelcomePage 제목 앞 아이콘 변경**: WelcomePage 제목 앞에 `EmojiPeopleIcon` 대신 `WavingHandIcon`을 최종 적용했습니다.
 
 # Getting Started with Create React App
 
@@ -56,7 +60,7 @@ It correctly bundles React in production mode and optimizes the build for the be
 The build is minified and the filenames include the hashes.\
 Your app is ready to be deployed!
 
-See the section about [deployment](https://facebook.github.com/create-react-app/docs/deployment) for more information.
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
 ### `npm run eject`
 

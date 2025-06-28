@@ -284,19 +284,19 @@ function logAccessTokenExpiry() {
     const msToAlert = exp - now - alertBeforeSec * 1000;
     const config = FastAuthProvider.getConfig();
     if (config.autoRefresh) {
-      console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`, {
-        exp,
-        now,
-        alertBeforeSec,
-        msToAlert
-      });
+      // console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`, {
+      //   exp,
+      //   now,
+      //   alertBeforeSec,
+      //   msToAlert
+      // });
     } else {
-      console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`, {
-        exp,
-        now,
-        alertBeforeSec,
-        msToAlert
-      });
+      // console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`, {
+      //   exp,
+      //   now,
+      //   alertBeforeSec,
+      //   msToAlert
+      // });
       if (!alertShown && remain <= alertBeforeSec) {
         alertShown = true;
         showSessionExpiryAlert();
@@ -328,16 +328,16 @@ function setupAutoRefresh() {
   const alertEnabled = getSessionExpiryAlertEnabled();
   const msToRefresh = config.autoRefresh ? exp - now - refreshBeforeSec * 1000 : null;
   const msToAlert = (!config.autoRefresh && alertEnabled) ? exp - now - alertBeforeSec * 1000 : null;
-  console.log('[fast-auth] setupAutoRefresh', {
-    autoRefresh: config.autoRefresh,
-    alertEnabled,
-    exp,
-    now,
-    alertBeforeSec,
-    refreshBeforeSec,
-    msToAlert,
-    msToRefresh
-  });
+  // console.log('[fast-auth] setupAutoRefresh', {
+  //   autoRefresh: config.autoRefresh,
+  //   alertEnabled,
+  //   exp,
+  //   now,
+  //   alertBeforeSec,
+  //   refreshBeforeSec,
+  //   msToAlert,
+  //   msToRefresh
+  // });
   if (msToAlert !== null && msToAlert > 1000) {
     console.log('[fast-auth] 알림 타이머 설정:', msToAlert, 'ms 후');
     alertTimeout = setTimeout(showSessionExpiryAlert, msToAlert);
@@ -384,7 +384,7 @@ if (typeof window !== 'undefined') {
       }
       const now = Date.now();
       const remain = Math.max(0, Math.floor((exp - now) / 1000));
-      console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`);
+      // console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`);
       if (remain <= 0) {
         clearInterval(expiryLogInterval!);
         expiryLogInterval = null;
