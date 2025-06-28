@@ -22,6 +22,7 @@ function loadInitConfig() {
         ...DEFAULT_AUTH_CONFIG,
         profileAfterLogin: false,
         profileEndpoint: '/me',
+        joinEndpoint: '/join',
       };
     }
   }
@@ -29,6 +30,7 @@ function loadInitConfig() {
     ...DEFAULT_AUTH_CONFIG,
     profileAfterLogin: false,
     profileEndpoint: '/me',
+    joinEndpoint: '/join',
   };
 }
 
@@ -49,6 +51,14 @@ export default function InitPage() {
         margin="normal"
         value={initConfig.baseUrl}
         onChange={e => setInitConfig({ ...initConfig, baseUrl: e.target.value })}
+      />
+      <TextField
+        fullWidth
+        label="계정등록 엔드포인트"
+        variant="outlined"
+        margin="normal"
+        value={initConfig.joinEndpoint || ''}
+        onChange={e => setInitConfig({ ...initConfig, joinEndpoint: e.target.value })}
       />
       <TextField
         fullWidth

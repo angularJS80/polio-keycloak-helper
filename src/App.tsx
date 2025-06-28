@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import InitPage from './pages/InitPage';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
+import AccountJoinPage from './pages/AccountJoinPage';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
@@ -123,6 +124,7 @@ function App() {
         <Route path="/init" element={<InitPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/welcome" element={<WelcomePage />} />
+        <Route path="/join" element={<AccountJoinPage />} />
         {/* 필요시 환영 페이지 등 추가 라우트 */}
       </Routes>
     </ThemeProvider>

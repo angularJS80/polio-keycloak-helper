@@ -114,6 +114,16 @@ export default function LoginPage() {
       >
         {loginState.loading ? '로그인 중...' : '로그인'}
       </Button>
+      <Button
+        fullWidth
+        variant="outlined"
+        color="secondary"
+        size="large"
+        sx={{ mt: 1, fontWeight: 700 }}
+        onClick={() => navigate('/join')}
+      >
+        계정 등록
+      </Button>
       {loginState.error && <Typography color="error" sx={{ mt: 1 }}>{loginState.error}</Typography>}
     </Box>
   );
