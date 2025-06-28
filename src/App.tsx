@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import InitPage from './pages/InitPage';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { getAccessToken, getTokenExpiration } from './fast-auth-with-keycloak/token';
+import { FastAuthProvider } from 'fast-auth-with-keycloak';
+import { getAccessToken, getTokenExpiration } from 'fast-auth-with-keycloak/token';
+
+const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
 
 const theme = createTheme({
   palette: {
@@ -74,32 +77,44 @@ const theme = createTheme({
 });
 
 function App() {
-  const [username, setUsername] = useState<string | null>(sessionStorage.getItem('fast-auth-username'));
+  // const [username, setUsername] = useState<string | null>(sessionStorage.getItem('fast-auth-username')); // 사용되지 않으므로 제거
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // 루트(/) 경로에서만 동작
-    if (location.pathname === '/') {
-      const initConfig = localStorage.getItem('fast-auth-init-config');
-      if (!initConfig) {
+    const initConfig = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (initConfig) {
+      try {
+        FastAuthProvider.init(JSON.parse(initConfig));
+        // 기존 토큰이 있으면 세션 재개 시도
+        const token = getAccessToken();
+        if (token) {
+          FastAuthProvider.resumeSession();
+        }
+      } catch (e) {
+        console.error("Failed to initialize FastAuthProvider from localStorage:", e);
+        // 초기화 실패 시 init 페이지로 리다이렉트
         navigate('/init', { replace: true });
         return;
       }
-      const token = getAccessToken();
-      if (!token) {
-        navigate('/login', { replace: true });
-        return;
-      }
-      const exp = getTokenExpiration(token);
-      if (!exp || Date.now() > exp) {
-        navigate('/login', { replace: true });
-        return;
-      }
-      // 토큰이 있고 만료되지 않았으면 환영 페이지로
-      navigate('/welcome', { replace: true });
+    } else {
+      // 설정이 없으면 init 페이지로 리다이렉트
+      navigate('/init', { replace: true });
+      return;
     }
-  }, [location.pathname]);
+
+    // 루트(/) 경로에서만 동작 (기존 로직)
+    if (location.pathname === '/') {
+      const token = getAccessToken();
+      const exp = token ? getTokenExpiration(token) : null;
+
+      if (!token || !exp || Date.now() > exp) {
+        navigate('/login', { replace: true });
+      } else {
+        navigate('/welcome', { replace: true });
+      }
+    }
+  }, [location.pathname, navigate]);
 
   return (
     <ThemeProvider theme={theme}>

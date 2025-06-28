@@ -18,7 +18,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "fast-auth-with-keycloak": ["packages/fast-auth-with-keycloak"],
+      "fast-auth-with-keycloak/*": ["packages/fast-auth-with-keycloak/*"]
+    }
   },
   "include": [
     "src"

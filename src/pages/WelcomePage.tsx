@@ -1,12 +1,26 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Confetti from 'react-confetti';
 import ReactCanvasConfetti from 'react-canvas-confetti';
+import Button from '@mui/material/Button';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import { FastAuthProvider } from 'fast-auth-with-keycloak';
+import { getAccessToken } from 'fast-auth-with-keycloak/token';
 
 export default function WelcomePage() {
   const username = sessionStorage.getItem('fast-auth-username');
   const refAnimationInstance = useRef<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      await FastAuthProvider.logout();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 빵빠레(파티팝) 애니메이션 함수
   function makeShot(particleRatio: number, opts: any) {
@@ -54,6 +68,18 @@ export default function WelcomePage() {
       <Typography variant="h4" sx={{ fontWeight: 700, zIndex: 2, position: 'relative' }}>
         환영합니다{username ? `, ${username}` : ''}님!
       </Typography>
+      {getAccessToken() && (
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleLogout}
+          sx={{ mt: 3, zIndex: 2, position: 'relative' }}
+          startIcon={<ExitToAppIcon />}
+          disabled={loading}
+        >
+          {loading ? '로그아웃 중...' : '로그아웃'}
+        </Button>
+      )}
     </Box>
   );
 } 

@@ -15,7 +15,10 @@
     "@types/node": "^16.18.126",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "customize-cra": "^1.0.0",
+    "fast-auth-with-keycloak": "file:./packages/fast-auth-with-keycloak",
     "react": "^19.1.0",
+    "react-app-rewired": "^2.2.1",
     "react-canvas-confetti": "^2.0.7",
     "react-confetti": "^6.4.0",
     "react-dom": "^19.1.0",
@@ -25,9 +28,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

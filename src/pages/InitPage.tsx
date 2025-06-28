@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FastAuthProvider } from '../fast-auth-with-keycloak';
+import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { DEFAULT_AUTH_CONFIG } from '../config';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -57,6 +57,14 @@ export default function InitPage() {
         margin="normal"
         value={initConfig.loginEndpoint}
         onChange={e => setInitConfig({ ...initConfig, loginEndpoint: e.target.value })}
+      />
+      <TextField
+        fullWidth
+        label="로그아웃 엔드포인트"
+        variant="outlined"
+        margin="normal"
+        value={initConfig.logoutEndpoint || ''}
+        onChange={e => setInitConfig({ ...initConfig, logoutEndpoint: e.target.value })}
       />
       <TextField
         fullWidth

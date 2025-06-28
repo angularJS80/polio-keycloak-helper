@@ -1,5 +1,22 @@
+# keycloak-helper
+
+이 프로젝트는 Keycloak 백엔드와 통합되는 React 애플리케이션의 예시 및 개발 환경입니다. 주요 인증 로직은 `fast-auth-with-keycloak`라는 별도의 NPM 패키지로 분리되어 관리됩니다.
+
+## fast-auth-with-keycloak NPM 패키지 (NEW!)
+
+`fast-auth-with-keycloak`는 React 환경에서 Keycloak 기반 인증을 빠르고 쉽게 연동할 수 있도록 돕는 인증 헬퍼 패키지입니다. 이 패키지는 이제 독립적인 NPM 패키지로 제공되어 어떤 React 프로젝트에서도 재사용 가능합니다.
+
+### 설치
+
+```bash
+npm install fast-auth-with-keycloak
+# 또는
+yarn add fast-auth-with-keycloak
+```
+
 ## 최근 변경사항
 
+- `fast-auth-with-keycloak` 인증 헬퍼 로직을 독립적인 NPM 패키지로 분리하여 재사용성을 높였습니다.
 - React 공식 사이트 톤(React Blue, 연회색, 연보라 등) 테마 적용
 - 설정(초기화) 화면 상단에 머터리얼 톱니바퀴(Settings) 아이콘 추가
 - 로그인 화면 상단에 머터리얼 자물쇠(Lock) 아이콘 추가
@@ -34,7 +51,7 @@ It correctly bundles React in production mode and optimizes the build for the be
 The build is minified and the filenames include the hashes.\
 Your app is ready to be deployed!
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+See the section about [deployment](https://facebook.github.com/create-react-app/docs/deployment) for more information.
 
 ### `npm run eject`
 
@@ -86,7 +103,7 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 
 ### 3. API 요청
 ```ts
-import { fastAuthApiRequest } from './fast-auth-with-keycloak';
+import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 
 // 토큰 자동 포함
 const data = await fastAuthApiRequest('/me');
@@ -110,7 +127,7 @@ const publicData = await fastAuthApiRequest('/public', { withToken: false });
 
 ## 개발 및 확장
 - 각 페이지(InitPage, LoginPage, WelcomePage)는 src/pages에 분리되어 관리
-- 인증 로직은 src/fast-auth-with-keycloak에 모듈화
+- 인증 로직은 `packages/fast-auth-with-keycloak`에 모듈화되어 있습니다.
 - 설정값은 localStorage(fast-auth-init-config)에 저장
 
 ---

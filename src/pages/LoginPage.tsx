@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FastAuthProvider, fastAuthApiRequest } from '../fast-auth-with-keycloak';
-import { getAccessToken } from '../fast-auth-with-keycloak/token';
-import { setupAutoRefresh } from '../fast-auth-with-keycloak';
+import { FastAuthProvider, fastAuthApiRequest } from 'fast-auth-with-keycloak';
+import { getAccessToken } from 'fast-auth-with-keycloak/token';
+// import { setupAutoRefresh } from 'fast-auth-with-keycloak'; // 이 줄을 제거하거나 주석 처리
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
@@ -58,7 +58,6 @@ export default function LoginPage() {
     if (token) {
       try {
         FastAuthProvider.getConfig();
-        setupAutoRefresh();
       } catch {}
     }
   }, []);
