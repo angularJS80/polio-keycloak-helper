@@ -45,6 +45,7 @@ export default function AccountJoinPage() {
       const response = await fastAuthApiRequest(joinEndpoint, {
         method: 'POST',
         body: JSON.stringify({ username, email, password }),
+        withToken: false,
       });
 
       if (response.ok) {

@@ -6,10 +6,10 @@ import ReactCanvasConfetti from 'react-canvas-confetti';
 import Button from '@mui/material/Button';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
-import { getAccessToken } from 'fast-auth-with-keycloak/token';
+import { getAccessToken, decodeToken } from 'fast-auth-with-keycloak/token';
 
 export default function WelcomePage() {
-  const username = sessionStorage.getItem('fast-auth-username');
+  const [displayName, setDisplayName] = useState<string | null>(null);
   const refAnimationInstance = useRef<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -58,6 +58,25 @@ export default function WelcomePage() {
   }
   useEffect(() => {
     fireConfetti();
+
+    const token = getAccessToken();
+    if (token) {
+      try {
+        const decoded = decodeToken(token);
+        if (decoded && decoded.preferred_username) {
+          setDisplayName(decoded.preferred_username);
+        } else if (decoded && decoded.username) {
+          setDisplayName(decoded.username);
+        } else {
+          setDisplayName('알 수 없는 사용자');
+        }
+      } catch (error) {
+        console.error("토큰 파싱 오류:", error);
+        setDisplayName('알 수 없는 사용자');
+      }
+    } else {
+      setDisplayName('게스트');
+    }
     // eslint-disable-next-line
   }, []);
 
@@ -66,7 +85,7 @@ export default function WelcomePage() {
       <Confetti width={window.innerWidth} height={window.innerHeight} numberOfPieces={120} recycle={false} />
       <ReactCanvasConfetti ref={refAnimationInstance} style={{ position: 'fixed', pointerEvents: 'none', width: '100vw', height: '100vh', top: 0, left: 0 }} />
       <Typography variant="h4" sx={{ fontWeight: 700, zIndex: 2, position: 'relative' }}>
-        환영합니다{username ? `, ${username}` : ''}님!
+        환영합니다{displayName ? `, ${displayName}` : ''}님!
       </Typography>
       {getAccessToken() && (
         <Button

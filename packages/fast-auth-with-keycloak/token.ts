@@ -34,4 +34,13 @@ export function getTokenExpiration(token: string): number | null {
   } catch {
     return null;
   }
+}
+
+export function decodeToken(token: string): any | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload;
+  } catch {
+    return null;
+  }
 } 

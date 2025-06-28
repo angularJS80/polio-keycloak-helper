@@ -23,6 +23,7 @@ function loadInitConfig() {
         profileAfterLogin: false,
         profileEndpoint: '/me',
         joinEndpoint: '/join',
+        passwordChangeEndpoint: '/password-change',
       };
     }
   }
@@ -31,6 +32,7 @@ function loadInitConfig() {
     profileAfterLogin: false,
     profileEndpoint: '/me',
     joinEndpoint: '/join',
+    passwordChangeEndpoint: '/password-change',
   };
 }
 
@@ -67,6 +69,14 @@ export default function InitPage() {
         margin="normal"
         value={initConfig.loginEndpoint}
         onChange={e => setInitConfig({ ...initConfig, loginEndpoint: e.target.value })}
+      />
+      <TextField
+        fullWidth
+        label="비밀번호 변경 엔드포인트"
+        variant="outlined"
+        margin="normal"
+        value={initConfig.passwordChangeEndpoint || ''}
+        onChange={e => setInitConfig({ ...initConfig, passwordChangeEndpoint: e.target.value })}
       />
       <TextField
         fullWidth

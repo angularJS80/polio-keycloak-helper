@@ -22,6 +22,8 @@ yarn add fast-auth-with-keycloak
 - 로그인 화면 상단에 머터리얼 자물쇠(Lock) 아이콘 추가
 - 초기화 버튼 텍스트를 '저장'으로 변경
 - **계정 등록 기능 추가**: 초기화 설정 화면에서 계정 등록 엔드포인트를 설정하고, 로그인 페이지에서 계정 등록 페이지로 이동하여 사용자 이름, 이메일, 비밀번호로 계정을 생성할 수 있습니다.
+- **비밀번호 변경 엔드포인트 설정 기능 추가**: 초기화 설정 화면에서 비밀번호 변경을 위한 별도 엔드포인트를 설정할 수 있게 되었습니다.
+- **토큰 파싱 기능 재사용성 강화**: JWT 토큰 파싱(`decodeToken`) 기능이 `fast-auth-with-keycloak` 패키지 내부로 이동하여 애플리케이션 전반에서 재사용할 수 있게 개선되었습니다.
 
 # Getting Started with Create React App
 
@@ -89,6 +91,7 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 - Base URL
 - 계정등록 엔드포인트 (NEW!)
 - 로그인 엔드포인트
+- **비밀번호 변경 엔드포인트 (NEW!)**
 - 리프레쉬 엔드포인트
 - 자동 토큰 연장 여부
 - 만료시 리다이렉트 경로
