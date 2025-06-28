@@ -21,6 +21,7 @@ yarn add fast-auth-with-keycloak
 - 설정(초기화) 화면 상단에 머터리얼 톱니바퀴(Settings) 아이콘 추가
 - 로그인 화면 상단에 머터리얼 자물쇠(Lock) 아이콘 추가
 - 초기화 버튼 텍스트를 '저장'으로 변경
+- **계정 등록 기능 추가**: 초기화 설정 화면에서 계정 등록 엔드포인트를 설정하고, 로그인 페이지에서 계정 등록 페이지로 이동하여 사용자 이름, 이메일, 비밀번호로 계정을 생성할 수 있습니다.
 
 # Getting Started with Create React App
 
@@ -86,6 +87,7 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 
 ### 1. 초기화 페이지에서 설정
 - Base URL
+- 계정등록 엔드포인트 (NEW!)
 - 로그인 엔드포인트
 - 리프레쉬 엔드포인트
 - 자동 토큰 연장 여부
@@ -96,12 +98,17 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 
 설정값은 localStorage에 저장되어 새로고침/재접속 시에도 유지됩니다.
 
-### 2. 로그인
+### 2. 계정 등록 (NEW!)
+- 로그인 페이지의 '계정 등록' 버튼을 통해 접근 가능합니다.
+- 사용자 이름, 이메일, 비밀번호, 비밀번호 확인을 입력하여 새 계정을 등록할 수 있습니다.
+- 초기화 설정 화면에 구성된 '계정등록 엔드포인트'로 POST 요청을 보내 계정 생성 로직을 수행합니다.
+
+### 3. 로그인
 - 로그인 시 accessToken은 sessionStorage, refreshToken은 localStorage에 저장
 - 프로필 조회 옵션이 켜져 있으면 해당 엔드포인트로 사용자 정보 조회
 - 로그인 후 이동 옵션이 켜져 있으면 지정 경로로 이동
 
-### 3. API 요청
+### 4. API 요청
 ```ts
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 
@@ -112,7 +119,7 @@ const data = await fastAuthApiRequest('/me');
 const publicData = await fastAuthApiRequest('/public', { withToken: false });
 ```
 
-### 4. 토큰 자동 갱신
+### 5. 토큰 자동 갱신
 - accessToken의 exp(JWT 만료시간)를 클라이언트에서 파싱하여, 설정한 시점(초 전)에 자동으로 refresh
 - 만료 시 자동 로그아웃 및 지정 경로로 리다이렉트
 

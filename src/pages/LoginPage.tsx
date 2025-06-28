@@ -8,6 +8,7 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import LockIcon from '@mui/icons-material/Lock';
+import Alert from '@mui/material/Alert';
 
 const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
 
@@ -48,8 +49,22 @@ function getRedirectConfig() {
   return { redirectAfterLogin: false, redirectPath: '/welcome' };
 }
 
+function getJoinEndpoint() {
+  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (saved) {
+    try {
+      const config = JSON.parse(saved);
+      return config.joinEndpoint || '';
+    } catch {
+      return '';
+    }
+  }
+  return '';
+}
+
 export default function LoginPage() {
   const [loginState, setLoginState] = useState({ username: '', password: '', loading: false, error: '' });
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -70,6 +85,11 @@ export default function LoginPage() {
           인증이 뭔지 보여줄게 <span style={{ fontSize: 28, marginLeft: 8 }}>🕶️</span>
         </Typography>
       </Box>
+      {alertMessage && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {alertMessage}
+        </Alert>
+      )}
       <TextField
         fullWidth
         label="아이디"
@@ -120,7 +140,15 @@ export default function LoginPage() {
         color="secondary"
         size="large"
         sx={{ mt: 1, fontWeight: 700 }}
-        onClick={() => navigate('/join')}
+        onClick={() => {
+          setAlertMessage(null);
+          const joinEndpoint = getJoinEndpoint();
+          if (joinEndpoint) {
+            navigate('/join');
+          } else {
+            setAlertMessage('계정 등록 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.');
+          }
+        }}
       >
         계정 등록
       </Button>
