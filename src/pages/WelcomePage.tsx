@@ -5,13 +5,16 @@ import Confetti from 'react-confetti';
 import ReactCanvasConfetti from 'react-canvas-confetti';
 import Button from '@mui/material/Button';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { getAccessToken, decodeToken } from 'fast-auth-with-keycloak/token';
+import { useNavigate } from 'react-router-dom';
 
 export default function WelcomePage() {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const refAnimationInstance = useRef<any>(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     setLoading(true);
@@ -88,16 +91,28 @@ export default function WelcomePage() {
         환영합니다{displayName ? `, ${displayName}` : ''}님!
       </Typography>
       {getAccessToken() && (
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleLogout}
-          sx={{ mt: 3, zIndex: 2, position: 'relative' }}
-          startIcon={<ExitToAppIcon />}
-          disabled={loading}
-        >
-          {loading ? '로그아웃 중...' : '로그아웃'}
-        </Button>
+        <>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleLogout}
+            sx={{ mt: 3, zIndex: 2, position: 'relative' }}
+            startIcon={<ExitToAppIcon />}
+            disabled={loading}
+          >
+            {loading ? '로그아웃 중...' : '로그아웃'}
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => navigate('/password-change')}
+            sx={{ mt: 2, zIndex: 2, position: 'relative' }}
+            startIcon={<VpnKeyIcon />}
+            disabled={loading}
+          >
+            비밀번호 변경
+          </Button>
+        </>
       )}
     </Box>
   );

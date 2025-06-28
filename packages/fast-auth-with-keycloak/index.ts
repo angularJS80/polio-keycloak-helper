@@ -141,8 +141,30 @@ export async function fastAuthApiRequest(
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error('API 요청 실패');
-  return res.json();
+  if (!res.ok) {
+    // API 요청 실패 시 응답 본문을 텍스트로 읽어 오류 메시지에 포함
+    const errorText = await res.text();
+    try {
+      const errorJson = JSON.parse(errorText);
+      throw new Error(`API 요청 실패: ${errorJson.message || errorText}`);
+    } catch {
+      throw new Error(`API 요청 실패: ${errorText || res.statusText}`);
+    }
+  }
+
+  // 응답 본문이 비어있을 수 있는 경우를 처리 (예: HTTP 204 No Content)
+  const contentLength = res.headers.get('content-length');
+  if (res.status === 204 || (contentLength === '0')) {
+    return {}; // 본문이 없는 경우 빈 객체 반환
+  }
+
+  try {
+    return await res.json();
+  } catch (error) {
+    // 응답 본문이 있지만 JSON 파싱에 실패한 경우 (예: 빈 본문이 아니지만 유효한 JSON이 아님)
+    console.warn(`[FastAuth] Failed to parse JSON for successful response (status: ${res.status}):`, error);
+    return {}; // 이 경우에도 빈 객체를 반환하여 클라이언트에서 오류를 받지 않도록 함
+  }
 }
 
 function handleTokenExpired() {
