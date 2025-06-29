@@ -121,11 +121,11 @@ export class FastAuthProvider {
 
 export async function fastAuthApiRequest(
   endpoint: string,
-  options?: { method?: string; body?: any; withToken?: boolean }
+  options?: { method?: string; body?: any; withToken?: boolean; headers?: Record<string, string> }
 ): Promise<any> {
   const config = FastAuthProvider.getConfig();
-  const { method = 'GET', body, withToken = true } = options || {};
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const { method = 'GET', body, withToken = true, headers: customHeaders } = options || {};
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...customHeaders };
   if (withToken) {
     const token = getAccessToken();
     if (!token) throw new Error('토큰이 없습니다.');

@@ -79,6 +79,14 @@ export default function InitPage() {
       />
       <TextField
         fullWidth
+        label="비밀번호 초기화 엔드포인트"
+        variant="outlined"
+        margin="normal"
+        value={initConfig.passwordResetEndpoint || ''}
+        onChange={e => setInitConfig({ ...initConfig, passwordResetEndpoint: e.target.value })}
+      />
+      <TextField
+        fullWidth
         label="로그아웃 엔드포인트"
         variant="outlined"
         margin="normal"

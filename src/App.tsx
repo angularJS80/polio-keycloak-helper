@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import AccountJoinPage from './pages/AccountJoinPage';
 import PasswordChangePage from './pages/PasswordChangePage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProfilePage from './pages/ProfilePage';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -128,6 +129,7 @@ function App() {
         <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/join" element={<AccountJoinPage />} />
         <Route path="/password-change" element={<PasswordChangePage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         {/* 필요시 환영 페이지 등 추가 라우트 */}
       </Routes>

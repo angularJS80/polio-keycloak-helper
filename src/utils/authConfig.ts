@@ -54,6 +54,19 @@ export function getJoinEndpoint() {
   return '';
 }
 
+export function getPasswordResetEndpoint() {
+  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (saved) {
+    try {
+      const config = JSON.parse(saved);
+      return config.passwordResetEndpoint || '';
+    } catch {
+      return '';
+    }
+  }
+  return '';
+}
+
 export function loadInitConfig() {
   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
   if (saved) {
@@ -66,6 +79,7 @@ export function loadInitConfig() {
         profileEndpoint: '/me',
         joinEndpoint: '/join',
         passwordChangeEndpoint: '/password-change',
+        passwordResetEndpoint: '/password-reset',
       };
     }
   }
@@ -75,5 +89,6 @@ export function loadInitConfig() {
     profileEndpoint: '/me',
     joinEndpoint: '/join',
     passwordChangeEndpoint: '/password-change',
+    passwordResetEndpoint: '/password-reset',
   };
 } 
