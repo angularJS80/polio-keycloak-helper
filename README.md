@@ -30,6 +30,12 @@ yarn add fast-auth-with-keycloak
 - **ProfilePage 디자인 개선**: 사용자 프로필 페이지에서 이름과 이메일 정보가 입력 필드처럼 보이지 않도록 List, ListItem, ListItemIcon, ListItemText 컴포넌트를 활용하여 목록 형태로 표시하고, 각 정보 앞에 아이콘을 추가하여 조회 전용 느낌을 강화했습니다.
 - **모든 화면 상단 제목 글자 크기 통일**: WelcomePage, LoginPage, InitPage, ProfilePage의 상단 제목 Typography 컴포넌트 `variant`를 모두 `h5`로 통일하여 일관성을 확보했습니다.
 - **WelcomePage 제목 앞 아이콘 변경**: WelcomePage 제목 앞에 `EmojiPeopleIcon` 대신 `WavingHandIcon`을 최종 적용했습니다.
+- **비밀번호 변경/재설정 기능 분리:**
+    - `PasswordChangePage.tsx`는 로그인된 사용자의 비밀번호 변경을 전담하도록 수정되었습니다.
+    - `ResetPasswordPage.tsx`를 새로 추가하여, URL 쿼리 파라미터를 통해 `access_token`을 받아 비밀번호를 재설정하는 기능을 구현했습니다. 이 페이지는 세션 기반의 토큰 갱신 로직을 사용하지 않습니다.
+    - `src/App.tsx`에 `/reset-password` 경로로 `ResetPasswordPage.tsx`에 대한 라우팅을 추가했습니다.
+    - `src/utils/authConfig.ts`에 `passwordResetEndpoint`를 추가하고, `InitPage.tsx`에서 이 엔드포인트를 설정할 수 있도록 입력 필드를 추가했습니다.
+- **`keycloak-js` 의존성 제거:** 클라이언트 애플리케이션에서 직접 `keycloak-js` 라이브러리를 사용하지 않도록 관련 임포트 및 코드를 `src/utils/authConfig.ts`에서 완전히 제거했습니다. 이는 백엔드가 Keycloak과 통신하고 클라이언트는 `fast-auth-with-keycloak` 패키지를 통해 백엔드와 통신하는 아키텍처에 맞게 코드를 정리한 것입니다.
 
 # Getting Started with Create React App
 
