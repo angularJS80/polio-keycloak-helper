@@ -16,22 +16,23 @@ import PageHeader from '../components/PageHeader';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const [displayName, setDisplayName] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
+  const [profile, setProfile] = useState<{ name?: string; email?: string } | null>(null);
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (token) {
+    const fetchProfile = async () => {
       try {
-        const decoded = decodeToken(token);
-        if (decoded) {
-          setDisplayName(decoded.preferred_username || decoded.username || null);
-          setEmail(decoded.email || null);
+        const accessToken = await getAccessToken();
+        if (accessToken) {
+          const decoded = decodeToken(accessToken);
+          setProfile({ name: decoded?.name, email: decoded?.email });
         }
       } catch (error) {
-        console.error("토큰 파싱 오류:", error);
+        console.error("Error fetching or decoding token:", error);
+        setProfile(null);
       }
-    }
+    };
+
+    fetchProfile();
   }, []);
 
   const handleGoBack = () => {
@@ -43,21 +44,21 @@ const ProfilePage: React.FC = () => {
       <PageHeader icon={PersonIcon} title="프로필" iconColor='#424242' />
       
       <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-        {displayName && (
-          <ListItem disablePadding>
-            <ListItemIcon>
-              <PersonIcon />
-            </ListItemIcon>
-            <ListItemText primary="이름" secondary={displayName} />
-          </ListItem>
-        )}
-        {email && (
-          <ListItem disablePadding>
-            <ListItemIcon>
-              <EmailIcon />
-            </ListItemIcon>
-            <ListItemText primary="이메일" secondary={email} />
-          </ListItem>
+        {profile && (
+          <>
+            <ListItem disablePadding>
+              <ListItemIcon>
+                <PersonIcon />
+              </ListItemIcon>
+              <ListItemText primary="이름" secondary={profile.name || '정보 없음'} />
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemIcon>
+                <EmailIcon />
+              </ListItemIcon>
+              <ListItemText primary="이메일" secondary={profile.email || '정보 없음'} />
+            </ListItem>
+          </>
         )}
       </List>
 

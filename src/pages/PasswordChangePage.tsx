@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Typography, Alert } from '@mui/material';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
-import { getAccessToken, decodeToken } from 'fast-auth-with-keycloak/token';
+import { getAccessToken } from 'fast-auth-with-keycloak/token';
 
 const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
 
@@ -39,23 +39,6 @@ export default function PasswordChangePage() {
       return;
     }
 
-    let userId: string | null = null;
-    try {
-      const decodedToken = decodeToken(accessToken);
-      userId = decodedToken?.sub || null;
-    } catch (error) {
-      console.error("토큰 디코딩 오류:", error);
-      setMessage({ type: 'error', text: '사용자 정보를 가져오는데 실패했습니다.' });
-      setLoading(false);
-      return;
-    }
-
-    if (!userId) {
-      setMessage({ type: 'error', text: '사용자 ID를 토큰에서 찾을 수 없습니다.' });
-      setLoading(false);
-      return;
-    }
-
     if (newPassword !== confirmNewPassword) {
       setMessage({ type: 'error', text: '새 비밀번호가 일치하지 않습니다.' });
       setLoading(false);
@@ -79,7 +62,6 @@ export default function PasswordChangePage() {
       await fastAuthApiRequest(passwordChangeEndpoint, {
         method: 'PUT',
         body: {
-          userId: userId,
           newPassword: newPassword,
         },
       });
