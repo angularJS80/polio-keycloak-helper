@@ -150,6 +150,18 @@ export default function LoginPage() {
       >
         계정 등록
       </Button>
+      <Button
+        fullWidth
+        variant="text"
+        color="secondary"
+        size="large"
+        sx={{ mt: 1, fontWeight: 700 }}
+        onClick={() => {
+          navigate('/password-find');
+        }}
+      >
+        비밀번호 찾기
+      </Button>
       {loginState.error && <Typography color="error" sx={{ mt: 1 }}>{loginState.error}</Typography>}
     </Layout>
   );

@@ -2,23 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Box, TextField, Button, Typography, Alert } from '@mui/material';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
-import { getPasswordResetEndpoint } from '../utils/authConfig';
+import { getPasswordResetEndpoint, loadInitConfig } from '../utils/authConfig';
 
 const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
-
-// function getPasswordChangeEndpoint() {
-//   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-//   if (saved) {
-//     try {
-//       const config = JSON.parse(saved);
-//       return config.passwordChangeEndpoint || '';
-//     } catch {
-//       return '';
-//     }
-//   }
-//   return '';
-// }
 
 export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState('');
@@ -62,20 +48,27 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      await fastAuthApiRequest(passwordResetEndpoint, {
-        method: 'PUT',
-        body: {
-          newPassword: newPassword,
-        },
-        withToken: false,
-        headers: { 'Authorization': `Bearer ${urlAccessToken}` },
-      });
+      const initConfig = loadInitConfig();
+      const response = await fetch(
+        `${initConfig.baseUrl}${passwordResetEndpoint}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${urlAccessToken}`,
+          },
+          body: JSON.stringify({ newPassword: newPassword }),
+        }
+      );
 
-      setMessage({ type: 'success', text: '비밀번호가 성공적으로 변경되었습니다!' });
-      setNewPassword('');
-      setConfirmNewPassword('');
-      // Optionally navigate to a success page or login page
-      // navigate('/login'); 
+      if (response.ok) {
+        setMessage({ type: 'success', text: '비밀번호가 성공적으로 변경되었습니다!' });
+        setNewPassword('');
+        setConfirmNewPassword('');
+      } else {
+        const errorData = await response.json();
+        setMessage({ type: 'error', text: `비밀번호 초기화 실패: ${errorData.message || '알 수 없는 오류'}` });
+      }
     } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setMessage({ type: 'error', text: `비밀번호 초기화 실패: ${errorMessage}` });

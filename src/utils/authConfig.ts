@@ -14,57 +14,29 @@ export function ensureInit() {
 }
 
 export function getProfileConfig() {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return {
-        profileAfterLogin: !!config.profileAfterLogin,
-        profileEndpoint: config.profileEndpoint || '/me',
-      };
-    } catch {}
-  }
-  return { profileAfterLogin: false, profileEndpoint: '/me' };
+  const config = loadInitConfig();
+  return {
+    profileAfterLogin: !!config.profileAfterLogin,
+    profileEndpoint: config.profileEndpoint || DEFAULT_AUTH_CONFIG.profileEndpoint || '/me',
+  };
 }
 
 export function getRedirectConfig() {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return {
-        redirectAfterLogin: !!config.redirectAfterLogin,
-        redirectPath: config.redirectPath || '/welcome',
-      };
-    } catch {}
-  }
-  return { redirectAfterLogin: false, redirectPath: '/welcome' };
+  const config = loadInitConfig();
+  return {
+    redirectAfterLogin: !!config.redirectAfterLogin,
+    redirectPath: config.redirectPath || DEFAULT_AUTH_CONFIG.onTokenExpiredRedirect || '/welcome',
+  };
 }
 
 export function getJoinEndpoint() {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return config.joinEndpoint || '';
-    } catch {
-      return '';
-    }
-  }
-  return '';
+  const config = loadInitConfig();
+  return config.joinEndpoint || DEFAULT_AUTH_CONFIG.joinEndpoint || '';
 }
 
 export function getPasswordResetEndpoint() {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return config.passwordResetEndpoint || '';
-    } catch {
-      return '';
-    }
-  }
-  return '';
+  const config = loadInitConfig();
+  return config.passwordResetEndpoint || DEFAULT_AUTH_CONFIG.passwordResetEndpoint || '';
 }
 
 export function loadInitConfig() {
@@ -77,9 +49,10 @@ export function loadInitConfig() {
         ...DEFAULT_AUTH_CONFIG,
         profileAfterLogin: false,
         profileEndpoint: '/me',
-        joinEndpoint: '/join',
-        passwordChangeEndpoint: '/password-change',
-        passwordResetEndpoint: '/password-reset',
+        joinEndpoint: '/auth/join',
+        passwordChangeEndpoint: '/auth/password-change',
+        passwordResetEndpoint: '/auth/reset-password',
+        passwordFindEndpoint: '/auth/password-find',
       };
     }
   }
@@ -87,8 +60,9 @@ export function loadInitConfig() {
     ...DEFAULT_AUTH_CONFIG,
     profileAfterLogin: false,
     profileEndpoint: '/me',
-    joinEndpoint: '/join',
-    passwordChangeEndpoint: '/password-change',
-    passwordResetEndpoint: '/password-reset',
+    joinEndpoint: '/auth/join',
+    passwordChangeEndpoint: '/auth/password-change',
+    passwordResetEndpoint: '/auth/reset-password',
+    passwordFindEndpoint: '/auth/password-find',
   };
 } 

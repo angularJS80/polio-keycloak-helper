@@ -6,6 +6,7 @@ import WelcomePage from './pages/WelcomePage';
 import AccountJoinPage from './pages/AccountJoinPage';
 import PasswordChangePage from './pages/PasswordChangePage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import PasswordFindPage from './pages/PasswordFindPage';
 import ProfilePage from './pages/ProfilePage';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -13,6 +14,15 @@ import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { getAccessToken, getTokenExpiration } from 'fast-auth-with-keycloak/token';
 
 const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
+
+// 초기화 설정 없이 접근 가능한 경로 목록
+const PUBLIC_PATHS = [
+  '/init',
+  '/login',
+  '/join',
+  '/password-find',
+  '/reset-password',
+];
 
 const theme = createTheme({
   palette: {
@@ -86,36 +96,37 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    const initConfig = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (initConfig) {
-      try {
-        FastAuthProvider.init(JSON.parse(initConfig));
-        // 기존 토큰이 있으면 세션 재개 시도
-        const token = getAccessToken();
-        if (token) {
-          FastAuthProvider.resumeSession();
+    const currentPath = location.pathname;
+
+    // 공개 경로가 아니거나 루트 경로인 경우에만 FastAuthProvider 초기화 시도
+    const shouldInitializeAuthProvider = !PUBLIC_PATHS.includes(currentPath) || currentPath === '/';
+
+    if (shouldInitializeAuthProvider) {
+      const initConfig = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+      if (initConfig) {
+        try {
+          FastAuthProvider.init(JSON.parse(initConfig));
+          
+          // 루트 경로일 경우에만 토큰 확인 후 리다이렉트
+          if (currentPath === '/') {
+            const token = getAccessToken();
+            const exp = token ? getTokenExpiration(token) : null;
+
+            if (!token || !exp || Date.now() > exp) {
+              navigate('/login', { replace: true });
+            } else {
+              navigate('/welcome', { replace: true });
+            }
+          }
+        } catch (e) {
+          console.error("Failed to initialize FastAuthProvider from localStorage:", e);
+          // 초기화 실패 시 init 페이지로 리다이렉트
+          navigate('/init', { replace: true });
         }
-      } catch (e) {
-        console.error("Failed to initialize FastAuthProvider from localStorage:", e);
-        // 초기화 실패 시 init 페이지로 리다이렉트
-        navigate('/init', { replace: true });
-        return;
-      }
-    } else {
-      // 설정이 없으면 init 페이지로 리다이렉트
-      navigate('/init', { replace: true });
-      return;
-    }
-
-    // 루트(/) 경로에서만 동작 (기존 로직)
-    if (location.pathname === '/') {
-      const token = getAccessToken();
-      const exp = token ? getTokenExpiration(token) : null;
-
-      if (!token || !exp || Date.now() > exp) {
-        navigate('/login', { replace: true });
       } else {
-        navigate('/welcome', { replace: true });
+        // 설정이 없으면 init 페이지로 리다이렉트 (공개 경로가 아니거나 루트 경로인 경우)
+        navigate('/init', { replace: true });
       }
     }
   }, [location.pathname, navigate]);
@@ -130,6 +141,7 @@ function App() {
         <Route path="/join" element={<AccountJoinPage />} />
         <Route path="/password-change" element={<PasswordChangePage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/password-find" element={<PasswordFindPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         {/* 필요시 환영 페이지 등 추가 라우트 */}
       </Routes>

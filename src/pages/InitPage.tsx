@@ -87,6 +87,14 @@ export default function InitPage() {
       />
       <TextField
         fullWidth
+        label="비밀번호 찾기 엔드포인트"
+        variant="outlined"
+        margin="normal"
+        value={initConfig.passwordFindEndpoint || ''}
+        onChange={e => setInitConfig({ ...initConfig, passwordFindEndpoint: e.target.value })}
+      />
+      <TextField
+        fullWidth
         label="로그아웃 엔드포인트"
         variant="outlined"
         margin="normal"

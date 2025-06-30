@@ -35,6 +35,13 @@ yarn add fast-auth-with-keycloak
     - `ResetPasswordPage.tsx`를 새로 추가하여, URL 쿼리 파라미터를 통해 `access_token`을 받아 비밀번호를 재설정하는 기능을 구현했습니다. 이 페이지는 세션 기반의 토큰 갱신 로직을 사용하지 않습니다.
     - `src/App.tsx`에 `/reset-password` 경로로 `ResetPasswordPage.tsx`에 대한 라우팅을 추가했습니다.
     - `src/utils/authConfig.ts`에 `passwordResetEndpoint`를 추가하고, `InitPage.tsx`에서 이 엔드포인트를 설정할 수 있도록 입력 필드를 추가했습니다.
+- **비밀번호 찾기 기능 추가 및 개선:**
+    - 초기화 설정 화면(`InitPage.tsx`)에 `비밀번호 찾기 엔드포인트` 설정 필드가 추가되었습니다.
+    - 이메일 입력을 통해 비밀번호 재설정 이메일을 요청하는 `비밀번호 찾기 페이지(/password-find)`(`PasswordFindPage.tsx`)가 새로 추가되었습니다.
+    - `PasswordFindPage.tsx`와 `ResetPasswordPage.tsx`에서 `FastAuthProvider` 의존성 없이 독립적으로 API 요청을 보낼 수 있도록 `fastAuthApiRequest` 대신 웹 표준 `fetch` API를 사용하도록 수정되었습니다.
+    - 애플리케이션 초기화 설정 유무와 관계없이 `비밀번호 찾기` 및 `비밀번호 재설정` 페이지에 직접 접근할 수 있도록 `src/App.tsx`의 라우팅 로직이 개선되었습니다.
+    - `src/utils/authConfig.ts` 내 엔드포인트 관련 유틸리티 함수들(`getJoinEndpoint`, `getPasswordResetEndpoint`, `getProfileConfig`, `getRedirectConfig`)이 `loadInitConfig()`를 통해 `DEFAULT_AUTH_CONFIG`의 기본값을 올바르게 참조하도록 수정되었습니다.
+    - 로그인 페이지(`LoginPage.tsx`)에서 "비밀번호를 잊으셨나요?" 버튼 텍스트가 "비밀번호 찾기"로 변경되었으며, 다른 버튼들과 동일한 높이를 갖도록 `size="large"`로 조정되었습니다.
 - **`keycloak-js` 의존성 제거:** 클라이언트 애플리케이션에서 직접 `keycloak-js` 라이브러리를 사용하지 않도록 관련 임포트 및 코드를 `src/utils/authConfig.ts`에서 완전히 제거했습니다. 이는 백엔드가 Keycloak과 통신하고 클라이언트는 `fast-auth-with-keycloak` 패키지를 통해 백엔드와 통신하는 아키텍처에 맞게 코드를 정리한 것입니다.
 
 # Getting Started with Create React App
