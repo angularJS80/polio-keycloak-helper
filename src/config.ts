@@ -3,7 +3,7 @@ export const DEFAULT_AUTH_CONFIG = {
   loginEndpoint: '/auth/login',
   refreshEndpoint: '/auth/refresh',
   autoRefresh: true,
-  onTokenExpiredRedirect: '/auth/login',
+  onTokenExpiredRedirect: '/login',
   profileAfterLogin: false,
   profileEndpoint: '/me',
   joinEndpoint: '/auth/join',

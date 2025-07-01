@@ -108,7 +108,11 @@ function App() {
 
       if (initConfig) {
         try {
-          FastAuthProvider.init(JSON.parse(initConfig));
+          const parsedConfig = JSON.parse(initConfig);
+          FastAuthProvider.init({
+            ...parsedConfig,
+            onTokenExpiredNavigate: navigate,
+          });
           
           // 루트 경로일 경우에만 토큰 확인 후 리다이렉트
           if (currentPath === '/') {

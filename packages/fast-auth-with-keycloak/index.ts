@@ -9,6 +9,7 @@ export type FastAuthConfig = {
   autoRefresh?: boolean;
   onTokenExpiredRedirect?: string;
   logoutEndpoint?: string;
+  onTokenExpiredNavigate?: (path: string) => void;
 };
 
 let fastAuthConfig: FastAuthConfig | null = null;
@@ -21,6 +22,10 @@ export class FastAuthProvider {
   static init(config: FastAuthConfig) {
     fastAuthConfig = { ...config };
     // console.log('[FastAuth] FastAuthProvider initialized with config:', fastAuthConfig);
+    if (config.onTokenExpiredNavigate) {
+      FastAuthProvider._onTokenExpiredNavigate = config.onTokenExpiredNavigate;
+    }
+    setupAutoRefresh();
   }
 
   static getConfig(): FastAuthConfig {
@@ -100,7 +105,11 @@ export class FastAuthProvider {
     if (refreshTimeout) clearTimeout(refreshTimeout);
 
     if (config.onTokenExpiredRedirect) {
-      window.location.href = config.onTokenExpiredRedirect;
+      if (FastAuthProvider._onTokenExpiredNavigate) {
+        FastAuthProvider._onTokenExpiredNavigate(config.onTokenExpiredRedirect);
+      } else {
+        window.location.href = config.onTokenExpiredRedirect;
+      }
     }
   }
 
@@ -117,6 +126,8 @@ export class FastAuthProvider {
       }
     }
   }
+
+  private static _onTokenExpiredNavigate: ((path: string) => void) | undefined;
 }
 
 export async function fastAuthApiRequest(
@@ -172,7 +183,11 @@ function handleTokenExpired() {
   removeAccessToken();
   removeRefreshToken();
   if (config.onTokenExpiredRedirect) {
-    window.location.href = config.onTokenExpiredRedirect;
+    if (FastAuthProvider._onTokenExpiredNavigate) {
+      FastAuthProvider._onTokenExpiredNavigate(config.onTokenExpiredRedirect);
+    } else {
+      window.location.href = config.onTokenExpiredRedirect;
+    }
   }
 }
 
