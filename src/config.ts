@@ -12,4 +12,6 @@ export const DEFAULT_AUTH_CONFIG = {
   passwordFindEndpoint: '/auth/password-find',
   logoutEndpoint: '/auth/logout',
   refreshBeforeExpirySec: 30,
+  socialLoginEndpoint: '/auth/social-login',
+  codeLoginEndpoint: '/auth/code-login',
 }; 

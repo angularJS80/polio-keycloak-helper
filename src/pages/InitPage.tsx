@@ -103,6 +103,22 @@ export default function InitPage() {
       />
       <TextField
         fullWidth
+        label="소셜 로그인 링크"
+        variant="outlined"
+        margin="normal"
+        value={initConfig.socialLoginEndpoint || ''}
+        onChange={e => setInitConfig({ ...initConfig, socialLoginEndpoint: e.target.value })}
+      />
+      <TextField
+        fullWidth
+        label="코드 로그인 엔드포인트"
+        variant="outlined"
+        margin="normal"
+        value={initConfig.codeLoginEndpoint || ''}
+        onChange={e => setInitConfig({ ...initConfig, codeLoginEndpoint: e.target.value })}
+      />
+      <TextField
+        fullWidth
         label="리프레쉬 엔드포인트"
         variant="outlined"
         margin="normal"

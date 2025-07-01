@@ -53,6 +53,8 @@ export function loadInitConfig() {
         passwordChangeEndpoint: '/auth/password-change',
         passwordResetEndpoint: '/auth/reset-password',
         passwordFindEndpoint: '/auth/password-find',
+        socialLoginEndpoint: '/auth/social-login',
+        codeLoginEndpoint: '/auth/login-by-code',
       };
     }
   }
@@ -64,5 +66,7 @@ export function loadInitConfig() {
     passwordChangeEndpoint: '/auth/password-change',
     passwordResetEndpoint: '/auth/reset-password',
     passwordFindEndpoint: '/auth/password-find',
+    socialLoginEndpoint: '/auth/social-login',
+    codeLoginEndpoint: '/auth/login-by-code',
   };
 } 

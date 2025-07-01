@@ -42,7 +42,16 @@ yarn add fast-auth-with-keycloak
     - 애플리케이션 초기화 설정 유무와 관계없이 `비밀번호 찾기` 및 `비밀번호 재설정` 페이지에 직접 접근할 수 있도록 `src/App.tsx`의 라우팅 로직이 개선되었습니다.
     - `src/utils/authConfig.ts` 내 엔드포인트 관련 유틸리티 함수들(`getJoinEndpoint`, `getPasswordResetEndpoint`, `getProfileConfig`, `getRedirectConfig`)이 `loadInitConfig()`를 통해 `DEFAULT_AUTH_CONFIG`의 기본값을 올바르게 참조하도록 수정되었습니다.
     - 로그인 페이지(`LoginPage.tsx`)에서 "비밀번호를 잊으셨나요?" 버튼 텍스트가 "비밀번호 찾기"로 변경되었으며, 다른 버튼들과 동일한 높이를 갖도록 `size="large"`로 조정되었습니다.
+    - 초기화 설정 화면(`InitPage.tsx`)의 "소셜 로그인 엔드포인트" 항목명이 "소셜 로그인 링크"로 변경되었습니다.
 - **`keycloak-js` 의존성 제거:** 클라이언트 애플리케이션에서 직접 `keycloak-js` 라이브러리를 사용하지 않도록 관련 임포트 및 코드를 `src/utils/authConfig.ts`에서 완전히 제거했습니다. 이는 백엔드가 Keycloak과 통신하고 클라이언트는 `fast-auth-with-keycloak` 패키지를 통해 백엔드와 통신하는 아키텍처에 맞게 코드를 정리한 것입니다.
+- **소셜/코드 로그인 통합 및 개선:**
+    - 초기화 설정 화면(`InitPage.tsx`)에 `소셜 로그인 링크`와 `코드 로그인 엔드포인트` 설정 필드가 추가되었습니다.
+    - `src/App.tsx`에 `/auth/callback` 경로를 추가하여 외부 인증 콜백을 처리하는 `AuthCallbackPage.tsx`를 구현했습니다. 이 경로는 초기화 설정 유무와 관계없이 접근 가능합니다.
+    - `AuthCallbackPage.tsx`는 URL에서 `code` 파라미터를 추출하여, 초기화 설정에서 정의된 `코드 로그인 엔드포인트`로 JSON 본문(`code`)을 포함한 POST 요청을 보냅니다.
+    - 코드 로그인 성공 시, ID/PW 로그인과 동일하게 백엔드로부터 받은 토큰(`accessToken`, `refreshToken`)을 `FastAuthProvider`에 설정하고 세션을 재개하며, 이후 프로필 조회 및 설정된 리다이렉트 경로로 이동합니다.
+    - React `StrictMode` 환경에서 발생할 수 있는 API 이중 호출을 방지하기 위해 `AuthCallbackPage.tsx`에 `useRef`를 사용하여 API 호출 상태를 추적하는 로직이 추가되었습니다.
+    - `LoginPage.tsx`에 `소셜 로그인` 버튼이 추가되어, 초기화 설정의 `소셜 로그인 링크`로 직접 이동할 수 있도록 구현되었습니다. 절대 경로인 경우 `baseUrl`이 중복되지 않도록 처리되었습니다.
+    - `src/config.ts` 및 `src/utils/authConfig.ts`에서 `socialLoginEndpoint`와 `codeLoginEndpoint`의 기본값이 정의되고 로드되도록 업데이트되었습니다.
 
 # Getting Started with Create React App
 

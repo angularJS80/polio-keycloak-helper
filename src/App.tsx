@@ -8,6 +8,7 @@ import PasswordChangePage from './pages/PasswordChangePage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import PasswordFindPage from './pages/PasswordFindPage';
 import ProfilePage from './pages/ProfilePage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
@@ -22,6 +23,7 @@ const PUBLIC_PATHS = [
   '/join',
   '/password-find',
   '/reset-password',
+  '/auth/callback',
 ];
 
 const theme = createTheme({
@@ -143,6 +145,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/password-find" element={<PasswordFindPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         {/* 필요시 환영 페이지 등 추가 라우트 */}
       </Routes>
     </ThemeProvider>
