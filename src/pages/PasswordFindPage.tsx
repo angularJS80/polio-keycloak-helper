@@ -1,82 +1,90 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import { fastAuthApiRequest } from 'fast-auth-with-keycloak'; // 제거
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Layout from '../components/Layout';
-import PageHeader from '../components/PageHeader';
-import EmailIcon from '@mui/icons-material/Email';
-import { loadInitConfig } from '../utils/authConfig';
+import { Box, TextField, Button, Typography, Alert } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
+import { getPasswordFindEndpoint } from 'fast-auth-with-keycloak/initConfig';
 
 export default function PasswordFindPage() {
   const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const initConfig = loadInitConfig();
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMessage(null);
+    setLoading(true);
+
+    const passwordFindEndpoint = getPasswordFindEndpoint();
+    if (!passwordFindEndpoint) {
+      setMessage({ type: 'error', text: '비밀번호 찾기 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.' });
+      setLoading(false);
+      return;
+    }
+
     try {
-      setMessage('');
-      const response = await fetch(
-        `${initConfig.baseUrl}${initConfig.passwordFindEndpoint}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
+      await fastAuthApiRequest(passwordFindEndpoint, {
+        method: 'POST',
+        body: {
+          email: email,
+        },
+      });
 
-      if (response.ok) {
-        setMessage('비밀번호 재설정 이메일이 발송되었습니다. 이메일을 확인해주세요.');
-      } else {
-        const errorData = await response.json();
-        setMessage(errorData.message || '비밀번호 찾기 요청에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('Error during password find request:', error);
-      setMessage('네트워크 오류 또는 서버 응답이 없습니다.');
+      setMessage({ type: 'success', text: '비밀번호 재설정 이메일이 발송되었습니다. 이메일을 확인해주세요.' });
+      setEmail('');
+    } catch (err: any) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setMessage({ type: 'error', text: `비밀번호 찾기 실패: ${errorMessage}` });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Layout>
-      <PageHeader icon={EmailIcon} title="비밀번호 찾기" iconColor='#808080' />
-      <Typography variant="body1" sx={{ mt: 2, mb: 3 }}>
-        비밀번호를 재설정할 수 있는 링크를 받으려면 이메일 주소를 입력하세요.
-      </Typography>
-      <TextField
-        fullWidth
-        label="이메일"
-        variant="outlined"
-        margin="normal"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        type="email"
-      />
-      <Button
-        fullWidth
-        variant="contained"
-        color="primary"
-        size="large"
-        sx={{ mt: 2, fontWeight: 700 }}
-        onClick={handleSubmit}
-      >
-        비밀번호 찾기
-      </Button>
+    <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <SearchIcon sx={{ mr: 1, color: '#009e6d', fontSize: 32 }} />
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>비밀번호 찾기</Typography>
+      </Box>
       {message && (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          {message}
-        </Typography>
+        <Alert severity={message.type} sx={{ mb: 2 }}>
+          {message.text}
+        </Alert>
       )}
-      <Box sx={{ mt: 3, textAlign: 'center' }}>
-        <Button onClick={() => navigate('/login')} color="secondary">
+      <form onSubmit={handleSubmit}>
+        <TextField
+          fullWidth
+          label="이메일"
+          variant="outlined"
+          margin="normal"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          size="large"
+          sx={{ mt: 2, fontWeight: 700 }}
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? '전송 중...' : '비밀번호 찾기'}
+        </Button>
+        <Button
+          fullWidth
+          variant="outlined"
+          color="info"
+          size="large"
+          sx={{ mt: 1, fontWeight: 700 }}
+          onClick={() => navigate('/login')}
+          disabled={loading}
+        >
           로그인 페이지로 돌아가기
         </Button>
-      </Box>
-    </Layout>
+      </form>
+    </Box>
   );
 } 

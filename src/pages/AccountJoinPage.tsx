@@ -3,21 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Typography, Alert } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
-
-const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
-
-function getJoinEndpoint() {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return config.joinEndpoint || '/join';
-    } catch {
-      return '/join';
-    }
-  }
-  return '/join';
-}
+import { getJoinEndpoint } from 'fast-auth-with-keycloak/initConfig';
 
 export default function AccountJoinPage() {
   const [username, setUsername] = useState('');

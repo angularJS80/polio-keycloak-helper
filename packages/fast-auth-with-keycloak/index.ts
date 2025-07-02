@@ -1,6 +1,8 @@
 // fast-auth-with-keycloak 패키지 진입점
 
 import { setAccessToken, removeAccessToken, getAccessToken, getTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken } from './token';
+import { getItem, setItem, removeItem } from './storage';
+import { getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled } from './initConfig';
 
 export type FastAuthConfig = {
   baseUrl: string;
@@ -16,7 +18,7 @@ let fastAuthConfig: FastAuthConfig | null = null;
 let refreshTimeout: ReturnType<typeof setTimeout> | null = null;
 let expiryLogInterval: ReturnType<typeof setInterval> | null = null;
 let enableExpiryLog = true;
-let alertShown = false;
+let alertShownForThisSession = false;
 
 export class FastAuthProvider {
   static init(config: FastAuthConfig) {
@@ -31,7 +33,7 @@ export class FastAuthProvider {
   static getConfig(): FastAuthConfig {
     if (!fastAuthConfig) {
       // fastAuthConfig가 초기화되지 않은 경우 localStorage에서 로드 시도
-      const savedConfig = localStorage.getItem('fast-auth-init-config');
+      const savedConfig = getItem('local', 'fast-auth-init-config');
       if (savedConfig) {
         try {
           FastAuthProvider.init(JSON.parse(savedConfig));
@@ -59,7 +61,7 @@ export class FastAuthProvider {
     const data = await res.json();
     setAccessToken(data.accessToken);
     setRefreshToken(data.refreshToken);
-    resetAlertShown();
+    FastAuthProvider.resetAlertShown();
     logAccessTokenExpiry();
     if (FastAuthProvider.getConfig().autoRefresh) {
       setupAutoRefresh();
@@ -101,7 +103,7 @@ export class FastAuthProvider {
 
     removeAccessToken();
     removeRefreshToken();
-    resetAlertShown();
+    FastAuthProvider.resetAlertShown();
     if (refreshTimeout) clearTimeout(refreshTimeout);
 
     if (config.onTokenExpiredRedirect) {
@@ -128,6 +130,23 @@ export class FastAuthProvider {
   }
 
   private static _onTokenExpiredNavigate: ((path: string) => void) | undefined;
+
+  static handleTokenExpired() {
+    const config = FastAuthProvider.getConfig();
+    removeAccessToken();
+    removeRefreshToken();
+    if (config.onTokenExpiredRedirect) {
+      if (FastAuthProvider._onTokenExpiredNavigate) {
+        FastAuthProvider._onTokenExpiredNavigate(config.onTokenExpiredRedirect);
+      } else {
+        window.location.href = config.onTokenExpiredRedirect;
+      }
+    }
+  }
+
+  static resetAlertShown() {
+    alertShownForThisSession = false;
+  }
 }
 
 export async function fastAuthApiRequest(
@@ -142,7 +161,7 @@ export async function fastAuthApiRequest(
     if (!token) throw new Error('토큰이 없습니다.');
     const exp = getTokenExpiration(token);
     if (!exp || Date.now() > exp) {
-      handleTokenExpired();
+      FastAuthProvider.handleTokenExpired();
       throw new Error('토큰이 만료되었습니다.');
     }
     headers['Authorization'] = `Bearer ${token}`;
@@ -178,19 +197,6 @@ export async function fastAuthApiRequest(
   }
 }
 
-function handleTokenExpired() {
-  const config = FastAuthProvider.getConfig();
-  removeAccessToken();
-  removeRefreshToken();
-  if (config.onTokenExpiredRedirect) {
-    if (FastAuthProvider._onTokenExpiredNavigate) {
-      FastAuthProvider._onTokenExpiredNavigate(config.onTokenExpiredRedirect);
-    } else {
-      window.location.href = config.onTokenExpiredRedirect;
-    }
-  }
-}
-
 async function refreshTokenIfNeeded() {
   const config = FastAuthProvider.getConfig();
   const token = getAccessToken();
@@ -200,10 +206,10 @@ async function refreshTokenIfNeeded() {
   const now = Date.now();
   // 만료 1분 전 자동 갱신
   if (exp - now < 60 * 1000) {
-    const refreshToken = localStorage.getItem('fast-auth-refresh-token');
+    const refreshToken = getItem('local', 'fast-auth-refresh-token');
     if (!refreshToken) {
       console.log('[FastAuth] No refresh token found, handling token expired.');
-      return handleTokenExpired();
+      return FastAuthProvider.handleTokenExpired();
     }
 
     console.log('[FastAuth] Attempting token refresh. Refresh Token present.');
@@ -221,55 +227,22 @@ async function refreshTokenIfNeeded() {
         const data = await res.json();
         setAccessToken(data.accessToken);
         setRefreshToken(data.refreshToken);
-        resetAlertShown();
+        FastAuthProvider.resetAlertShown();
         logAccessTokenExpiry();
         setupAutoRefresh();
       } else {
         const errorText = await res.text();
         console.error('[FastAuth] Token refresh failed:', res.status, res.statusText, '응답 본문:', errorText);
-        handleTokenExpired();
+        FastAuthProvider.handleTokenExpired();
       }
     } catch (error) {
       console.error('[FastAuth] Network error during token refresh:', error);
-      handleTokenExpired(); // 네트워크 오류 시에도 토큰 만료 처리
+      FastAuthProvider.handleTokenExpired(); // 네트워크 오류 시에도 토큰 만료 처리
     }
   } else {
     console.log('[FastAuth] Token not expiring soon, setting up next auto-refresh.');
     setupAutoRefresh();
   }
-}
-
-function getRefreshBeforeExpirySec() {
-  const saved = localStorage.getItem('fast-auth-init-config');
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return Number(config.refreshBeforeExpirySec) || 1;
-    } catch {}
-  }
-  return 1;
-}
-
-function getSessionExpiryAlertSec() {
-  const saved = localStorage.getItem('fast-auth-init-config');
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return Number(config.sessionExpiryAlertSec) || 30;
-    } catch {}
-  }
-  return 30;
-}
-
-function getSessionExpiryAlertEnabled() {
-  const saved = localStorage.getItem('fast-auth-init-config');
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return !!config.sessionExpiryAlertEnabled;
-    } catch {}
-  }
-  return false;
 }
 
 let alertTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -278,7 +251,6 @@ function logAccessTokenExpiry() {
   if (expiryLogInterval) clearInterval(expiryLogInterval);
   const token = getAccessToken();
   if (!token) return;
-  let alertShown = false;
   expiryLogInterval = setInterval(() => {
     const currentToken = getAccessToken();
     if (currentToken !== token) {
@@ -312,8 +284,8 @@ function logAccessTokenExpiry() {
       //   alertBeforeSec,
       //   msToAlert
       // });
-      if (!alertShown && remain <= alertBeforeSec) {
-        alertShown = true;
+      if (!alertShownForThisSession && remain <= alertBeforeSec) {
+        alertShownForThisSession = true;
         showSessionExpiryAlert();
       }
     }
@@ -368,8 +340,8 @@ function setupAutoRefresh() {
 }
 
 function showSessionExpiryAlert() {
-  if (alertShown) return;
-  alertShown = true;
+  if (alertShownForThisSession) return;
+  alertShownForThisSession = true;
   console.log('[fast-auth] showSessionExpiryAlert 호출');
   if (expiryLogInterval) {
     clearInterval(expiryLogInterval);
@@ -378,11 +350,6 @@ function showSessionExpiryAlert() {
   if (window.confirm('로그인 세션이 만료됩니다. 연장하시겠습니까?')) {
     refreshTokenIfNeeded();
   }
-}
-
-// accessToken이 갱신되거나 로그아웃 시 alertShown을 false로 초기화
-function resetAlertShown() {
-  alertShown = false;
 }
 
 // 앱이 시작될 때 accessToken이 있으면 만료 전까지 로그만 출력 (초기화 여부와 무관)

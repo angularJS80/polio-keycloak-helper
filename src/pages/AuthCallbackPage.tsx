@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FastAuthProvider, fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { setAccessToken, setRefreshToken } from 'fast-auth-with-keycloak/token';
-import { loadInitConfig, getProfileConfig, getRedirectConfig } from '../utils/authConfig';
+import { getInitConfig, getProfileConfig, getRedirectConfig } from 'fast-auth-with-keycloak/initConfig';
+import { setItem } from 'fast-auth-with-keycloak/storage';
 import { Box, CircularProgress, Typography, Alert } from '@mui/material';
 import Layout from '../components/Layout';
 
@@ -30,7 +31,7 @@ export default function AuthCallbackPage() {
 
       isApiCallMade.current = true;
 
-      const initConfig = loadInitConfig();
+      const initConfig = getInitConfig();
       const codeLoginEndpoint = initConfig.codeLoginEndpoint;
       const baseUrl = initConfig.baseUrl;
 
@@ -62,7 +63,7 @@ export default function AuthCallbackPage() {
           if (profileAfterLogin) {
             try {
               const user = await fastAuthApiRequest(profileEndpoint);
-              sessionStorage.setItem('fast-auth-username', user.username);
+              setItem('session', 'fast-auth-username', user.username);
             } catch (profileErr) {
               console.error('프로필 조회 실패:', profileErr);
             }

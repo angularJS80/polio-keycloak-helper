@@ -4,21 +4,7 @@ import { Box, TextField, Button, Typography, Alert } from '@mui/material';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getAccessToken } from 'fast-auth-with-keycloak/token';
-
-const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
-
-function getPasswordChangeEndpoint() {
-  const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (saved) {
-    try {
-      const config = JSON.parse(saved);
-      return config.passwordChangeEndpoint || '';
-    } catch {
-      return '';
-    }
-  }
-  return '';
-}
+import { getPasswordChangeEndpoint } from 'fast-auth-with-keycloak/initConfig';
 
 export default function PasswordChangePage() {
   const [newPassword, setNewPassword] = useState('');

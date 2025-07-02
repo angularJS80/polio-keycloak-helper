@@ -1,76 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider, fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getAccessToken } from 'fast-auth-with-keycloak/token';
-// import { setupAutoRefresh } from 'fast-auth-with-keycloak'; // 이 줄을 제거하거나 주석 처리
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import LockIcon from '@mui/icons-material/Lock';
 import Alert from '@mui/material/Alert';
 import Layout from '../components/Layout';
-import { ensureInit, getProfileConfig, getRedirectConfig, getJoinEndpoint, loadInitConfig } from '../utils/authConfig'; // authConfig 함수들 임포트, loadInitConfig 추가
+import { ensureInit, getProfileConfig, getRedirectConfig, getJoinEndpoint } from '../utils/authConfig'; 
+import { getInitConfig } from 'fast-auth-with-keycloak/initConfig';
 import PageHeader from '../components/PageHeader'; // PageHeader 컴포넌트 임포트
-
-// const LOCAL_STORAGE_KEY = 'fast-auth-init-config'; // 제거
-
-// function ensureInit() { // 제거
-//   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-//   if (saved) {
-//     try {
-//       FastAuthProvider.init(JSON.parse(saved));
-//     } catch {}
-//   }
-// }
-
-// function getProfileConfig() { // 제거
-//   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-//   if (saved) {
-//     try {
-//       const config = JSON.parse(saved);
-//       return {
-//         profileAfterLogin: !!config.profileAfterLogin,
-//         profileEndpoint: config.profileEndpoint || '/me',
-//       };
-//     } catch {}
-//   }
-//   return { profileAfterLogin: false, profileEndpoint: '/me' };
-// }
-
-// function getRedirectConfig() { // 제거
-//   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-//   if (saved) {
-//     try {
-//       const config = JSON.parse(saved);
-//       return {
-//         redirectAfterLogin: !!config.redirectAfterLogin,
-//         redirectPath: config.redirectPath || '/welcome',
-//       };
-//     } catch {}
-//   }
-//   return { redirectAfterLogin: false, redirectPath: '/welcome' };
-// }
-
-// function getJoinEndpoint() { // 제거
-//   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-//   if (saved) {
-//     try {
-//       const config = JSON.parse(saved);
-//       return config.joinEndpoint || '';
-//     } catch {
-//       return '';
-//     }
-//   }
-//   return '';
-// }
 
 export default function LoginPage() {
   const [loginState, setLoginState] = useState({ username: '', password: '', loading: false, error: '' });
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
-  const initConfig = loadInitConfig(); // initConfig 로드
+  const initConfig = getInitConfig();
 
   useEffect(() => {
     ensureInit();

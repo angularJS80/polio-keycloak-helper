@@ -1,46 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
-// import { DEFAULT_AUTH_CONFIG } from '../config'; // 제거
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Layout from '../components/Layout';
-import { LOCAL_STORAGE_KEY, loadInitConfig } from '../utils/authConfig'; // authConfig 함수들 임포트
-import PageHeader from '../components/PageHeader'; // PageHeader 컴포넌트 임포트
+import { getInitConfig } from 'fast-auth-with-keycloak/initConfig';
+import { setItem } from 'fast-auth-with-keycloak/storage';
+import PageHeader from '../components/PageHeader';
 
-// const LOCAL_STORAGE_KEY = 'fast-auth-init-config'; // 제거
-
-// function loadInitConfig() { // 제거
-//   const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-//   if (saved) {
-//     try {
-//       return JSON.parse(saved);
-//     } catch {
-//       return {
-//         ...DEFAULT_AUTH_CONFIG,
-//         profileAfterLogin: false,
-//         profileEndpoint: '/me',
-//         joinEndpoint: '/join',
-//         passwordChangeEndpoint: '/password-change',
-//       };
-//     }
-//   }
-//   return {
-//     ...DEFAULT_AUTH_CONFIG,
-//     profileAfterLogin: false,
-//     profileEndpoint: '/me',
-//     joinEndpoint: '/join',
-//     passwordChangeEndpoint: '/password-change',
-//   };
-// }
 
 export default function InitPage() {
-  const [initConfig, setInitConfig] = useState(loadInitConfig());
+  const [initConfig, setInitConfig] = useState(getInitConfig());
   const navigate = useNavigate();
   return (
     <Layout>
@@ -208,7 +181,7 @@ export default function InitPage() {
         size="large"
         sx={{ mt: 2, fontWeight: 700 }}
         onClick={() => {
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initConfig));
+          setItem('local', 'fast-auth-init-config', JSON.stringify(initConfig));
           FastAuthProvider.init(initConfig);
           navigate('/login');
         }}

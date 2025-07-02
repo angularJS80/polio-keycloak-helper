@@ -13,8 +13,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { getAccessToken, getTokenExpiration } from 'fast-auth-with-keycloak/token';
-
-const LOCAL_STORAGE_KEY = 'fast-auth-init-config';
+import { getInitConfig } from 'fast-auth-with-keycloak/initConfig';
 
 // 초기화 설정 없이 접근 가능한 경로 목록
 const PUBLIC_PATHS = [
@@ -93,7 +92,6 @@ const theme = createTheme({
 });
 
 function App() {
-  // const [username, setUsername] = useState<string | null>(sessionStorage.getItem('fast-auth-username')); // 사용되지 않으므로 제거
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -104,35 +102,23 @@ function App() {
     const shouldInitializeAuthProvider = !PUBLIC_PATHS.includes(currentPath) || currentPath === '/';
 
     if (shouldInitializeAuthProvider) {
-      const initConfig = localStorage.getItem(LOCAL_STORAGE_KEY);
+      const parsedConfig = getInitConfig();
 
-      if (initConfig) {
-        try {
-          const parsedConfig = JSON.parse(initConfig);
-          FastAuthProvider.init({
-            ...parsedConfig,
-            onTokenExpiredNavigate: navigate,
-          });
-          
-          // 루트 경로일 경우에만 토큰 확인 후 리다이렉트
-          if (currentPath === '/') {
-            const token = getAccessToken();
-            const exp = token ? getTokenExpiration(token) : null;
+      FastAuthProvider.init({
+        ...parsedConfig,
+        onTokenExpiredNavigate: navigate,
+      });
+      
+      // 루트 경로일 경우에만 토큰 확인 후 리다이렉트
+      if (currentPath === '/') {
+        const token = getAccessToken();
+        const exp = token ? getTokenExpiration(token) : null;
 
-            if (!token || !exp || Date.now() > exp) {
-              navigate('/login', { replace: true });
-            } else {
-              navigate('/welcome', { replace: true });
-            }
-          }
-        } catch (e) {
-          console.error("Failed to initialize FastAuthProvider from localStorage:", e);
-          // 초기화 실패 시 init 페이지로 리다이렉트
-          navigate('/init', { replace: true });
+        if (!token || !exp || Date.now() > exp) {
+          navigate('/login', { replace: true });
+        } else {
+          navigate('/welcome', { replace: true });
         }
-      } else {
-        // 설정이 없으면 init 페이지로 리다이렉트 (공개 경로가 아니거나 루트 경로인 경우)
-        navigate('/init', { replace: true });
       }
     }
   }, [location.pathname, navigate]);
