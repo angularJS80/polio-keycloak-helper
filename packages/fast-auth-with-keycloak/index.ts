@@ -1,8 +1,7 @@
 // fast-auth-with-keycloak 패키지 진입점
 
 import { setAccessToken, removeAccessToken, getAccessToken, getTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken } from './token';
-import { getItem, setItem, removeItem } from './storage';
-import { getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled } from './initConfig';
+import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, } from './config';
 
 export type FastAuthConfig = {
   baseUrl: string;
@@ -31,23 +30,8 @@ export class FastAuthProvider {
   }
 
   static getConfig(): FastAuthConfig {
-    if (!fastAuthConfig) {
-      // fastAuthConfig가 초기화되지 않은 경우 localStorage에서 로드 시도
-      const savedConfig = getItem('local', 'fast-auth-init-config');
-      if (savedConfig) {
-        try {
-          FastAuthProvider.init(JSON.parse(savedConfig));
-        } catch (e) {
-          console.error("[FastAuth] Failed to re-initialize FastAuthProvider from localStorage in getConfig:", e);
-          // 파싱 실패 시에도 여전히 초기화되지 않은 상태
-        }
-      }
-    }
     
-    if (!fastAuthConfig) {
-      throw new Error('FastAuthProvider가 초기화되지 않았습니다.');
-    }
-    return fastAuthConfig;
+    return getConfig();
   }
 
   static async login({ username, password }: { username: string; password: string }) {
@@ -206,7 +190,7 @@ async function refreshTokenIfNeeded() {
   const now = Date.now();
   // 만료 1분 전 자동 갱신
   if (exp - now < 60 * 1000) {
-    const refreshToken = getItem('local', 'fast-auth-refresh-token');
+    const refreshToken = getRefreshToken();
     if (!refreshToken) {
       console.log('[FastAuth] No refresh token found, handling token expired.');
       return FastAuthProvider.handleTokenExpired();
@@ -271,19 +255,7 @@ function logAccessTokenExpiry() {
     const msToAlert = exp - now - alertBeforeSec * 1000;
     const config = FastAuthProvider.getConfig();
     if (config.autoRefresh) {
-      // console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`, {
-      //   exp,
-      //   now,
-      //   alertBeforeSec,
-      //   msToAlert
-      // });
     } else {
-      // console.log(`[fast-auth] accessToken 만료까지 남은 시간: ${remain}초`, {
-      //   exp,
-      //   now,
-      //   alertBeforeSec,
-      //   msToAlert
-      // });
       if (!alertShownForThisSession && remain <= alertBeforeSec) {
         alertShownForThisSession = true;
         showSessionExpiryAlert();
@@ -315,16 +287,7 @@ function setupAutoRefresh() {
   const alertEnabled = getSessionExpiryAlertEnabled();
   const msToRefresh = config.autoRefresh ? exp - now - refreshBeforeSec * 1000 : null;
   const msToAlert = (!config.autoRefresh && alertEnabled) ? exp - now - alertBeforeSec * 1000 : null;
-  // console.log('[fast-auth] setupAutoRefresh', {
-  //   autoRefresh: config.autoRefresh,
-  //   alertEnabled,
-  //   exp,
-  //   now,
-  //   alertBeforeSec,
-  //   refreshBeforeSec,
-  //   msToAlert,
-  //   msToRefresh
-  // });
+  
   if (msToAlert !== null && msToAlert > 1000) {
     console.log('[fast-auth] 알림 타이머 설정:', msToAlert, 'ms 후');
     alertTimeout = setTimeout(showSessionExpiryAlert, msToAlert);

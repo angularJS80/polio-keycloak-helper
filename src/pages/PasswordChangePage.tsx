@@ -4,7 +4,7 @@ import { Box, TextField, Button, Typography, Alert } from '@mui/material';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getAccessToken } from 'fast-auth-with-keycloak/token';
-import { getPasswordChangeEndpoint } from 'fast-auth-with-keycloak/initConfig';
+import { getPasswordChangeEndpoint } from 'fast-auth-with-keycloak/config';
 
 export default function PasswordChangePage() {
   const [newPassword, setNewPassword] = useState('');

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Box, TextField, Button, Typography, Alert } from '@mui/material';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import { getInitConfig, getPasswordResetEndpoint } from 'fast-auth-with-keycloak/initConfig';
+import { getConfig, getPasswordResetEndpoint } from 'fast-auth-with-keycloak/config';
 
 export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState('');
@@ -38,7 +38,7 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    const initConfig = getInitConfig();
+    const initConfig = getConfig();
     const passwordResetEndpoint = getPasswordResetEndpoint();
     if (!passwordResetEndpoint) {
       setMessage({ type: 'error', text: '비밀번호 초기화 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.' });

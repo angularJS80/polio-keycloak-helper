@@ -7,13 +7,13 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Layout from '../components/Layout';
-import { getInitConfig } from 'fast-auth-with-keycloak/initConfig';
+import { getConfig } from 'fast-auth-with-keycloak/config';
 import { setItem } from 'fast-auth-with-keycloak/storage';
 import PageHeader from '../components/PageHeader';
 
 
 export default function InitPage() {
-  const [initConfig, setInitConfig] = useState(getInitConfig());
+  const [initConfig, setInitConfig] = useState(getConfig());
   const navigate = useNavigate();
   return (
     <Layout>

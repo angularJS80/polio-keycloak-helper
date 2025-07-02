@@ -8,15 +8,14 @@ import Typography from '@mui/material/Typography';
 import LockIcon from '@mui/icons-material/Lock';
 import Alert from '@mui/material/Alert';
 import Layout from '../components/Layout';
-import { ensureInit, getProfileConfig, getRedirectConfig, getJoinEndpoint } from '../utils/authConfig'; 
-import { getInitConfig } from 'fast-auth-with-keycloak/initConfig';
+import { getConfig, getProfileConfig, getRedirectConfig, getJoinEndpoint, ensureInit } from 'fast-auth-with-keycloak/config';
 import PageHeader from '../components/PageHeader'; // PageHeader 컴포넌트 임포트
 
 export default function LoginPage() {
   const [loginState, setLoginState] = useState({ username: '', password: '', loading: false, error: '' });
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-  const initConfig = getInitConfig();
+  const initConfig = getConfig();
 
   useEffect(() => {
     ensureInit();

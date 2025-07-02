@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Typography, Alert } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
-import { getJoinEndpoint } from 'fast-auth-with-keycloak/initConfig';
+import { getJoinEndpoint } from 'fast-auth-with-keycloak/config';
 
 export default function AccountJoinPage() {
   const [username, setUsername] = useState('');

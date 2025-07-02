@@ -1,6 +1,6 @@
 import { getItem } from './storage';
-
-interface InitConfig {
+import { FastAuthProvider } from 'fast-auth-with-keycloak';
+interface Config {
   baseUrl: string;
   loginEndpoint: string;
   refreshEndpoint: string;
@@ -22,9 +22,9 @@ interface InitConfig {
   redirectPath?: string;
 }
 
-let _cachedConfig: InitConfig | null = null;
+let _cachedConfig: Config | null = null;
 
-function _loadInitConfigInternal(): InitConfig {
+function _initConfig(): Config {
   const saved = getItem('local', 'fast-auth-init-config');
   if (saved) {
     try {
@@ -48,74 +48,80 @@ export const DEFAULT_INIT_AUTH_CONFIG = {
   profileAfterLogin: false,
   profileEndpoint: '/me',
   joinEndpoint: '/auth/join',
-  passwordChangeEndpoint: '/auth/password-change',
-  passwordFindEndpoint: '/auth/password-find',
+  passwordChangeEndpoint: '/auth/change-password',
+  passwordFindEndpoint: '/auth/find-password',
   passwordResetEndpoint: '/auth/reset-password',
-  socialLoginEndpoint: '/auth/social-login',
+  socialLoginEndpoint: '/auth/social-login?idp=github&scope=openid email profile&redirectUrl=http://localhost:3000/auth/callback',
   codeLoginEndpoint: '/auth/login-by-code',
+  redirectAfterLogin: true,
+  redirectPath: '/welcome'
+
 };
 
-export function getInitConfig(): InitConfig {
+export function getConfig(): Config {
   if (_cachedConfig) {
     return _cachedConfig;
   }
 
   // 캐시가 없는 경우에만 내부 로딩 함수 호출
-  _cachedConfig = _loadInitConfigInternal();
+  _cachedConfig = _initConfig();
   return _cachedConfig;
 }
 
 export function getRefreshBeforeExpirySec() {
-  const config = getInitConfig();
-  return Number(config.refreshBeforeExpirySec) || 1;
+  return Number(getConfig().refreshBeforeExpirySec) || 1;
 }
 
 export function getSessionExpiryAlertSec() {
-  const config = getInitConfig();
-  return Number(config.sessionExpiryAlertSec) || 30;
+  
+  return Number(getConfig().sessionExpiryAlertSec) || 30;
 }
 
 export function getSessionExpiryAlertEnabled() {
-  const config = getInitConfig();
-  return !!config.sessionExpiryAlertEnabled;
+  
+  return !!getConfig().sessionExpiryAlertEnabled;
 }
 
 export function getJoinEndpoint() {
-  const config = getInitConfig();
-  return config.joinEndpoint || DEFAULT_INIT_AUTH_CONFIG.joinEndpoint || '/join';
+  
+  return getConfig().joinEndpoint || DEFAULT_INIT_AUTH_CONFIG.joinEndpoint || '/join';
 }
 
 export function getPasswordChangeEndpoint() {
-  const config = getInitConfig();
-  return config.passwordChangeEndpoint || DEFAULT_INIT_AUTH_CONFIG.passwordChangeEndpoint || '';
+  
+  return getConfig().passwordChangeEndpoint || DEFAULT_INIT_AUTH_CONFIG.passwordChangeEndpoint || '';
 }
 
 export function getPasswordFindEndpoint() {
-  const config = getInitConfig();
-  return config.passwordFindEndpoint || DEFAULT_INIT_AUTH_CONFIG.passwordFindEndpoint || '';
+  
+  return getConfig().passwordFindEndpoint || DEFAULT_INIT_AUTH_CONFIG.passwordFindEndpoint || '';
 }
 
 export function getPasswordResetEndpoint() {
-  const config = getInitConfig();
-  return config.passwordResetEndpoint || DEFAULT_INIT_AUTH_CONFIG.passwordResetEndpoint || '';
+  
+  return getConfig().passwordResetEndpoint || DEFAULT_INIT_AUTH_CONFIG.passwordResetEndpoint || '';
 }
 
 export function getProfileConfig() {
-  const config = getInitConfig();
+  
   return {
-    profileAfterLogin: !!config.profileAfterLogin,
-    profileEndpoint: config.profileEndpoint || DEFAULT_INIT_AUTH_CONFIG.profileEndpoint || '/me',
+    profileAfterLogin: !!getConfig().profileAfterLogin,
+    profileEndpoint: getConfig().profileEndpoint || DEFAULT_INIT_AUTH_CONFIG.profileEndpoint || '/me',
   };
 }
 
 export function getRedirectConfig() {
-  const config = getInitConfig();
   return {
-    redirectAfterLogin: !!config.redirectAfterLogin,
-    redirectPath: config.redirectPath || DEFAULT_INIT_AUTH_CONFIG.onTokenExpiredRedirect || '/welcome',
+    redirectAfterLogin: !!getConfig().redirectAfterLogin,
+    redirectPath: getConfig().redirectPath || DEFAULT_INIT_AUTH_CONFIG.onTokenExpiredRedirect || '/welcome',
   };
 }
 
-export function getLoadedInitConfig(): InitConfig | null {
+export function getLoadedInitConfig(): Config | null {
   return _cachedConfig;
+} 
+
+
+export function ensureInit() {
+  FastAuthProvider.init(getConfig());
 } 

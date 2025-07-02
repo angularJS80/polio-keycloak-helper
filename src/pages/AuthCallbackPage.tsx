@@ -2,8 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FastAuthProvider, fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { setAccessToken, setRefreshToken } from 'fast-auth-with-keycloak/token';
-import { getInitConfig, getProfileConfig, getRedirectConfig } from 'fast-auth-with-keycloak/initConfig';
+import { getConfig, getProfileConfig, getRedirectConfig, ensureInit} from 'fast-auth-with-keycloak/config';
 import { setItem } from 'fast-auth-with-keycloak/storage';
+
 import { Box, CircularProgress, Typography, Alert } from '@mui/material';
 import Layout from '../components/Layout';
 
@@ -15,6 +16,7 @@ export default function AuthCallbackPage() {
   const isApiCallMade = useRef(false);
 
   useEffect(() => {
+    ensureInit();
     if (isApiCallMade.current) {
       return;
     }
@@ -22,7 +24,6 @@ export default function AuthCallbackPage() {
     const processAuthCallback = async () => {
       const queryParams = new URLSearchParams(location.search);
       const code = queryParams.get('code');
-
       if (!code) {
         setError('인증 코드를 찾을 수 없습니다.');
         setMessage('로그인 실패');
@@ -31,10 +32,10 @@ export default function AuthCallbackPage() {
 
       isApiCallMade.current = true;
 
-      const initConfig = getInitConfig();
+      const initConfig = getConfig();
+
       const codeLoginEndpoint = initConfig.codeLoginEndpoint;
       const baseUrl = initConfig.baseUrl;
-
       if (!codeLoginEndpoint || !baseUrl) {
         setError('초기화 설정에 코드 로그인 엔드포인트 또는 Base URL이 설정되지 않았습니다. 관리자에게 문의하세요.');
         setMessage('로그인 실패');
@@ -53,12 +54,13 @@ export default function AuthCallbackPage() {
           }
         );
 
+
         if (response.ok) {
           const data = await response.json();
           setAccessToken(data.accessToken);
           setRefreshToken(data.refreshToken);
-          FastAuthProvider.resumeSession();
 
+          FastAuthProvider.resumeSession();
           const { profileAfterLogin, profileEndpoint } = getProfileConfig();
           if (profileAfterLogin) {
             try {

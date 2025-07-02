@@ -13,7 +13,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { getAccessToken, getTokenExpiration } from 'fast-auth-with-keycloak/token';
-import { getInitConfig } from 'fast-auth-with-keycloak/initConfig';
+import { getConfig } from 'fast-auth-with-keycloak/config';
 
 // 초기화 설정 없이 접근 가능한 경로 목록
 const PUBLIC_PATHS = [
@@ -102,7 +102,7 @@ function App() {
     const shouldInitializeAuthProvider = !PUBLIC_PATHS.includes(currentPath) || currentPath === '/';
 
     if (shouldInitializeAuthProvider) {
-      const parsedConfig = getInitConfig();
+      const parsedConfig = getConfig();
 
       FastAuthProvider.init({
         ...parsedConfig,

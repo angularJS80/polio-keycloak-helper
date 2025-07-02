@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Typography, Alert } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
-import { getPasswordFindEndpoint } from 'fast-auth-with-keycloak/initConfig';
+import { getPasswordFindEndpoint } from 'fast-auth-with-keycloak/config';
 
 export default function PasswordFindPage() {
   const [email, setEmail] = useState('');
@@ -29,11 +29,13 @@ export default function PasswordFindPage() {
         body: {
           email: email,
         },
+        withToken: false,
       });
 
       setMessage({ type: 'success', text: '비밀번호 재설정 이메일이 발송되었습니다. 이메일을 확인해주세요.' });
       setEmail('');
     } catch (err: any) {
+      console.error(err);
       const errorMessage = err instanceof Error ? err.message : String(err);
       setMessage({ type: 'error', text: `비밀번호 찾기 실패: ${errorMessage}` });
     } finally {
