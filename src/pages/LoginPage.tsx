@@ -3,11 +3,6 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import LockIcon from '@mui/icons-material/Lock';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import WarningIcon from '@mui/icons-material/Warning';
 import Layout from '../components/Layout';
 import PageHeader from '../components/PageHeader';
 import LoginIcon from '@mui/icons-material/Login';
@@ -16,19 +11,21 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import PublicIcon from '@mui/icons-material/Public';
 import Stack from '@mui/material/Stack';
 import { useLoginPage } from '../hooks/useLoginPage';
+import { useNavigate } from 'react-router-dom';
+import { useMessage } from '../hooks/useMessage';
+import CommonMessageDialog from '../components/CommonMessageDialog';
+
 
 export default function LoginPage() {
   const {
     loginState,
     setLoginState,
-    alertMessage,
-    handleCloseAlert,
     handleLogin,
-    handlePasswordFind,
-    handleJoin,
     handleSocialLogin,
     initConfig,
   } = useLoginPage();
+  const { message, showSuccess, showError, clearMessage } = useMessage();
+  const navigate = useNavigate();
 
   return (
     <Layout>
@@ -37,29 +34,9 @@ export default function LoginPage() {
         title="인증이 뭔지 보여줄게" 
         iconColor='#b04a5a'
         showSettingsIcon={true}
-        onSettingsClick={() => handlePasswordFind()}
+        onSettingsClick={()=>navigate('/config')}
       />
-      <Dialog
-        open={!!alertMessage}
-        onClose={handleCloseAlert}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <WarningIcon color="warning" />
-            <Typography variant="h6">알림</Typography>
-          </Stack>
-        </DialogTitle>
-        <DialogContent>
-          <Typography id="alert-dialog-description">
-            {alertMessage}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseAlert} autoFocus>확인</Button>
-        </DialogActions>
-      </Dialog>
+      <CommonMessageDialog message={message} onClose={clearMessage} />
       <TextField
         fullWidth
         label="아이디"
@@ -95,7 +72,7 @@ export default function LoginPage() {
         color="secondary"
         size="large"
         sx={{ mt: 1, fontWeight: 700 }}
-        onClick={handlePasswordFind}
+        onClick={()=>navigate('/find-password')}
         startIcon={<HelpOutlineIcon />}
       >
         비밀번호 찾기
@@ -106,7 +83,7 @@ export default function LoginPage() {
           color="secondary"
           size="large"
           sx={{ fontWeight: 700, flexGrow: 1 }}
-          onClick={handleJoin}
+          onClick={()=>navigate('/regist')}
           startIcon={<PersonAddIcon />}
         >
           계정 등록

@@ -1,88 +1,21 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
 import { Box, TextField, Button, Typography } from '@mui/material';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import { getConfig, getPasswordResetEndpoint, hasPasswordResetEndpoint } from 'fast-auth-with-keycloak/config';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import WarningIcon from '@mui/icons-material/Warning';
-import Stack from '@mui/material/Stack';
+import { useMessage } from '../hooks/useMessage';
+import CommonMessageDialog from '../components/CommonMessageDialog';
+import { useResetPasswordPage } from '../hooks/useResetPasswordPage';
 
 export default function ResetPasswordPage() {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const handleCloseMessage = () => {
-    setMessage(null);
-  };
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setMessage(null);
-    setLoading(true);
-
-    const queryParams = new URLSearchParams(location.search);
-    const urlAccessToken = queryParams.get('access_token');
-
-    if (!urlAccessToken) {
-      setMessage({ type: 'error', text: '유효한 접근 토큰이 없습니다.' });
-      setLoading(false);
-      return;
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      setMessage({ type: 'error', text: '새 비밀번호가 일치하지 않습니다.' });
-      setLoading(false);
-      return;
-    }
-
-    if (newPassword.length < 6) { 
-      setMessage({ type: 'error', text: '새 비밀번호는 최소 6자 이상이어야 합니다.' });
-      setLoading(false);
-      return;
-    }
-
-    const initConfig = getConfig();
-    if (!hasPasswordResetEndpoint()) {
-      setMessage({ type: 'error', text: '비밀번호 초기화 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.' });
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${initConfig.baseUrl}${getPasswordResetEndpoint()}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${urlAccessToken}`,
-          },
-          body: JSON.stringify({ newPassword: newPassword }),
-        }
-      );
-
-      if (response.ok) {
-        setMessage({ type: 'success', text: '비밀번호가 성공적으로 변경되었습니다!' });
-        setNewPassword('');
-        setConfirmNewPassword('');
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: `비밀번호 초기화 실패: ${errorData.message || '알 수 없는 오류'}` });
-      }
-    } catch (err: any) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setMessage({ type: 'error', text: `비밀번호 초기화 실패: ${errorMessage}` });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { message, showSuccess, showError, clearMessage } = useMessage();
+  const {
+    newPassword,
+    setNewPassword,
+    confirmNewPassword,
+    setConfirmNewPassword,
+    handleSubmit,
+    loading,
+    handleGoToLogin,
+  } = useResetPasswordPage(showSuccess, showError);
 
   return (
     <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
@@ -90,29 +23,7 @@ export default function ResetPasswordPage() {
         <VpnKeyIcon sx={{ mr: 1, color: '#009e6d', fontSize: 32 }} />
         <Typography variant="h5" sx={{ fontWeight: 700 }}>비밀번호 재설정</Typography>
       </Box>
-      {message && (
-        <Dialog
-          open={!!message}
-          onClose={handleCloseMessage}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogTitle id="alert-dialog-title">
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <WarningIcon color={message.type === "success" ? "success" : "warning"} />
-              <Typography variant="h6">알림</Typography>
-            </Stack>
-          </DialogTitle>
-          <DialogContent>
-            <Typography id="alert-dialog-description">
-              {message.text}
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseMessage} autoFocus>확인</Button>
-          </DialogActions>
-        </Dialog>
-      )}
+      <CommonMessageDialog message={message} onClose={clearMessage} />
       <form onSubmit={handleSubmit}>
         <TextField
           fullWidth
@@ -151,7 +62,7 @@ export default function ResetPasswordPage() {
           color="info"
           size="large"
           sx={{ mt: 1, fontWeight: 700 }}
-          onClick={() => navigate('/login')}
+          onClick={handleGoToLogin}
           disabled={loading}
         >
           로그인 페이지로 돌아가기

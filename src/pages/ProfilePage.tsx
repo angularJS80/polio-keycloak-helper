@@ -14,14 +14,15 @@ import PageHeader from '../components/PageHeader';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import Stack from '@mui/material/Stack';
 import { useProfilePage } from '../hooks/useProfilePage';
+import { useNavigate} from 'react-router-dom';
+
 
 const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   const {
-    profile,
-    handleGoBack,
-    handlePasswordChange,
-    handleSettings,
+    profile
   } = useProfilePage();
+
 
   return (
     <Layout>
@@ -30,7 +31,7 @@ const ProfilePage: React.FC = () => {
         title="프로필" 
         iconColor='#424242'
         showSettingsIcon={true}
-        onSettingsClick={handleSettings}
+        onSettingsClick={()=>navigate('/config')}
       />
       <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
         {profile && (
@@ -54,7 +55,7 @@ const ProfilePage: React.FC = () => {
         <Button
           variant="contained"
           color="primary"
-          onClick={handleGoBack}
+          onClick={()=>navigate('/welcome')}
           startIcon={<ArrowBackIcon />}
         >
           뒤로가기
@@ -62,7 +63,7 @@ const ProfilePage: React.FC = () => {
         <Button
           variant="contained"
           color="secondary"
-          onClick={handlePasswordChange}
+          onClick={()=>navigate('/password-change')}
           startIcon={<VpnKeyIcon />}
         >
           비밀번호 변경

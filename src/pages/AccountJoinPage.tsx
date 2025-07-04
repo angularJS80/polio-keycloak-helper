@@ -1,17 +1,16 @@
 import React from 'react';
-import { Box, TextField, Button, Typography } from '@mui/material';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import WarningIcon from '@mui/icons-material/Warning';
-import Stack from '@mui/material/Stack';
+import { Box, TextField, Button } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import Layout from '../components/Layout';
 import PageHeader from '../components/PageHeader';
+import { useMessage } from '../hooks/useMessage';
+import CommonMessageDialog from '../components/CommonMessageDialog';
 import { useAccountJoinPage } from '../hooks/useAccountJoinPage';
+import { useNavigate } from 'react-router-dom';
 
 export default function AccountJoinPage() {
+  const navigate = useNavigate();
+  const { message, showSuccess, showError, clearMessage } = useMessage();
   const {
     username,
     setUsername,
@@ -21,39 +20,14 @@ export default function AccountJoinPage() {
     setPassword,
     confirmPassword,
     setConfirmPassword,
-    message,
-    handleCloseMessage,
     handleSubmit,
     loading,
-    handleGoToLogin,
-  } = useAccountJoinPage();
+  } = useAccountJoinPage(showSuccess, showError);
 
   return (
     <Layout>
       <PageHeader icon={PersonAddIcon} title="계정 등록" iconColor='#4CAF50' />
-      {message && (
-        <Dialog
-          open={!!message}
-          onClose={handleCloseMessage}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogTitle id="alert-dialog-title">
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <WarningIcon color={message.type === "success" ? "success" : "warning"} />
-              <Typography variant="h6">알림</Typography>
-            </Stack>
-          </DialogTitle>
-          <DialogContent>
-            <Typography id="alert-dialog-description">
-              {message.text}
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseMessage} autoFocus>확인</Button>
-          </DialogActions>
-        </Dialog>
-      )}
+      <CommonMessageDialog message={message} onClose={clearMessage} />
       <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
         <form onSubmit={handleSubmit}>
           <TextField
@@ -112,7 +86,7 @@ export default function AccountJoinPage() {
             color="info"
             size="large"
             sx={{ mt: 1, fontWeight: 700 }}
-            onClick={handleGoToLogin}
+            onClick={()=>navigate('/join')}
             disabled={loading}
           >
             로그인으로 돌아가기

@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getUserName, getEmail } from 'fast-auth-with-keycloak/token';
 
 export function useProfilePage() {
-  const navigate = useNavigate();
   const [profile, setProfile] = useState<{ name?: string; email?: string } | null>(null);
 
   useEffect(() => {
@@ -20,22 +18,7 @@ export function useProfilePage() {
     fetchProfile();
   }, []);
 
-  const handleGoBack = () => {
-    navigate('/welcome');
-  };
-
-  const handlePasswordChange = () => {
-    navigate('/password-change');
-  };
-
-  const handleSettings = () => {
-    navigate('/config');
-  };
-
   return {
-    profile,
-    handleGoBack,
-    handlePasswordChange,
-    handleSettings,
+    profile
   };
 } 

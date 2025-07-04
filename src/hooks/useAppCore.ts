@@ -68,7 +68,6 @@ export function useAppCore() {
         if (!hasAccessToken()) {
           navigate('/login', { replace: true });
         } else {
-          const token = getAccessToken() as string;
           const exp = getAccessTokenExpiration();
 
           if (!exp || Date.now() > exp) {

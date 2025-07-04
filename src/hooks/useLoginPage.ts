@@ -40,19 +40,6 @@ export function useLoginPage() {
     }
   };
 
-  const handlePasswordFind = () => {
-    navigate('/password-find');
-  };
-
-  const handleJoin = () => {
-    setAlertMessage(null);
-    const joinEndpoint = getJoinEndpoint();
-    if (joinEndpoint) {
-      navigate('/join');
-    } else {
-      setAlertMessage('계정 등록 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.');
-    }
-  };
 
   const handleSocialLogin = () => {
     if (initConfig.socialLoginEndpoint) {
@@ -70,8 +57,6 @@ export function useLoginPage() {
     setAlertMessage,
     handleCloseAlert,
     handleLogin,
-    handlePasswordFind,
-    handleJoin,
     handleSocialLogin,
     initConfig,
   };
