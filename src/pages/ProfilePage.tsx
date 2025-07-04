@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
-import { getAccessToken, decodeToken } from 'fast-auth-with-keycloak/token';
+import { getUserName, getEmail } from 'fast-auth-with-keycloak/token';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -13,6 +13,8 @@ import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import Layout from '../components/Layout';
 import PageHeader from '../components/PageHeader';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import Stack from '@mui/material/Stack';
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,13 +23,11 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const accessToken = await getAccessToken();
-        if (accessToken) {
-          const decoded = decodeToken(accessToken);
-          setProfile({ name: decoded?.name, email: decoded?.email });
-        }
+        const name = getUserName();
+        const email = getEmail();
+        setProfile({ name: name || undefined, email: email || undefined });
       } catch (error) {
-        console.error("Error fetching or decoding token:", error);
+        console.error("Error fetching profile:", error);
         setProfile(null);
       }
     };
@@ -41,7 +41,13 @@ const ProfilePage: React.FC = () => {
 
   return (
     <Layout>
-      <PageHeader icon={PersonIcon} title="프로필" iconColor='#424242' />
+      <PageHeader 
+        icon={PersonIcon} 
+        title="프로필" 
+        iconColor='#424242'
+        showSettingsIcon={true}
+        onSettingsClick={() => navigate('/config')}
+      />
       
       <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
         {profile && (
@@ -62,14 +68,24 @@ const ProfilePage: React.FC = () => {
         )}
       </List>
 
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleGoBack}
-        startIcon={<ArrowBackIcon />}
-      >
-        뒤로가기
-      </Button>
+      <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleGoBack}
+          startIcon={<ArrowBackIcon />}
+        >
+          뒤로가기
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={() => navigate('/password-change')}
+          startIcon={<VpnKeyIcon />}
+        >
+          비밀번호 변경
+        </Button>
+      </Stack>
     </Layout>
   );
 };

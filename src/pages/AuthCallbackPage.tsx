@@ -2,11 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FastAuthProvider, fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { setAccessToken, setRefreshToken } from 'fast-auth-with-keycloak/token';
-import { getConfig, getProfileConfig, getRedirectConfig, ensureInit} from 'fast-auth-with-keycloak/config';
+import { getConfig, getProfileConfig, getRedirectConfig} from 'fast-auth-with-keycloak/config';
 import { setItem } from 'fast-auth-with-keycloak/storage';
 
-import { Box, CircularProgress, Typography, Alert } from '@mui/material';
+import { Box, CircularProgress, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import Layout from '../components/Layout';
+import WarningIcon from '@mui/icons-material/Warning';
+import Stack from '@mui/material/Stack';
 
 export default function AuthCallbackPage() {
   const location = useLocation();
@@ -15,8 +17,12 @@ export default function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
   const isApiCallMade = useRef(false);
 
+  const handleCloseError = () => {
+    setError(null);
+    navigate('/login');
+  };
+
   useEffect(() => {
-    ensureInit();
     if (isApiCallMade.current) {
       return;
     }
@@ -102,10 +108,27 @@ export default function AuthCallbackPage() {
             <Typography variant="h6">{message}</Typography>
           </>
         ) : (
-          <Alert severity="error">
-            <Typography variant="h6">{message}</Typography>
-            <Typography variant="body2">{error}</Typography>
-          </Alert>
+          <Dialog
+            open={!!error}
+            onClose={handleCloseError}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <WarningIcon color="error" />
+                <Typography variant="h6">인증 오류</Typography>
+              </Stack>
+            </DialogTitle>
+            <DialogContent>
+              <Typography id="alert-dialog-description">
+                {error}
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseError} autoFocus>로그인 페이지로 돌아가기</Button>
+            </DialogActions>
+          </Dialog>
         )}
       </Box>
     </Layout>

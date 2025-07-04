@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Box, TextField, Button, Typography, Alert } from '@mui/material';
+import { Box, TextField, Button, Typography } from '@mui/material';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import { getConfig, getPasswordResetEndpoint } from 'fast-auth-with-keycloak/config';
+import { getConfig, getPasswordResetEndpoint, hasPasswordResetEndpoint } from 'fast-auth-with-keycloak/config';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import WarningIcon from '@mui/icons-material/Warning';
+import Stack from '@mui/material/Stack';
 
 export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState('');
@@ -11,6 +17,10 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleCloseMessage = () => {
+    setMessage(null);
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -39,8 +49,7 @@ export default function ResetPasswordPage() {
     }
 
     const initConfig = getConfig();
-    const passwordResetEndpoint = getPasswordResetEndpoint();
-    if (!passwordResetEndpoint) {
+    if (!hasPasswordResetEndpoint()) {
       setMessage({ type: 'error', text: '비밀번호 초기화 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.' });
       setLoading(false);
       return;
@@ -48,7 +57,7 @@ export default function ResetPasswordPage() {
 
     try {
       const response = await fetch(
-        `${initConfig.baseUrl}${passwordResetEndpoint}`,
+        `${initConfig.baseUrl}${getPasswordResetEndpoint()}`,
         {
           method: 'PUT',
           headers: {
@@ -82,9 +91,27 @@ export default function ResetPasswordPage() {
         <Typography variant="h5" sx={{ fontWeight: 700 }}>비밀번호 재설정</Typography>
       </Box>
       {message && (
-        <Alert severity={message.type} sx={{ mb: 2 }}>
-          {message.text}
-        </Alert>
+        <Dialog
+          open={!!message}
+          onClose={handleCloseMessage}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <WarningIcon color={message.type === "success" ? "success" : "warning"} />
+              <Typography variant="h6">알림</Typography>
+            </Stack>
+          </DialogTitle>
+          <DialogContent>
+            <Typography id="alert-dialog-description">
+              {message.text}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseMessage} autoFocus>확인</Button>
+          </DialogActions>
+        </Dialog>
       )}
       <form onSubmit={handleSubmit}>
         <TextField

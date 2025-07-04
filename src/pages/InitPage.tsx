@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
+import { hasAccessToken } from 'fast-auth-with-keycloak/token';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Layout from '../components/Layout';
-import { getConfig } from 'fast-auth-with-keycloak/config';
+import { getConfig, clearConfigCache } from 'fast-auth-with-keycloak/config';
 import { setItem } from 'fast-auth-with-keycloak/storage';
 import PageHeader from '../components/PageHeader';
 
@@ -15,6 +16,16 @@ import PageHeader from '../components/PageHeader';
 export default function InitPage() {
   const [initConfig, setInitConfig] = useState(getConfig());
   const navigate = useNavigate();
+  
+  // 페이지 로드 시마다 최신 설정을 다시 로드
+  useEffect(() => {
+    // 캐시를 무효화하고 최신 설정을 로드
+    clearConfigCache();
+    const latestConfig = getConfig(true); // 강제 새로고침
+    console.log('[InitPage] 최신 설정 로드:', latestConfig);
+    setInitConfig(latestConfig);
+  }, []);
+
   return (
     <Layout>
       <PageHeader icon={SettingsIcon} title="인증 엄청 귀찮지? 한방에!" iconColor='#808080' />
@@ -181,9 +192,46 @@ export default function InitPage() {
         size="large"
         sx={{ mt: 2, fontWeight: 700 }}
         onClick={() => {
-          setItem('local', 'fast-auth-init-config', JSON.stringify(initConfig));
-          FastAuthProvider.init(initConfig);
-          navigate('/login');
+          try {
+            console.log('[InitPage] 설정 저장 시작:', initConfig);
+            
+            // 로컬 스토리지에 저장
+            setItem('local', 'fast-auth-init-config', JSON.stringify(initConfig));
+            console.log('[InitPage] 로컬 스토리지 저장 완료');
+            
+            // 로그인 상태에 따라 적절한 초기화 메서드 사용
+            if (hasAccessToken()) {
+              // 로그인된 상태: 재초기화 (설정 변경 적용)
+              console.log('[InitPage] 로그인된 상태 - 재초기화 실행');
+              FastAuthProvider.reinit(initConfig);
+            } else {
+              // 로그인되지 않은 상태: 초기 초기화
+              console.log('[InitPage] 로그인되지 않은 상태 - 초기 초기화 실행');
+              FastAuthProvider.init(initConfig);
+            }
+            
+            console.log('[InitPage] 설정 저장 완료');
+            
+            // 로그인 상태에 따라 적절한 페이지로 이동
+            if (hasAccessToken()) {
+              // 로그인된 상태: 이전 페이지로 돌아가거나 welcome 페이지로
+              const currentPath = window.location.pathname;
+              if (currentPath === '/config') {
+                // 설정 페이지에서 직접 접근한 경우 welcome으로
+                navigate('/welcome');
+              } else {
+                // 다른 페이지에서 설정으로 온 경우 이전 페이지로
+                navigate(-1);
+              }
+            } else {
+              // 로그인되지 않은 상태: 로그인 페이지로
+              navigate('/login');
+            }
+          } catch (error) {
+            console.error('[InitPage] 설정 저장 중 오류 발생:', error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            alert('설정 저장 중 오류가 발생했습니다: ' + errorMessage);
+          }
         }}
       >
         저장
