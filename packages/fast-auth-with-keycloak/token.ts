@@ -42,6 +42,11 @@ export function getTokenExpiration(token: string): number | null {
   }
 }
 
+export function  isTokenExpired(){
+  const exp = getAccessTokenExpiration();
+  return !exp || Date.now() > exp
+}
+
 export function decodeToken(token: string): any | null {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));

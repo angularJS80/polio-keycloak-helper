@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FastAuthProvider, addDialogStateListener, removeDialogStateListener } from 'fast-auth-with-keycloak';
-import { getAccessToken, getAccessTokenExpiration, hasAccessToken } from 'fast-auth-with-keycloak/token';
+import {  isTokenExpired, hasAccessToken } from 'fast-auth-with-keycloak/token';
 import { getConfig } from 'fast-auth-with-keycloak/config';
 
 // 초기화 설정 없이 접근 가능한 경로 목록
@@ -31,6 +31,10 @@ export function useAppCore() {
     setDialogState(state);
   };
 
+  const isNeedAuthPath = (path: any) =>{
+    return !PUBLIC_PATHS.includes(path) || path === '/';
+  }
+
   // 다이얼로그 상태 변경 감지
   useEffect(() => {
     // 이벤트 리스너 등록
@@ -59,24 +63,21 @@ export function useAppCore() {
     const currentPath = location.pathname;
     console.log("location.pathname: " + currentPath);
 
-    // 공개 경로가 아니거나 루트 경로인 경우에만 인증 체크
-    const shouldCheckAuth = !PUBLIC_PATHS.includes(currentPath) || currentPath === '/';
-
-    if (shouldCheckAuth) {
-      // 루트 경로일 경우에만 토큰 확인 후 리다이렉트
-      if (currentPath === '/') {
-        if (!hasAccessToken()) {
-          navigate('/login', { replace: true });
-        } else {
-          const exp = getAccessTokenExpiration();
-
-          if (!exp || Date.now() > exp) {
+    if (isNeedAuthPath(currentPath)) {
+      
+        if (hasAccessToken()) {
+          
+        
+          if (isTokenExpired()) {
             navigate('/login', { replace: true });
           } else {
             navigate('/welcome', { replace: true });
           }
+
+        } else {
+          navigate('/login', { replace: true });
         }
-      }
+      
     }
   }, [location.pathname, navigate]);
 

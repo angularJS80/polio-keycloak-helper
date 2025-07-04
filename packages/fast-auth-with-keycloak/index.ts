@@ -1,6 +1,6 @@
 // fast-auth-with-keycloak 패키지 진입점
 
-import { setAccessToken, removeAccessToken, getAccessToken, getTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, hasAccessToken, isAccessTokenStaleOrInvalid, getAccessTokenInfo } from './token';
+import { setAccessToken, removeAccessToken, getAccessToken, isAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, hasAccessToken, isAccessTokenStaleOrInvalid, getAccessTokenInfo } from './token';
 import { getAccessTokenExpiration } from './token';
 import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, } from './config';
 
@@ -252,8 +252,8 @@ export async function fastAuthApiRequest(
   if (withToken) {
     if (!hasAccessToken()) throw new Error('토큰이 없습니다.');
     const token = getAccessToken() as string; // hasAccessToken()이 true이므로 string으로 단언
-    const exp = getAccessTokenExpiration();
-    if (!exp || Date.now() > exp) {
+    
+    if (isTokenExpired()) {
       FastAuthProvider.handleTokenExpired();
       throw new Error('토큰이 만료되었습니다.');
     }
