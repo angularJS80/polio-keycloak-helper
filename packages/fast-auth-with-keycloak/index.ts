@@ -12,7 +12,7 @@ export type FastAuthConfig = {
   onTokenExpiredRedirect?: string;
   logoutEndpoint?: string;
   onTokenExpiredNavigate?: (path: string) => void;
-  onSessionExpiryAlert?: (onExtend: () => void, onLogout: () => void) => void;
+  // onSessionExpiryAlert 제거 - 더 이상 필요 없음
 };
 
 let fastAuthConfig: FastAuthConfig | null = null;
@@ -21,6 +21,53 @@ let expiryLogInterval: ReturnType<typeof setInterval> | null = null;
 let enableExpiryLog = true;
 let alertShownForThisSession = false;
 let isInitialized = false; // 초기화 플래그 추가
+
+// 이벤트 시스템으로 다이얼로그 상태 관리
+type DialogState = {
+  show: boolean;
+  onExtend: (() => void) | null;
+  onLogout: (() => void) | null;
+};
+
+type DialogStateListener = (state: DialogState) => void;
+
+let dialogStateListeners: DialogStateListener[] = [];
+let currentDialogState: DialogState = {
+  show: false,
+  onExtend: null,
+  onLogout: null
+};
+
+// 이벤트 리스너 등록/해제
+export function addDialogStateListener(listener: DialogStateListener) {
+  dialogStateListeners.push(listener);
+  // 등록 즉시 현재 상태 전달
+  listener(currentDialogState);
+}
+
+export function removeDialogStateListener(listener: DialogStateListener) {
+  dialogStateListeners = dialogStateListeners.filter(l => l !== listener);
+}
+
+// 상태 변경 시 모든 리스너에게 알림
+function notifyDialogStateChange(state: DialogState) {
+  currentDialogState = state;
+  dialogStateListeners.forEach(listener => listener(state));
+}
+
+// 전역 함수로 다이얼로그 상태 관리
+export function setSessionExpiryDialogState(show: boolean, onExtend?: () => void, onLogout?: () => void) {
+  const newState = {
+    show,
+    onExtend: onExtend || null,
+    onLogout: onLogout || null
+  };
+  notifyDialogStateChange(newState);
+}
+
+export function checkSessionExpiryDialogState() {
+  return currentDialogState;
+}
 
 export class FastAuthProvider {
   static init(config: FastAuthConfig) {
@@ -36,12 +83,7 @@ export class FastAuthProvider {
       FastAuthProvider._onTokenExpiredNavigate = config.onTokenExpiredNavigate;
       console.log('[FastAuth] onTokenExpiredNavigate 콜백 등록됨');
     }
-    if (config.onSessionExpiryAlert) {
-      FastAuthProvider._onSessionExpiryAlert = config.onSessionExpiryAlert;
-      console.log('[FastAuth] onSessionExpiryAlert 콜백 등록됨');
-    } else {
-      console.log('[FastAuth] onSessionExpiryAlert 콜백이 등록되지 않음');
-    }
+    // onSessionExpiryAlert 제거 - 더 이상 필요 없음
     
     isInitialized = true; // 초기화 완료 표시
     setupAutoRefresh();
@@ -168,7 +210,7 @@ export class FastAuthProvider {
   }
 
   private static _onTokenExpiredNavigate: ((path: string) => void) | undefined;
-  static _onSessionExpiryAlert: ((onExtend: () => void, onLogout: () => void) => void) | undefined;
+  // onSessionExpiryAlert 제거 - 더 이상 필요 없음
 
   static handleTokenExpired() {
     const config = FastAuthProvider.getConfig();
@@ -383,7 +425,6 @@ function setupAutoRefresh() {
 
 function showSessionExpiryAlert() {
   console.log('[FastAuth] showSessionExpiryAlert 진입, alertShownForThisSession:', alertShownForThisSession);
-  console.log('[FastAuth] _onSessionExpiryAlert 콜백 존재:', !!FastAuthProvider._onSessionExpiryAlert);
 
   if (alertShownForThisSession) {
     console.log('[FastAuth] 이미 알림을 띄웠으므로 return');
@@ -398,20 +439,9 @@ function showSessionExpiryAlert() {
     expiryLogInterval = null;
   }
   
-  if (FastAuthProvider._onSessionExpiryAlert) {
-    console.log('[FastAuth] 등록된 콜백 실행');
-    FastAuthProvider._onSessionExpiryAlert(refreshTokenIfNeeded, FastAuthProvider.handleTokenExpired);
-    // 콜백이 등록되어 있으면 여기서 종료 (fallback 실행하지 않음)
-    return;
-  } else {
-    console.log('[FastAuth] 등록된 콜백이 없어서 fallback 실행');
-    // fallback for environments where alert cannot be shown or callback not provided
-    if (window.confirm('로그인 세션이 만료됩니다. 연장하시겠습니까?')) {
-      refreshTokenIfNeeded();
-    } else {
-      FastAuthProvider.handleTokenExpired();
-    }
-  }
+  // 전역 상태로 다이얼로그 표시
+  setSessionExpiryDialogState(true, refreshTokenIfNeeded, FastAuthProvider.handleTokenExpired);
+  console.log('[FastAuth] 다이얼로그 상태 설정 완료');
 }
 
 // 앱이 시작될 때 accessToken이 있으면 만료 전까지 로그만 출력 (초기화 여부와 무관)

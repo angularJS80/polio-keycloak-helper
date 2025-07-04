@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useNavigate } from 'react-router-dom';
-import { getUserName, getEmail } from 'fast-auth-with-keycloak/token';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -15,29 +13,15 @@ import Layout from '../components/Layout';
 import PageHeader from '../components/PageHeader';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import Stack from '@mui/material/Stack';
+import { useProfilePage } from '../hooks/useProfilePage';
 
 const ProfilePage: React.FC = () => {
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState<{ name?: string; email?: string } | null>(null);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const name = getUserName();
-        const email = getEmail();
-        setProfile({ name: name || undefined, email: email || undefined });
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-        setProfile(null);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
-  const handleGoBack = () => {
-    navigate('/welcome'); // 또는 이전 페이지로 돌아가는 로직
-  };
+  const {
+    profile,
+    handleGoBack,
+    handlePasswordChange,
+    handleSettings,
+  } = useProfilePage();
 
   return (
     <Layout>
@@ -46,9 +30,8 @@ const ProfilePage: React.FC = () => {
         title="프로필" 
         iconColor='#424242'
         showSettingsIcon={true}
-        onSettingsClick={() => navigate('/config')}
+        onSettingsClick={handleSettings}
       />
-      
       <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
         {profile && (
           <>
@@ -67,7 +50,6 @@ const ProfilePage: React.FC = () => {
           </>
         )}
       </List>
-
       <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
         <Button
           variant="contained"
@@ -80,7 +62,7 @@ const ProfilePage: React.FC = () => {
         <Button
           variant="contained"
           color="secondary"
-          onClick={() => navigate('/password-change')}
+          onClick={handlePasswordChange}
           startIcon={<VpnKeyIcon />}
         >
           비밀번호 변경

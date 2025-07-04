@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import InitPage from './pages/InitPage';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
@@ -11,23 +11,8 @@ import ProfilePage from './pages/ProfilePage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { FastAuthProvider } from 'fast-auth-with-keycloak';
-import { getAccessToken, getTokenExpiration, hasAccessToken } from 'fast-auth-with-keycloak/token';
-import { getAccessTokenExpiration } from 'fast-auth-with-keycloak/token';
-import { getConfig } from 'fast-auth-with-keycloak/config';
-import { refreshTokenIfNeeded } from 'fast-auth-with-keycloak';
 import SessionExpiryDialog from './components/SessionExpiryDialog';
-import { Stack } from '@mui/material';
-
-// 초기화 설정 없이 접근 가능한 경로 목록
-const PUBLIC_PATHS = [
-  '/config',
-  '/login',
-  '/join',
-  '/password-find',
-  '/reset-password',
-  '/auth/callback',
-];
+import { useAppCore } from './hooks/useAppCore';
 
 const theme = createTheme({
   palette: {
@@ -96,86 +81,7 @@ const theme = createTheme({
 });
 
 function App() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const navigateRef = useRef(navigate);
-  
-  // navigate ref 업데이트
-  useEffect(() => {
-    navigateRef.current = navigate;
-  }, [navigate]);
-
-  const [showSessionExpiryDialog, setShowSessionExpiryDialog] = useState(false);
-  const [onExtendSession, setOnExtendSession] = useState<(() => void) | null>(null);
-  const [onLogoutSession, setOnLogoutSession] = useState<(() => void) | null>(null);
-
-  // showSessionExpiryDialog state 변화 추적
-  useEffect(() => {
-    console.log('[App] showSessionExpiryDialog state 변경됨:', showSessionExpiryDialog);
-  }, [showSessionExpiryDialog]);
-
-  // 콜백 함수를 일반 함수로 정의 (의존성 문제 해결)
-  const handleSessionExpiryAlert = (onExtend: () => void, onLogout: () => void) => {
-    console.log('[App] onSessionExpiryAlert 콜백 실행 시작');
-    console.log('[App] 현재 showSessionExpiryDialog 상태:', showSessionExpiryDialog);
-    
-    setShowSessionExpiryDialog(true);
-    console.log('[App] setShowSessionExpiryDialog(true) 호출됨');
-    
-    setOnExtendSession(() => () => {
-      console.log('[App] onExtendSession 실행');
-      onExtend();
-      setShowSessionExpiryDialog(false);
-    });
-    
-    setOnLogoutSession(() => () => {
-      console.log('[App] onLogoutSession 실행');
-      onLogout();
-      setShowSessionExpiryDialog(false);
-    });
-    
-    console.log('[App] onSessionExpiryAlert 콜백 실행 완료');
-  };
-
-  // FastAuthProvider 초기화 - 한 번만 실행
-  useEffect(() => {
-    console.log('[App] FastAuthProvider 초기화 시작');
-    const parsedConfig = getConfig();
-    
-    FastAuthProvider.init({
-      ...parsedConfig,
-      onTokenExpiredNavigate: (path: string) => navigateRef.current(path), // ref 사용
-      onSessionExpiryAlert: handleSessionExpiryAlert,
-    });
-    console.log('[App] FastAuthProvider 초기화 완료');
-  }, []); // 빈 의존성 배열로 한 번만 실행
-
-  // 경로별 처리 - 별도 useEffect로 분리
-  useEffect(() => {
-    const currentPath = location.pathname;
-    console.log("location.pathname: " + currentPath);
-
-    // 공개 경로가 아니거나 루트 경로인 경우에만 인증 체크
-    const shouldCheckAuth = !PUBLIC_PATHS.includes(currentPath) || currentPath === '/';
-
-    if (shouldCheckAuth) {
-      // 루트 경로일 경우에만 토큰 확인 후 리다이렉트
-      if (currentPath === '/') {
-        if (!hasAccessToken()) {
-          navigate('/login', { replace: true });
-        } else {
-          const token = getAccessToken() as string;
-          const exp = getAccessTokenExpiration();
-
-          if (!exp || Date.now() > exp) {
-            navigate('/login', { replace: true });
-          } else {
-            navigate('/welcome', { replace: true });
-          }
-        }
-      }
-    }
-  }, [location.pathname, navigate]);
+  const { dialogState } = useAppCore();
 
   return (
     <ThemeProvider theme={theme}>
@@ -193,11 +99,11 @@ function App() {
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         {/* 필요시 환영 페이지 등 추가 라우트 */}
       </Routes>
-      {onExtendSession && onLogoutSession && (
+      {dialogState.show && (
         <SessionExpiryDialog
-          open={showSessionExpiryDialog}
-          onExtend={onExtendSession}
-          onLogout={onLogoutSession}
+          open={dialogState.show}
+          onExtend={dialogState.onExtend}
+          onLogout={dialogState.onLogout}
         />
       )}
     </ThemeProvider>
