@@ -53,6 +53,18 @@ yarn add fast-auth-with-keycloak
     - `LoginPage.tsx`에 `소셜 로그인` 버튼이 추가되어, 초기화 설정의 `소셜 로그인 링크`로 직접 이동할 수 있도록 구현되었습니다. 절대 경로인 경우 `baseUrl`이 중복되지 않도록 처리되었습니다.
     - `src/config.ts` 및 `src/utils/authConfig.ts`에서 `socialLoginEndpoint`와 `codeLoginEndpoint`의 기본값이 정의되고 로드되도록 업데이트되었습니다.
 
+## 2024년 6월 리팩토링
+
+- 모든 주요 페이지의 상태, 이펙트, 주요 핸들러를 커스텀 훅(`src/hooks/useXXXPage.ts`)으로 분리하여 UI와 로직을 완전히 분리함
+- 각 페이지 컴포넌트는 UI만 담당, 상태/핸들러/이펙트는 커스텀 훅에서 관리
+- 공통 메시지/다이얼로그 관리(`useMessage`, `CommonMessageDialog`)를 도입하여 성공/에러 메시지 처리 일원화
+- 세션 만료 다이얼로그, 메시지 다이얼로그 등도 전역 상태/공통 컴포넌트로 단순화
+- 페이지 이동(navigate)만 각 페이지에서 직접 처리, 나머지 로직은 모두 훅으로 이동
+- AuthCallbackPage, PasswordFindPage 등도 커스텀 훅(`useAuthCallbackPage`, `usePasswordFindPage`)으로 분리
+- 코드 네이밍, 함수명, 상태 변수명 등 실무적이고 명확하게 개선
+- hooks 폴더 구조 및 네이밍 표준화
+- 각종 중복 코드/로직을 공통 훅, 컴포넌트로 통합하여 유지보수성 향상
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
