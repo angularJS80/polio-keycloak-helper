@@ -66,7 +66,7 @@ export const DEFAULT_INIT_AUTH_CONFIG = {
   passwordChangeEndpoint: '/auth/change-password',
   passwordFindEndpoint: '/auth/find-password',
   passwordResetEndpoint: '/auth/reset-password',
-  socialLoginEndpoint: '/auth/social-login?idp=github&scope=openid email profile&redirectUrl=http://localhost:3000/auth/callback',
+  socialLoginEndpoint: '/auth/social-login?idp=github&scope=openid email profile&redirectUrl=http://localhost:3000/login-by-code',
   loginByCodeEndpoint: '/auth/login-by-code',
   redirectAfterLogin: true,
   redirectPath: '/welcome',

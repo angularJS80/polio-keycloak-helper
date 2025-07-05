@@ -32,7 +32,7 @@ export function useResetPasswordPage(showSuccess?: (msg: string) => void, showEr
 
     try {
       // FastAuthProvider.resetPassword 사용 (내부에서 validateUrlToken 수행)
-      const response = await FastAuthProvider.resetPassword(urlAccessToken!, newPassword);
+      await FastAuthProvider.resetPassword(urlAccessToken!, newPassword);
       handleApiSuccess({ 
         showSuccess, 
         resetForm: () => resetFormState([setNewPassword, setConfirmNewPassword]) 

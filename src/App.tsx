@@ -90,13 +90,13 @@ function App() {
         <Route path="/" element={<div>Loading...</div>} />
         <Route path="/config" element={<InitPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/login-by-code" element={<LoginByOauthPage />} />
         <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/join" element={<AccountJoinPage />} />
         <Route path="/password-change" element={<PasswordChangePage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/password-find" element={<PasswordFindPage />} />
+        <Route path="/find-password" element={<PasswordFindPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/auth/callback" element={<LoginByOauthPage />} />
         {/* 필요시 환영 페이지 등 추가 라우트 */}
       </Routes>
       {dialogState.show && (

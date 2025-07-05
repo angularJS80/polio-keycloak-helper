@@ -7,7 +7,7 @@ export const PUBLIC_PATHS = [
   '/config',
   '/login',
   '/join',
-  '/password-find',
+  '/find-password',
   '/reset-password',
   '/auth/callback',
 ];

@@ -35,7 +35,7 @@ export function useLoginPage() {
 
     setLoginState(s => ({ ...s, loading: true, error: '' }));
     try {
-      const response = await FastAuthProvider.login({ username: loginState.username, password: loginState.password });
+      await FastAuthProvider.login({ username: loginState.username, password: loginState.password });
       // handleApiSuccess 재사용
       handleApiSuccess({ 
         setLoading: (loading) => setLoginState(s => ({ ...s, loading }))

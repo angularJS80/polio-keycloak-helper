@@ -83,7 +83,7 @@ export default function LoginPage() {
           color="secondary"
           size="large"
           sx={{ fontWeight: 700, flexGrow: 1 }}
-          onClick={()=>navigate('/regist')}
+          onClick={()=>navigate('/join')}
           startIcon={<PersonAddIcon />}
         >
           계정 등록

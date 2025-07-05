@@ -1,6 +1,5 @@
 import React from 'react';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
 import Confetti from 'react-confetti';
 import ReactCanvasConfetti from 'react-canvas-confetti';
 import Button from '@mui/material/Button';

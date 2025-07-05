@@ -86,7 +86,7 @@ export default function AccountJoinPage() {
             color="info"
             size="large"
             sx={{ mt: 1, fontWeight: 700 }}
-            onClick={()=>navigate('/join')}
+            onClick={()=>navigate('/login')}
             disabled={loading}
           >
             로그인으로 돌아가기

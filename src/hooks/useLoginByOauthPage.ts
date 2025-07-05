@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FastAuthProvider, validateAuthCode } from 'fast-auth-with-keycloak';
 import { getRedirectConfig } from 'fast-auth-with-keycloak/config';
@@ -17,15 +17,7 @@ export function useLoginByOauthPage() {
     navigate(LOGIN_PATH);
   };
 
-  useEffect(() => {
-    if (isApiCallMade.current) {
-      return;
-    }
-
-    processAuthCallback();
-  }, [location.search, navigate]);
-
-  const processAuthCallback = async () => {
+  const processAuthCallback = useCallback(async () => {
     const queryParams = new URLSearchParams(location.search);
     const code = queryParams.get('code');
 
@@ -40,7 +32,7 @@ export function useLoginByOauthPage() {
 
     try {
       // FastAuthProvider.loginByCode 사용
-      const response = await FastAuthProvider.loginByCode(code!);
+      await FastAuthProvider.loginByCode(code!);
       
       // handleApiSuccess 재사용
       handleApiSuccess({ 
@@ -64,7 +56,15 @@ export function useLoginByOauthPage() {
       }, '코드 로그인 처리 중 오류가 발생했습니다.');
       setMessage('로그인 실패');
     }
-  };
+  }, [location.search, navigate]);
+
+  useEffect(() => {
+    if (isApiCallMade.current) {
+      return;
+    }
+
+    processAuthCallback();
+  }, [processAuthCallback]);
 
   return {
     message,

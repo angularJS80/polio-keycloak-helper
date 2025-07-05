@@ -5,7 +5,7 @@ import { handleApiResponse } from './apiResultHandler';
 import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, } from './config';
 import { 
   validateFastAuthConfig, 
-  validateRefreshToken, 
+  validateTokenExists, 
   validateEndpoint, 
   validateApiRequestOptions,
   validateRequiredConfig,
