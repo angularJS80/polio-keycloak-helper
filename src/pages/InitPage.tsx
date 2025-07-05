@@ -83,8 +83,8 @@ export default function InitPage() {
         label="코드 로그인 엔드포인트"
         variant="outlined"
         margin="normal"
-        value={initConfig.codeLoginEndpoint || ''}
-        onChange={e => setInitConfig({ ...initConfig, codeLoginEndpoint: e.target.value })}
+        value={initConfig.loginByCodeEndpoint || ''}
+        onChange={e => setInitConfig({ ...initConfig, loginByCodeEndpoint: e.target.value })}
       />
       <TextField
         fullWidth

@@ -6,8 +6,19 @@ import {
   hasPasswordChangeEndpoint, 
   hasPasswordResetEndpoint, 
   hasPasswordFindEndpoint,
-  hasJoinEndpoint
+  hasJoinEndpoint,
+  EndpointType
 } from './config';
+
+// 설정 초기화 유효성 검사
+export const validateInitConfig = (): { isValid: boolean; error?: string } => {
+  try {
+    const config = getConfig();
+    return validateFastAuthConfig(config);
+  } catch (error) {
+    return { isValid: false, error: '설정을 로드할 수 없습니다.' };
+  }
+};
 
 // FastAuthConfig 유효성 검사
 export const validateFastAuthConfig = (config: any): { isValid: boolean; error?: string } => {
@@ -23,53 +34,13 @@ export const validateFastAuthConfig = (config: any): { isValid: boolean; error?:
     return { isValid: false, error: 'loginEndpoint가 설정되지 않았습니다.' };
   }
 
-  if (!config.refreshEndpoint) {
-    return { isValid: false, error: 'refreshEndpoint가 설정되지 않았습니다.' };
+  // refreshEndpoint 검증을 ENDPOINT_CONFIG를 사용하도록 수정
+  const refreshValidation = validateEndpoint('refresh');
+  if (!refreshValidation.isValid) {
+    return { isValid: false, error: refreshValidation.error };
   }
 
   return { isValid: true };
-};
-
-
-
-
-
-// 리프레시 토큰 유효성 검사
-export const validateRefreshToken = (refreshToken: string | null): { isValid: boolean; error?: string } => {
-  if (!refreshToken) {
-    return { isValid: false, error: '리프레시 토큰이 없습니다.' };
-  }
-
-  return { isValid: true };
-};
-
-
-
-// API 요청 옵션 유효성 검사
-export const validateApiRequestOptions = (options: any): { isValid: boolean; error?: string } => {
-  if (options && typeof options !== 'object') {
-    return { isValid: false, error: 'API 요청 옵션은 객체여야 합니다.' };
-  }
-
-  if (options?.method && !['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
-    return { isValid: false, error: '지원하지 않는 HTTP 메서드입니다.' };
-  }
-
-  if (options?.headers && typeof options.headers !== 'object') {
-    return { isValid: false, error: '헤더는 객체여야 합니다.' };
-  }
-
-  return { isValid: true };
-};
-
-// 설정 초기화 유효성 검사
-export const validateInitConfig = (): { isValid: boolean; error?: string } => {
-  try {
-    const config = getConfig();
-    return validateFastAuthConfig(config);
-  } catch (error) {
-    return { isValid: false, error: '설정을 로드할 수 없습니다.' };
-  }
 };
 
 // 필수 설정 유효성 검사
@@ -88,23 +59,49 @@ export const validateRequiredConfig = (requiredFields: string[]): { isValid: boo
   return { isValid: true };
 };
 
-// 로그아웃 요청 유효성 검사
-export const validateLogoutRequest = (): { isValid: boolean; error?: string } => {
-  const config = getConfig();
+// 엔드포인트 설정 유효성 검사
+export const validateEndpoint = (endpointType: EndpointType): { isValid: boolean; error?: string } => {
+  const endpointChecks: Record<EndpointType, () => boolean> = {
+    passwordChange: hasPasswordChangeEndpoint,
+    passwordReset: hasPasswordResetEndpoint,
+    passwordFind: hasPasswordFindEndpoint,
+    join: hasJoinEndpoint,
+    logout: () => !!getConfig().logoutEndpoint,
+    refresh: () => !!getConfig().refreshEndpoint
+  };
   
-  if (!config.logoutEndpoint) {
-    return { isValid: false, error: '로그아웃 엔드포인트가 설정되지 않았습니다.' };
+  const endpointNames: Record<EndpointType, string> = {
+    passwordChange: '비밀번호 변경',
+    passwordReset: '비밀번호 초기화',
+    passwordFind: '비밀번호 찾기',
+    join: '계정 등록',
+    logout: '로그아웃',
+    refresh: '토큰 갱신'
+  };
+  
+  const check = endpointChecks[endpointType];
+  if (!check()) {
+    return { 
+      isValid: false, 
+      error: `${endpointNames[endpointType]} 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.` 
+    };
   }
-
+  
   return { isValid: true };
 };
 
-// 토큰 갱신 요청 유효성 검사
-export const validateTokenRefreshRequest = (): { isValid: boolean; error?: string } => {
-  const config = getConfig();
-  
-  if (!config.refreshEndpoint) {
-    return { isValid: false, error: '토큰 갱신 엔드포인트가 설정되지 않았습니다.' };
+// API 요청 옵션 유효성 검사
+export const validateApiRequestOptions = (options: any): { isValid: boolean; error?: string } => {
+  if (options && typeof options !== 'object') {
+    return { isValid: false, error: 'API 요청 옵션은 객체여야 합니다.' };
+  }
+
+  if (options?.method && !['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
+    return { isValid: false, error: '지원하지 않는 HTTP 메서드입니다.' };
+  }
+
+  if (options?.headers && typeof options.headers !== 'object') {
+    return { isValid: false, error: '헤더는 객체여야 합니다.' };
   }
 
   return { isValid: true };
@@ -117,6 +114,24 @@ export const validateMultiple = (validations: Array<{ isValid: boolean; error?: 
       return validation;
     }
   }
+  return { isValid: true };
+};
+
+// 리프레시 토큰 유효성 검사
+export const validateRefreshToken = (refreshToken: string | null): { isValid: boolean; error?: string } => {
+  if (!refreshToken) {
+    return { isValid: false, error: '리프레시 토큰이 없습니다.' };
+  }
+
+  return { isValid: true };
+};
+
+// URL 토큰 유효성 검사
+export const validateUrlToken = (token: string | null): { isValid: boolean; error?: string } => {
+  if (!token || !token.trim()) {
+    return { isValid: false, error: '액세스 토큰을 찾을 수 없습니다.' };
+  }
+  
   return { isValid: true };
 };
 
@@ -139,41 +154,7 @@ export const validateToken = (userFriendly: boolean = true): { isValid: boolean;
   return { isValid: true };
 };
 
-// URL 토큰 유효성 검사
-export const validateUrlToken = (token: string | null): { isValid: boolean; error?: string } => {
-  if (!token || !token.trim()) {
-    return { isValid: false, error: '액세스 토큰을 찾을 수 없습니다.' };
-  }
-  
-  return { isValid: true };
-};
 
-// 엔드포인트 설정 유효성 검사
-export const validateEndpoint = (endpointType: 'passwordChange' | 'passwordReset' | 'passwordFind' | 'join'): { isValid: boolean; error?: string } => {
-  const endpointValidators = {
-    passwordChange: hasPasswordChangeEndpoint,
-    passwordReset: hasPasswordResetEndpoint,
-    passwordFind: hasPasswordFindEndpoint,
-    join: hasJoinEndpoint
-  };
-  
-  const validator = endpointValidators[endpointType];
-  if (!validator()) {
-    const endpointNames = {
-      passwordChange: '비밀번호 변경',
-      passwordReset: '비밀번호 초기화',
-      passwordFind: '비밀번호 찾기',
-      join: '계정 등록'
-    };
-    
-    return { 
-      isValid: false, 
-      error: `${endpointNames[endpointType]} 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.` 
-    };
-  }
-  
-  return { isValid: true };
-};
 
 
 // 인증 코드 유효성 검사

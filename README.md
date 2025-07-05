@@ -36,6 +36,9 @@ yarn add fast-auth-with-keycloak
   - `validateEndpoint`, `validateApiRequestOptions`, `validateAuthCode` 등
   - `validateRequiredConfig`, `validateToken`, `validateUrlToken` 등
   - **토큰 검증 함수 통합**: `validateToken`과 `validateTokenBasedRequest`를 하나로 통합하여 `userFriendly` 매개변수로 에러 메시지 구분
+- **엔드포인트 검증 통합**: `validateLogoutRequest`, `validateTokenRefreshRequest`를 `validateEndpoint`로 통합
+- **타입 안전성 개선**: `FastAuthConfig` 타입에 누락된 엔드포인트들(`passwordResetEndpoint`, `joinEndpoint`, `passwordChangeEndpoint`, `passwordFindEndpoint`, `socialLoginEndpoint`) 추가
+- **엔드포인트 타입 정의**: `EndpointType` 타입 정의로 새로운 엔드포인트 타입 추가 시 관리 용이성 향상
 - **FastAuthProvider 메서드 보강**: 모든 주요 메서드에 유효성 검사 적용
   - `init`, `login`, `logout`, `fastAuthApiRequest`, `checkAndRefreshToken` 등
 
@@ -100,7 +103,7 @@ yarn add fast-auth-with-keycloak
     - 코드 로그인 성공 시, ID/PW 로그인과 동일하게 백엔드로부터 받은 토큰(`accessToken`, `refreshToken`)을 `FastAuthProvider`에 설정하고 세션을 재개하며, 이후 프로필 조회 및 설정된 리다이렉트 경로로 이동합니다.
     - React `StrictMode` 환경에서 발생할 수 있는 API 이중 호출을 방지하기 위해 `LoginByOauthPage.tsx`에 `useRef`를 사용하여 API 호출 상태를 추적하는 로직이 추가되었습니다.
     - `LoginPage.tsx`에 `소셜 로그인` 버튼이 추가되어, 초기화 설정의 `소셜 로그인 링크`로 직접 이동할 수 있도록 구현되었습니다. 절대 경로인 경우 `baseUrl`이 중복되지 않도록 처리되었습니다.
-    - `src/config.ts` 및 `src/utils/authConfig.ts`에서 `socialLoginEndpoint`와 `codeLoginEndpoint`의 기본값이 정의되고 로드되도록 업데이트되었습니다.
+    - `src/config.ts` 및 `src/utils/authConfig.ts`에서 `socialLoginEndpoint`와 `loginByCodeEndpoint`의 기본값이 정의되고 로드되도록 업데이트되었습니다.
 
 ## 2024년 6월 리팩토링
 
@@ -203,6 +206,75 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 # fast-auth-with-keycloak
 
 리액트에서 Keycloak 기반 인증을 빠르게 붙일 수 있는 인증 헬퍼 패키지입니다.
+
+## 새로운 엔드포인트 타입 추가하기
+
+새로운 엔드포인트 타입을 추가하려면 다음 단계를 따르세요:
+
+1. **타입 정의 확장** (`packages/fast-auth-with-keycloak/config.ts`):
+   ```typescript
+   export type EndpointType = 'passwordChange' | 'passwordReset' | 'passwordFind' | 'join' | 'logout' | 'refresh' | 'newEndpoint';
+   ```
+
+2. **Config 인터페이스에 추가** (`packages/fast-auth-with-keycloak/config.ts`):
+   ```typescript
+   interface Config {
+     // ... 기존 필드들
+     newEndpoint: string;
+   }
+   ```
+
+3. **FastAuthConfig 타입에 추가** (`packages/fast-auth-with-keycloak/index.ts`):
+   ```typescript
+   export type FastAuthConfig = {
+     // ... 기존 필드들
+     newEndpoint: string;
+   };
+   ```
+
+4. **DEFAULT_INIT_AUTH_CONFIG에 기본값 추가**:
+   ```typescript
+   export const DEFAULT_INIT_AUTH_CONFIG = {
+     // ... 기존 필드들
+     newEndpoint: '/auth/new-endpoint',
+   };
+   ```
+
+5. **getter 함수 추가** (필요한 경우):
+   ```typescript
+   export function getNewEndpoint() {
+     return getConfig().newEndpoint || DEFAULT_INIT_AUTH_CONFIG.newEndpoint || '';
+   }
+   
+   export function hasNewEndpoint(): boolean {
+     return !!getNewEndpoint();
+   }
+   ```
+
+6. **validator.ts의 validateEndpoint 함수에 추가**:
+   ```typescript
+   const endpointChecks: Record<EndpointType, () => boolean> = {
+     // ... 기존 엔드포인트들
+     newEndpoint: hasNewEndpoint,
+   };
+   
+   const endpointNames: Record<EndpointType, string> = {
+     // ... 기존 엔드포인트들
+     newEndpoint: '새 엔드포인트',
+   };
+   ```
+
+7. **사용 예시**:
+   ```typescript
+   // fastAuthApiRequest에서 사용
+   await fastAuthApiRequest('/new-endpoint', {
+     method: 'POST',
+     endpointType: 'newEndpoint'
+   });
+   
+   // 또는 직접 validateEndpoint 사용
+   const validation = validateEndpoint('newEndpoint');
+   ```
 
 ## 주요 기능
 - Keycloak 등 OAuth2 기반 인증 연동을 위한 인증/토큰 관리

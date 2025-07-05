@@ -1,4 +1,8 @@
 import { getItem } from './storage';
+
+// 엔드포인트 타입 정의
+export type EndpointType = 'passwordChange' | 'passwordReset' | 'passwordFind' | 'join' | 'logout' | 'refresh';
+
 interface Config {
   baseUrl: string;
   loginEndpoint: string;
@@ -11,7 +15,7 @@ interface Config {
   passwordFindEndpoint: string;
   passwordResetEndpoint: string;
   socialLoginEndpoint: string;
-  codeLoginEndpoint: string;
+  loginByCodeEndpoint: string;
   refreshBeforeExpirySec?: number;
   sessionExpiryAlertSec?: number;
   sessionExpiryAlertEnabled: boolean;
@@ -63,7 +67,7 @@ export const DEFAULT_INIT_AUTH_CONFIG = {
   passwordFindEndpoint: '/auth/find-password',
   passwordResetEndpoint: '/auth/reset-password',
   socialLoginEndpoint: '/auth/social-login?idp=github&scope=openid email profile&redirectUrl=http://localhost:3000/auth/callback',
-  codeLoginEndpoint: '/auth/login-by-code',
+  loginByCodeEndpoint: '/auth/login-by-code',
   redirectAfterLogin: true,
   redirectPath: '/welcome',
   refreshBeforeExpirySec: 20,
