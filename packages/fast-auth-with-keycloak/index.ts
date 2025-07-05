@@ -581,6 +581,7 @@ export {
   isTokenExpiringSoon, 
   refreshToken,
   validateToken,
+  validateTokenExists,
   validateUrlToken,
   validateEndpoint,
   validateAuthCode

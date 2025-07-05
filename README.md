@@ -36,6 +36,7 @@ yarn add fast-auth-with-keycloak
   - `validateEndpoint`, `validateApiRequestOptions`, `validateAuthCode` 등
   - `validateRequiredConfig`, `validateToken`, `validateUrlToken` 등
   - **토큰 검증 함수 통합**: `validateToken`과 `validateTokenBasedRequest`를 하나로 통합하여 `userFriendly` 매개변수로 에러 메시지 구분
+- **토큰 존재 검증 통합**: `validateRefreshToken`과 `validateUrlToken`을 `validateTokenExists`로 통합하여 중복 코드 제거
 - **엔드포인트 검증 통합**: `validateLogoutRequest`, `validateTokenRefreshRequest`를 `validateEndpoint`로 통합
 - **타입 안전성 개선**: `FastAuthConfig` 타입에 누락된 엔드포인트들(`passwordResetEndpoint`, `joinEndpoint`, `passwordChangeEndpoint`, `passwordFindEndpoint`, `socialLoginEndpoint`) 추가
 - **FastAuthProvider 메서드 보강**: 모든 주요 메서드에 유효성 검사 적용
