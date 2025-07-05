@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getPasswordChangeEndpoint } from 'fast-auth-with-keycloak/config';
-import { validateToken, validatePassword, validateEndpoint } from '../utils/requestValidators';
-import { handlePasswordChangeSuccess, handleApiError, resetFormState } from '../utils/apiResponseHandler';
+import { validateToken, validateEndpoint } from 'fast-auth-with-keycloak';
+import { validatePassword } from '../utils/uiUtils';
+import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
+import { resetFormState } from '../utils/uiUtils';
 
 export function usePasswordChangePage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
   const [newPassword, setNewPassword] = useState('');
@@ -47,7 +49,7 @@ export function usePasswordChangePage(showSuccess?: (msg: string) => void, showE
         },
       });
 
-      handlePasswordChangeSuccess({ showSuccess, resetForm: () => resetFormState([setNewPassword, setConfirmNewPassword]) });
+      handleApiSuccess({ showSuccess, resetForm: () => resetFormState([setNewPassword, setConfirmNewPassword]) }, '비밀번호가 성공적으로 변경되었습니다!');
     } catch (err: any) {
       handleApiError(err, { showError, setLoading }, '비밀번호 변경 실패');
     }

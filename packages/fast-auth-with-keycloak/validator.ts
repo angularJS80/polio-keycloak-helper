@@ -1,7 +1,13 @@
 // fast-auth-with-keycloak 패키지 내부 유효성 검사 함수들
 
-import { hasAccessToken, isTokenExpired, getAccessToken } from './token';
-import { getConfig } from './config';
+import { hasAccessToken, isTokenExpired } from './token';
+import { 
+  getConfig, 
+  hasPasswordChangeEndpoint, 
+  hasPasswordResetEndpoint, 
+  hasPasswordFindEndpoint,
+  hasJoinEndpoint
+} from './config';
 
 // FastAuthConfig 유효성 검사
 export const validateFastAuthConfig = (config: any): { isValid: boolean; error?: string } => {
@@ -24,18 +30,7 @@ export const validateFastAuthConfig = (config: any): { isValid: boolean; error?:
   return { isValid: true };
 };
 
-// 로그인 요청 유효성 검사
-export const validateLoginRequest = (username: string, password: string): { isValid: boolean; error?: string } => {
-  if (!username || !username.trim()) {
-    return { isValid: false, error: '사용자명을 입력해주세요.' };
-  }
 
-  if (!password || !password.trim()) {
-    return { isValid: false, error: '비밀번호를 입력해주세요.' };
-  }
-
-  return { isValid: true };
-};
 
 // 토큰 기반 API 요청 유효성 검사
 export const validateTokenBasedRequest = (): { isValid: boolean; error?: string } => {
@@ -59,18 +54,7 @@ export const validateRefreshToken = (refreshToken: string | null): { isValid: bo
   return { isValid: true };
 };
 
-// 엔드포인트 유효성 검사
-export const validateEndpoint = (endpoint: string): { isValid: boolean; error?: string } => {
-  if (!endpoint || !endpoint.trim()) {
-    return { isValid: false, error: '엔드포인트가 제공되지 않았습니다.' };
-  }
 
-  if (!endpoint.startsWith('/')) {
-    return { isValid: false, error: '엔드포인트는 "/"로 시작해야 합니다.' };
-  }
-
-  return { isValid: true };
-};
 
 // API 요청 옵션 유효성 검사
 export const validateApiRequestOptions = (options: any): { isValid: boolean; error?: string } => {
@@ -144,5 +128,64 @@ export const validateMultiple = (validations: Array<{ isValid: boolean; error?: 
       return validation;
     }
   }
+  return { isValid: true };
+};
+
+// 토큰 유효성 검사
+export const validateToken = (): { isValid: boolean; error?: string } => {
+  if (!hasAccessToken()) {
+    return { isValid: false, error: '로그인 상태가 아닙니다. 다시 로그인 해주세요.' };
+  }
+  
+  if (isTokenExpired()) {
+    return { isValid: false, error: '토큰이 만료되었습니다. 다시 로그인 해주세요.' };
+  }
+  
+  return { isValid: true };
+};
+
+// URL 토큰 유효성 검사
+export const validateUrlToken = (token: string | null): { isValid: boolean; error?: string } => {
+  if (!token || !token.trim()) {
+    return { isValid: false, error: '액세스 토큰을 찾을 수 없습니다.' };
+  }
+  
+  return { isValid: true };
+};
+
+// 엔드포인트 설정 유효성 검사
+export const validateEndpoint = (endpointType: 'passwordChange' | 'passwordReset' | 'passwordFind' | 'join'): { isValid: boolean; error?: string } => {
+  const endpointValidators = {
+    passwordChange: hasPasswordChangeEndpoint,
+    passwordReset: hasPasswordResetEndpoint,
+    passwordFind: hasPasswordFindEndpoint,
+    join: hasJoinEndpoint
+  };
+  
+  const validator = endpointValidators[endpointType];
+  if (!validator()) {
+    const endpointNames = {
+      passwordChange: '비밀번호 변경',
+      passwordReset: '비밀번호 초기화',
+      passwordFind: '비밀번호 찾기',
+      join: '계정 등록'
+    };
+    
+    return { 
+      isValid: false, 
+      error: `${endpointNames[endpointType]} 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.` 
+    };
+  }
+  
+  return { isValid: true };
+};
+
+
+// 인증 코드 유효성 검사
+export const validateAuthCode = (code: string | null): { isValid: boolean; error?: string } => {
+  if (!code || !code.trim()) {
+    return { isValid: false, error: '인증 코드를 찾을 수 없습니다.' };
+  }
+  
   return { isValid: true };
 }; 

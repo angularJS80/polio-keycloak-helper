@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getConfig, getPasswordResetEndpoint } from 'fast-auth-with-keycloak/config';
-import { validateUrlToken, validatePassword, validateEndpoint } from '../utils/requestValidators';
-import { handlePasswordResetSuccess, handleApiError, handleHttpError, resetFormState } from '../utils/apiResponseHandler';
-import { LOGIN_PATH } from '../utils/constants';
+import { FastAuthProvider, validateUrlToken } from 'fast-auth-with-keycloak';
+import { validatePassword } from '../utils/uiUtils';
+import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
+import { resetFormState } from '../utils/uiUtils';
+import { LOGIN_PATH } from '../utils/uiUtils';
 
 export function useResetPasswordPage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
   const [newPassword, setNewPassword] = useState('');
@@ -37,36 +38,13 @@ export function useResetPasswordPage(showSuccess?: (msg: string) => void, showEr
       return;
     }
 
-    // 엔드포인트 유효성 검사
-    const endpointValidation = validateEndpoint('passwordReset');
-    if (!endpointValidation.isValid) {
-      if (showError) showError(endpointValidation.error!);
-      setLoading(false);
-      return;
-    }
-
-    const initConfig = getConfig();
     try {
-      const response = await fetch(
-        `${initConfig.baseUrl}${getPasswordResetEndpoint()}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${urlAccessToken}`,
-          },
-          body: JSON.stringify({ newPassword: newPassword }),
-        }
-      );
-
-      if (response.ok) {
-        handlePasswordResetSuccess({ 
-          showSuccess, 
-          resetForm: () => resetFormState([setNewPassword, setConfirmNewPassword]) 
-        });
-      } else {
-        await handleHttpError(response, { showError, setLoading }, '비밀번호 초기화 실패');
-      }
+      // FastAuthProvider.resetPassword 사용
+      const response = await FastAuthProvider.resetPassword(urlAccessToken!, newPassword);
+      handleApiSuccess({ 
+        showSuccess, 
+        resetForm: () => resetFormState([setNewPassword, setConfirmNewPassword]) 
+      }, '비밀번호가 성공적으로 변경되었습니다!');
     } catch (err: any) {
       handleApiError(err, { showError, setLoading }, '비밀번호 초기화 실패');
     }

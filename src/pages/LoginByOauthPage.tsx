@@ -3,14 +3,14 @@ import { Box, CircularProgress, Typography, Dialog, DialogTitle, DialogContent, 
 import Layout from '../components/Layout';
 import WarningIcon from '@mui/icons-material/Warning';
 import Stack from '@mui/material/Stack';
-import { useAuthCallbackPage } from '../hooks/useAuthCallbackPage';
+import { useLoginByOauthPage } from '../hooks/useLoginByOauthPage';
 
-export default function AuthCallbackPage() {
+export default function LoginByOauthPage() {
   const {
     message,
     error,
     handleCloseError,
-  } = useAuthCallbackPage();
+  } = useLoginByOauthPage();
 
   return (
     <Layout>

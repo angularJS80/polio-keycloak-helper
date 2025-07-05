@@ -140,21 +140,7 @@ export default function InitPage() {
         value={initConfig.onTokenExpiredRedirect}
         onChange={e => setInitConfig({ ...initConfig, onTokenExpiredRedirect: e.target.value })}
       />
-      <FormControlLabel
-        control={<Checkbox checked={initConfig.profileAfterLogin} onChange={e => setInitConfig({ ...initConfig, profileAfterLogin: e.target.checked })} />}
-        label="로그인 후 프로필 조회"
-        sx={{ mb: 1 }}
-      />
-      {initConfig.profileAfterLogin && (
-        <TextField
-          fullWidth
-          label="프로필 엔드포인트"
-          variant="outlined"
-          margin="normal"
-          value={initConfig.profileEndpoint}
-          onChange={e => setInitConfig({ ...initConfig, profileEndpoint: e.target.value })}
-        />
-      )}
+
       <FormControlLabel
         control={<Checkbox checked={initConfig.redirectAfterLogin} onChange={e => setInitConfig({ ...initConfig, redirectAfterLogin: e.target.checked })} />}
         label="로그인 후 이동"

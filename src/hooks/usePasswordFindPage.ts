@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getPasswordFindEndpoint } from 'fast-auth-with-keycloak/config';
-import { validateEmail, validateEndpoint } from '../utils/requestValidators';
-import { handlePasswordFindSuccess, handleApiError, resetFormState } from '../utils/apiResponseHandler';
+import { validateEndpoint } from 'fast-auth-with-keycloak';
+import { validateEmail } from '../utils/uiUtils';
+import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
+import { resetFormState } from '../utils/uiUtils';
 
 export function usePasswordFindPage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
   const [email, setEmail] = useState('');
@@ -39,10 +41,10 @@ export function usePasswordFindPage(showSuccess?: (msg: string) => void, showErr
         withToken: false,
       });
 
-      handlePasswordFindSuccess({ 
+      handleApiSuccess({ 
         showSuccess, 
         resetForm: () => resetFormState([setEmail]) 
-      });
+      }, '비밀번호 재설정 이메일이 발송되었습니다. 이메일을 확인해주세요.');
     } catch (err: any) {
       handleApiError(err, { showError, setLoading }, '비밀번호 찾기 실패');
     }

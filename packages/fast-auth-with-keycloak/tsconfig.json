@@ -16,7 +16,8 @@
   "include": [
     "index.ts",
     "token.ts",
-    "config.ts"
+    "config.ts",
+    "validator.ts"
   ],
   "exclude": [
     "node_modules",

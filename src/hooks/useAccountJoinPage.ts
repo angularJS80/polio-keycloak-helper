@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getJoinEndpoint } from 'fast-auth-with-keycloak/config';
-import { validatePassword, validateEmail, validateUsername, validateEndpoint, validateMultiple } from '../utils/requestValidators';
-import { handleJoinSuccess, handleApiError, handleHttpError, resetFormState } from '../utils/apiResponseHandler';
+import { validateEndpoint } from 'fast-auth-with-keycloak';
+import { validatePassword, validateEmail, validateUsername, validateMultiple } from '../utils/uiUtils';
+import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
+import { resetFormState } from '../utils/uiUtils';
 
 export function useAccountJoinPage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
   const [username, setUsername] = useState('');
@@ -39,12 +41,14 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
       });
 
       if (response.ok) {
-        handleJoinSuccess({ 
+        handleApiSuccess({ 
           showSuccess, 
           resetForm: () => resetFormState([setUsername, setEmail, setPassword, setConfirmPassword]) 
-        });
+        }, '계정 등록이 성공적으로 완료되었습니다!');
       } else {
-        await handleHttpError(response, { showError, setLoading }, '계정 등록 실패');
+        const errorData = await response.json();
+        const errorMessage = errorData.message || response.statusText || '계정 등록 실패';
+        handleApiError(new Error(errorMessage), { showError, setLoading }, '계정 등록 실패');
       }
     } catch (err: any) {
       handleApiError(err, { showError, setLoading }, '계정 등록 실패');

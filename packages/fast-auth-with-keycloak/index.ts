@@ -5,14 +5,16 @@ import { handleApiResponse } from './apiResultHandler';
 import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, } from './config';
 import { 
   validateFastAuthConfig, 
-  validateLoginRequest, 
   validateTokenBasedRequest, 
   validateRefreshToken, 
   validateEndpoint, 
   validateApiRequestOptions,
   validateLogoutRequest,
   validateTokenRefreshRequest,
-  validateRequiredConfig
+  validateRequiredConfig,
+  validateToken,
+  validateUrlToken,
+  validateAuthCode
 } from './validator';
 
 export type FastAuthConfig = {
@@ -147,12 +149,6 @@ export class FastAuthProvider {
   }
 
   static async login({ username, password }: { username: string; password: string }) {
-    // 로그인 요청 유효성 검사
-    const loginValidation = validateLoginRequest(username, password);
-    if (!loginValidation.isValid) {
-      throw new Error(loginValidation.error);
-    }
-    
     const config = FastAuthProvider.getConfig();
     const res = await fetch(config.baseUrl + config.loginEndpoint, {
       method: 'POST',
@@ -200,6 +196,32 @@ export class FastAuthProvider {
       setupAutoRefresh();
     }
     return data;
+  }
+
+  static async resetPassword(accessToken: string, newPassword: string) {
+    const config = FastAuthProvider.getConfig();
+    
+    // 필수 설정 유효성 검사
+    const configValidation = validateRequiredConfig(['passwordResetEndpoint', 'baseUrl']);
+    if (!configValidation.isValid) {
+      throw new Error(configValidation.error);
+    }
+    
+    const res = await fetch(config.baseUrl + config.passwordResetEndpoint, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ newPassword }),
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || '비밀번호 초기화 처리 중 오류가 발생했습니다.');
+    }
+    
+    return await res.json();
   }
 
   static async logout() {
@@ -551,4 +573,12 @@ export { setupAutoRefresh };
 
 // validator 함수들 export
 export * from './validator';
-export { checkAndRefreshToken, isTokenExpiringSoon, refreshToken }; 
+export { 
+  checkAndRefreshToken, 
+  isTokenExpiringSoon, 
+  refreshToken,
+  validateToken,
+  validateUrlToken,
+  validateEndpoint,
+  validateAuthCode
+}; 

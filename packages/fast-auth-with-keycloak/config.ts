@@ -7,8 +7,6 @@ interface Config {
   logoutEndpoint: string;
   autoRefresh: boolean;
   onTokenExpiredRedirect: string;
-  profileAfterLogin: boolean;
-  profileEndpoint: string;
   joinEndpoint: string;
   passwordChangeEndpoint: string;
   passwordFindEndpoint: string;
@@ -61,8 +59,6 @@ export const DEFAULT_INIT_AUTH_CONFIG = {
   logoutEndpoint: '/auth/logout',
   autoRefresh: false,
   onTokenExpiredRedirect: '/login',
-  profileAfterLogin: false,
-  profileEndpoint: '/me',
   joinEndpoint: '/auth/join',
   passwordChangeEndpoint: '/auth/change-password',
   passwordFindEndpoint: '/auth/find-password',
@@ -137,13 +133,7 @@ export function hasPasswordResetEndpoint(): boolean {
   return !!getPasswordResetEndpoint();
 }
 
-export function getProfileConfig() {
-  
-  return {
-    profileAfterLogin: !!getConfig().profileAfterLogin,
-    profileEndpoint: getConfig().profileEndpoint || DEFAULT_INIT_AUTH_CONFIG.profileEndpoint || '/me',
-  };
-}
+
 
 export function getRedirectConfig() {
   return {

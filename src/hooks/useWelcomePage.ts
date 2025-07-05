@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { getUserName, hasAccessToken } from 'fast-auth-with-keycloak/token';
-import { LOGIN_PATH } from '../utils/constants';
+import { LOGIN_PATH } from '../utils/uiUtils';
 
 export function useWelcomePage() {
   const [displayName, setDisplayName] = useState<string | null>(null);

@@ -4,7 +4,7 @@ import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { hasAccessToken } from 'fast-auth-with-keycloak/token';
 import { getConfig, clearConfigCache } from 'fast-auth-with-keycloak/config';
 import { setItem } from 'fast-auth-with-keycloak/storage';
-import { LOGIN_PATH, DEFAULT_REDIRECT_PATH, CONFIG_PATH } from '../utils/constants';
+import { LOGIN_PATH, DEFAULT_REDIRECT_PATH, CONFIG_PATH } from '../utils/uiUtils';
 
 export function useInitPage() {
   const [initConfig, setInitConfig] = useState(getConfig());

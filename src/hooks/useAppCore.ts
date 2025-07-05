@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FastAuthProvider, addDialogStateListener, removeDialogStateListener } from 'fast-auth-with-keycloak';
 import {  isTokenExpired, hasAccessToken } from 'fast-auth-with-keycloak/token';
 import { getConfig } from 'fast-auth-with-keycloak/config';
-import { PUBLIC_PATHS, LOGIN_PATH } from '../utils/constants';
+import { PUBLIC_PATHS, LOGIN_PATH } from '../utils/uiUtils';
 
 export function useAppCore() {
   const navigate = useNavigate();

@@ -16,6 +16,54 @@ yarn add fast-auth-with-keycloak
 
 ## 최근 변경사항
 
+### 2024년 12월 코드 구조 개선 및 모듈화
+
+#### 유틸리티 함수 통합 및 분리
+- **UI 관련 유틸리티 통합**: `src/utils/uiUtils.ts`로 모든 UI/폼 관련 함수들을 통합
+  - `validateLoginRequest`, `validatePassword`, `validateEmail`, `validateUsername` 등 폼 유효성 검사 함수들
+  - `resetFormState` 폼 초기화 함수
+  - `validateMultiple` 복합 유효성 검사 함수
+  - `PUBLIC_PATHS`, `DEFAULT_REDIRECT_PATH`, `LOGIN_PATH`, `CONFIG_PATH` 등 UI 관련 상수들
+- **API 응답 처리 통합**: `src/utils/apiResponseHandler.ts`에서 모든 API 응답 처리를 통합
+  - `handleApiSuccess`: 모든 성공 응답 처리 통합
+  - `handleApiError`: 모든 에러 응답 처리 통합
+  - 기존 개별 성공/에러 처리 함수들 제거하여 코드 중복 제거
+- **불필요한 파일 제거**: `src/utils/constants.ts`, `src/utils/requestValidators.ts`, `src/utils/formUtils.ts` 등 중복/불필요한 파일들 정리
+
+#### fast-auth-with-keycloak 패키지 내부 유효성 검사 강화
+- **validator.ts 확장**: 패키지 내부에 모든 API 호출 전 유효성 검사 함수들을 집중
+  - `validateFastAuthConfig`, `validateTokenBasedRequest`, `validateRefreshToken` 등
+  - `validateEndpoint`, `validateApiRequestOptions`, `validateAuthCode` 등
+  - `validateRequiredConfig`, `validateToken`, `validateUrlToken` 등
+- **FastAuthProvider 메서드 보강**: 모든 주요 메서드에 유효성 검사 적용
+  - `init`, `login`, `logout`, `fastAuthApiRequest`, `checkAndRefreshToken` 등
+
+#### 토큰 갱신 로직 분리 및 개선
+- **책임 분리**: `refreshTokenIfNeeded` 함수를 세 개의 함수로 분리
+  - `isTokenExpiringSoon()`: 토큰 만료 시점 판단
+  - `refreshToken()`: 토큰 갱신 발급
+  - `checkAndRefreshToken()`: 위 두 함수를 조합한 통합 함수 (기존 `refreshTokenIfNeeded`에서 이름 변경)
+- **코드 가독성 향상**: 각 함수의 책임을 명확히 분리하여 유지보수성 개선
+
+#### 인증 콜백 처리 개선
+- **processAuthCallback 리팩토링**: 유효성 검사와 API 호출을 분리
+  - `validateAuthCode`로 코드 유효성 검사
+  - `FastAuthProvider.loginByCode` 메서드로 API 호출
+- **resetPassword API 분리**: `FastAuthProvider.resetPassword` 메서드로 분리하여 일관성 확보
+
+#### 프로필 조회 로직 제거 및 성능 최적화
+- **profileAfterLogin 설정 제거**: 불필요한 프로필 조회 로직 제거
+- **profileEndpoint 설정 제거**: 관련 설정 및 UI 제거
+- **InitPage UI 간소화**: 프로필 조회 관련 설정 필드 제거
+- **성능 향상**: 로그인 후 불필요한 API 호출 제거로 성능 개선
+
+#### 코드 모듈화 및 재사용성 향상
+- **인증 관련 로직 집중**: `fast-auth-with-keycloak` 패키지 내부로 모든 인증 로직 집중
+- **UI/폼 관련 유틸리티 분리**: `uiUtils.ts`로 UI 관련 함수들 분리
+- **일관된 구조**: 모든 유틸리티 함수들이 적절한 위치에 배치되어 일관성 있는 구조 확보
+
+### 이전 변경사항
+
 - `fast-auth-with-keycloak` 인증 헬퍼 로직을 독립적인 NPM 패키지로 분리하여 재사용성을 높였습니다.
 - React 공식 사이트 톤(React Blue, 연회색, 연보라 등) 테마 적용
 - 설정(초기화) 화면 상단에 머터리얼 톱니바퀴(Settings) 아이콘 추가
@@ -46,10 +94,10 @@ yarn add fast-auth-with-keycloak
 - **`keycloak-js` 의존성 제거:** 클라이언트 애플리케이션에서 직접 `keycloak-js` 라이브러리를 사용하지 않도록 관련 임포트 및 코드를 `src/utils/authConfig.ts`에서 완전히 제거했습니다. 이는 백엔드가 Keycloak과 통신하고 클라이언트는 `fast-auth-with-keycloak` 패키지를 통해 백엔드와 통신하는 아키텍처에 맞게 코드를 정리한 것입니다.
 - **소셜/코드 로그인 통합 및 개선:**
     - 초기화 설정 화면(`InitPage.tsx`)에 `소셜 로그인 링크`와 `코드 로그인 엔드포인트` 설정 필드가 추가되었습니다.
-    - `src/App.tsx`에 `/auth/callback` 경로를 추가하여 외부 인증 콜백을 처리하는 `AuthCallbackPage.tsx`를 구현했습니다. 이 경로는 초기화 설정 유무와 관계없이 접근 가능합니다.
-    - `AuthCallbackPage.tsx`는 URL에서 `code` 파라미터를 추출하여, 초기화 설정에서 정의된 `코드 로그인 엔드포인트`로 JSON 본문(`code`)을 포함한 POST 요청을 보냅니다.
+    - `src/App.tsx`에 `/auth/callback` 경로를 추가하여 외부 인증 콜백을 처리하는 `LoginByOauthPage.tsx`를 구현했습니다. 이 경로는 초기화 설정 유무와 관계없이 접근 가능합니다.
+    - `LoginByOauthPage.tsx`는 URL에서 `code` 파라미터를 추출하여, 초기화 설정에서 정의된 `코드 로그인 엔드포인트`로 JSON 본문(`code`)을 포함한 POST 요청을 보냅니다.
     - 코드 로그인 성공 시, ID/PW 로그인과 동일하게 백엔드로부터 받은 토큰(`accessToken`, `refreshToken`)을 `FastAuthProvider`에 설정하고 세션을 재개하며, 이후 프로필 조회 및 설정된 리다이렉트 경로로 이동합니다.
-    - React `StrictMode` 환경에서 발생할 수 있는 API 이중 호출을 방지하기 위해 `AuthCallbackPage.tsx`에 `useRef`를 사용하여 API 호출 상태를 추적하는 로직이 추가되었습니다.
+    - React `StrictMode` 환경에서 발생할 수 있는 API 이중 호출을 방지하기 위해 `LoginByOauthPage.tsx`에 `useRef`를 사용하여 API 호출 상태를 추적하는 로직이 추가되었습니다.
     - `LoginPage.tsx`에 `소셜 로그인` 버튼이 추가되어, 초기화 설정의 `소셜 로그인 링크`로 직접 이동할 수 있도록 구현되었습니다. 절대 경로인 경우 `baseUrl`이 중복되지 않도록 처리되었습니다.
     - `src/config.ts` 및 `src/utils/authConfig.ts`에서 `socialLoginEndpoint`와 `codeLoginEndpoint`의 기본값이 정의되고 로드되도록 업데이트되었습니다.
 
@@ -61,7 +109,7 @@ yarn add fast-auth-with-keycloak
 - 공통 메시지/다이얼로그 관리(`useMessage`, `CommonMessageDialog`)를 도입하여 성공/에러 메시지 처리 일원화
 - 세션 만료 다이얼로그, 메시지 다이얼로그 등도 전역 상태/공통 컴포넌트로 단순화
 - 페이지 이동(navigate)만 각 페이지에서 직접 처리, 나머지 로직은 모두 훅으로 이동
-- AuthCallbackPage, PasswordFindPage 등도 커스텀 훅(`useAuthCallbackPage`, `usePasswordFindPage`)으로 분리
+- LoginByOauthPage, PasswordFindPage 등도 커스텀 훅(`useLoginByOauthPage`, `usePasswordFindPage`)으로 분리
 
 ### 유틸리티 함수 분리 (NEW!)
 - `src/utils/requestValidators.ts`: 요청 전 유효성 검사 함수들
@@ -99,7 +147,7 @@ yarn add fast-auth-with-keycloak
   - 인증 코드를 받아서 API를 호출하는 전용 메서드
   - 내부적으로 설정 유효성 검사 수행
   - 토큰 설정 및 자동 갱신 설정 포함
-- `useAuthCallbackPage` 훅 리팩토링
+- `useLoginByOauthPage` 훅 리팩토링
   - **이전**: 직접 fetch 호출과 복잡한 설정 검증
   - **이후**: `validateAuthCode`로 코드 유효성 검사 + `FastAuthProvider.loginByCode`로 API 호출
   - 더 간결하고 명확한 코드 구조
