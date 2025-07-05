@@ -200,6 +200,12 @@ export class FastAuthProvider {
   static async resetPassword(accessToken: string, newPassword: string) {
     const config = FastAuthProvider.getConfig();
     
+    // URL 토큰 유효성 검사
+    const tokenValidation = validateUrlToken(accessToken);
+    if (!tokenValidation.isValid) {
+      throw new Error(tokenValidation.error);
+    }
+    
     // 필수 설정 유효성 검사
     const configValidation = validateRequiredConfig(['passwordResetEndpoint', 'baseUrl']);
     if (!configValidation.isValid) {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FastAuthProvider, validateUrlToken } from 'fast-auth-with-keycloak';
+import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { validatePassword } from '../utils/uiUtils';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
 import { resetFormState } from '../utils/uiUtils';
@@ -22,14 +22,6 @@ export function useResetPasswordPage(showSuccess?: (msg: string) => void, showEr
     const queryParams = new URLSearchParams(location.search);
     const urlAccessToken = queryParams.get('access_token');
 
-    // URL 토큰 유효성 검사
-    const tokenValidation = validateUrlToken(urlAccessToken);
-    if (!tokenValidation.isValid) {
-      if (showError) showError(tokenValidation.error!);
-      setLoading(false);
-      return;
-    }
-
     // 비밀번호 유효성 검사
     const passwordValidation = validatePassword(newPassword, confirmNewPassword);
     if (!passwordValidation.isValid) {
@@ -39,7 +31,7 @@ export function useResetPasswordPage(showSuccess?: (msg: string) => void, showEr
     }
 
     try {
-      // FastAuthProvider.resetPassword 사용
+      // FastAuthProvider.resetPassword 사용 (내부에서 validateUrlToken 수행)
       const response = await FastAuthProvider.resetPassword(urlAccessToken!, newPassword);
       handleApiSuccess({ 
         showSuccess, 

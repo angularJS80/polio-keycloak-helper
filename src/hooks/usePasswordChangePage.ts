@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getPasswordChangeEndpoint } from 'fast-auth-with-keycloak/config';
-import { validateToken } from 'fast-auth-with-keycloak';
+
 import { validatePassword } from '../utils/uiUtils';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
 import { resetFormState } from '../utils/uiUtils';
@@ -16,14 +16,6 @@ export function usePasswordChangePage(showSuccess?: (msg: string) => void, showE
     if (showSuccess) showSuccess('');
     if (showError) showError('');
     setLoading(true);
-
-    // 토큰 유효성 검사
-    const tokenValidation = validateToken();
-    if (!tokenValidation.isValid) {
-      if (showError) showError(tokenValidation.error!);
-      setLoading(false);
-      return;
-    }
 
     // 비밀번호 유효성 검사
     const passwordValidation = validatePassword(newPassword, confirmNewPassword);
