@@ -117,25 +117,6 @@ export const validateMultiple = (validations: Array<{ isValid: boolean; error?: 
   return { isValid: true };
 };
 
-// 토큰 존재 여부 유효성 검사 (통합)
-export const validateTokenExists = (token: string | null, tokenType: 'refresh' | 'access' = 'access'): { isValid: boolean; error?: string } => {
-  if (!token || !token.trim()) {
-    const tokenName = tokenType === 'refresh' ? '리프레시 토큰' : '액세스 토큰';
-    return { isValid: false, error: `${tokenName}이 없습니다.` };
-  }
-
-  return { isValid: true };
-};
-
-// 기존 함수들을 호환성을 위해 유지 (내부적으로 validateTokenExists 사용)
-export const validateRefreshToken = (refreshToken: string | null): { isValid: boolean; error?: string } => {
-  return validateTokenExists(refreshToken, 'refresh');
-};
-
-export const validateUrlToken = (token: string | null): { isValid: boolean; error?: string } => {
-  return validateTokenExists(token, 'access');
-};
-
 // 토큰 유효성 검사 (통합)
 export const validateToken = (userFriendly: boolean = true): { isValid: boolean; error?: string } => {
   if (!hasAccessToken()) {

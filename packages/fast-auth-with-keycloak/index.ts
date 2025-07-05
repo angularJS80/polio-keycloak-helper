@@ -5,12 +5,10 @@ import { handleApiResponse } from './apiResultHandler';
 import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, } from './config';
 import { 
   validateFastAuthConfig, 
-  validateTokenExists, 
   validateEndpoint, 
   validateApiRequestOptions,
   validateRequiredConfig,
   validateToken,
-  validateUrlToken,
   validateAuthCode
 } from './validator';
 import { EndpointType } from './config';
@@ -204,9 +202,11 @@ export class FastAuthProvider {
   static async resetPassword(accessToken: string, newPassword: string) {
     const config = FastAuthProvider.getConfig();
     
-    // URL 토큰 유효성 검사
-    const tokenValidation = validateUrlToken(accessToken);
+    const tokenValidation = validateToken(true);
     if (!tokenValidation.isValid) {
+      if (tokenValidation.error === '토큰이 만료되었습니다.') {
+        FastAuthProvider.handleTokenExpired();
+      }
       throw new Error(tokenValidation.error);
     }
     
@@ -360,7 +360,7 @@ export async function fastAuthApiRequest(
 
   const { method = 'GET', body, withToken = true, headers: customHeaders } = options || {};
   // 토큰 기반 요청 유효성 검사
-      const tokenValidation = validateToken(withToken);
+  const tokenValidation = validateToken(true);
   if (!tokenValidation.isValid) {
     if (tokenValidation.error === '토큰이 만료되었습니다.') {
       FastAuthProvider.handleTokenExpired();
@@ -403,7 +403,6 @@ function isTokenExpiringSoon(): boolean {
 async function refreshToken(): Promise<void> {
   const config = getConfig();
   const refreshToken = getRefreshToken();
-
   if (!refreshToken) {
     console.log('[FastAuth] No refresh token available');
     return;
@@ -581,8 +580,6 @@ export {
   isTokenExpiringSoon, 
   refreshToken,
   validateToken,
-  validateTokenExists,
-  validateUrlToken,
   validateEndpoint,
   validateAuthCode
 }; 
