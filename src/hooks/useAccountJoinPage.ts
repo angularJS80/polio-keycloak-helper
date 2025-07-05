@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getJoinEndpoint } from 'fast-auth-with-keycloak/config';
 import { validateEndpoint } from 'fast-auth-with-keycloak';
+
 import { validatePassword, validateEmail, validateUsername, validateMultiple } from '../utils/uiUtils';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
 import { resetFormState } from '../utils/uiUtils';

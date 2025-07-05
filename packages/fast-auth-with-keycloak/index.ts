@@ -328,12 +328,6 @@ export async function fastAuthApiRequest(
   endpoint: string,
   options?: { method?: string; body?: any; withToken?: boolean; headers?: Record<string, string> }
 ): Promise<any> {
-  // 엔드포인트 유효성 검사
-  const endpointValidation = validateEndpoint(endpoint);
-  if (!endpointValidation.isValid) {
-    throw new Error(endpointValidation.error);
-  }
-  
   // API 요청 옵션 유효성 검사
   const optionsValidation = validateApiRequestOptions(options);
   if (!optionsValidation.isValid) {
@@ -495,7 +489,6 @@ function setupAutoRefresh() {
   });
   
   if (!hasAccessToken()) return;
-  const token = getAccessToken() as string; // hasAccessToken()이 true이므로 string으로 단언
   const exp = getAccessTokenExpiration();
   if (!exp) return;
   const now = Date.now();

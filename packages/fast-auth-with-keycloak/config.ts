@@ -1,5 +1,4 @@
 import { getItem } from './storage';
-import { FastAuthProvider } from 'fast-auth-with-keycloak';
 interface Config {
   baseUrl: string;
   loginEndpoint: string;
