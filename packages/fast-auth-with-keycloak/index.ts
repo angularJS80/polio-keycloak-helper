@@ -1,8 +1,19 @@
 // fast-auth-with-keycloak 패키지 진입점
 
-import { setAccessToken, removeAccessToken, getAccessToken, isAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, hasAccessToken, isAccessTokenStaleOrInvalid, getAccessTokenInfo } from './token';
-import { getAccessTokenExpiration } from './token';
+import { setAccessToken, removeAccessToken, getAccessToken, getAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, hasAccessToken, getAccessTokenInfo } from './token';
+import { handleApiResponse } from './apiResultHandler';
 import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, } from './config';
+import { 
+  validateFastAuthConfig, 
+  validateLoginRequest, 
+  validateTokenBasedRequest, 
+  validateRefreshToken, 
+  validateEndpoint, 
+  validateApiRequestOptions,
+  validateLogoutRequest,
+  validateTokenRefreshRequest,
+  validateRequiredConfig
+} from './validator';
 
 export type FastAuthConfig = {
   baseUrl: string;
@@ -77,6 +88,13 @@ export class FastAuthProvider {
       return;
     }
     
+    // 설정 유효성 검사
+    const configValidation = validateFastAuthConfig(config);
+    if (!configValidation.isValid) {
+      console.error('[FastAuth] 설정 유효성 검사 실패:', configValidation.error);
+      throw new Error(configValidation.error);
+    }
+    
     fastAuthConfig = { ...config };
     console.log('[FastAuth] FastAuthProvider initialized with config:', fastAuthConfig);
     if (config.onTokenExpiredNavigate) {
@@ -129,6 +147,12 @@ export class FastAuthProvider {
   }
 
   static async login({ username, password }: { username: string; password: string }) {
+    // 로그인 요청 유효성 검사
+    const loginValidation = validateLoginRequest(username, password);
+    if (!loginValidation.isValid) {
+      throw new Error(loginValidation.error);
+    }
+    
     const config = FastAuthProvider.getConfig();
     const res = await fetch(config.baseUrl + config.loginEndpoint, {
       method: 'POST',
@@ -147,53 +171,90 @@ export class FastAuthProvider {
     return data;
   }
 
+  static async loginByCode(code: string) {
+    const config = FastAuthProvider.getConfig();
+    
+    // 필수 설정 유효성 검사
+    const configValidation = validateRequiredConfig(['codeLoginEndpoint', 'baseUrl']);
+    if (!configValidation.isValid) {
+      throw new Error(configValidation.error);
+    }
+    
+    const res = await fetch(config.baseUrl + config.codeLoginEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || '코드 로그인 처리 중 오류가 발생했습니다.');
+    }
+    
+    const data = await res.json();
+    setAccessToken(data.accessToken);
+    setRefreshToken(data.refreshToken);
+    FastAuthProvider.disableAlertShown();
+    logAccessTokenExpiry();
+    if (FastAuthProvider.getConfig().autoRefresh) {
+      setupAutoRefresh();
+    }
+    return data;
+  }
+
   static async logout() {
     const config = FastAuthProvider.getConfig();
     const refreshToken = getRefreshToken();
 
-    if (!config.logoutEndpoint) {
-      console.warn('[FastAuth] Logout endpoint is not defined in FastAuthConfig. Displaying alert.');
+    // 로그아웃 요청 유효성 검사
+    const logoutValidation = validateLogoutRequest();
+    if (!logoutValidation.isValid) {
       alert('로그아웃 경로를 지정해 주세요');
+      return;
+    }
+    
+    if (!refreshToken) {
+      console.log('[FastAuth] Refresh token is missing. Performing client-side logout only.');
+      return;
+    }
+    
+    
+    try {
+      const res = await fetch(`${config.baseUrl}${config.logoutEndpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+    
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('로그아웃 엔드포인트 호출 실패:', res.status, res.statusText, '응답 본문:', errorText);
+        return;
+      }
+    } catch (error) {
+      console.error('로그아웃 엔드포인트 호출 중 오류 발생:', error);
     }
 
-    if (config.logoutEndpoint && refreshToken) {
-      try {
-        const res = await fetch(config.baseUrl + config.logoutEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refreshToken }),
-        });
+    const afterLogout = (config: FastAuthConfig) => {
+      removeAccessToken();
+      removeRefreshToken();
+      FastAuthProvider.disableAlertShown();
+      if (refreshTimeout) clearTimeout(refreshTimeout);
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('로그아웃 엔드포인트 호출 실패:', res.status, res.statusText, '응답 본문:', errorText);
-          return; // API 호출 실패 시 클라이언트 측 로그아웃을 진행하지 않고 함수 종료
+      // 초기화 플래그 리셋 (다음 로그인 시 정상 초기화를 위해)
+      isInitialized = false;
+
+      if (config.onTokenExpiredRedirect) {
+        if (FastAuthProvider._onTokenExpiredNavigate) {
+          FastAuthProvider._onTokenExpiredNavigate(config.onTokenExpiredRedirect);
+        } else {
+          window.location.href = config.onTokenExpiredRedirect;
         }
-      } catch (error) {
-        console.error('로그아웃 엔드포인트 호출 중 오류 발생:', error);
-        return; // 네트워크 오류 시에도 클라이언트 측 로그아웃을 진행하지 않고 함수 종료
       }
-    } else {
-      console.log('[FastAuth] Logout endpoint or refresh token missing. Performing client-side logout only.');
+
     }
-
-    removeAccessToken();
-    removeRefreshToken();
-    FastAuthProvider.disableAlertShown();
-    if (refreshTimeout) clearTimeout(refreshTimeout);
-
-    // 초기화 플래그 리셋 (다음 로그인 시 정상 초기화를 위해)
-    isInitialized = false;
-
-    if (config.onTokenExpiredRedirect) {
-      if (FastAuthProvider._onTokenExpiredNavigate) {
-        FastAuthProvider._onTokenExpiredNavigate(config.onTokenExpiredRedirect);
-      } else {
-        window.location.href = config.onTokenExpiredRedirect;
-      }
-    }
+    afterLogout(config)
+    
   }
 
   static enableExpiryLog(enable: boolean) {
@@ -246,43 +307,40 @@ export async function fastAuthApiRequest(
   endpoint: string,
   options?: { method?: string; body?: any; withToken?: boolean; headers?: Record<string, string> }
 ): Promise<any> {
-  const config = FastAuthProvider.getConfig();
-  const { method = 'GET', body, withToken = true, headers: customHeaders } = options || {};
-  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...customHeaders };
-  if (withToken) {
-    if (!hasAccessToken()) throw new Error('토큰이 없습니다.');
-    const token = getAccessToken() as string; // hasAccessToken()이 true이므로 string으로 단언
-    
-    if (isTokenExpired()) {
-      FastAuthProvider.handleTokenExpired();
-      throw new Error('토큰이 만료되었습니다.');
-    }
-    headers['Authorization'] = `Bearer ${token}`;
+  // 엔드포인트 유효성 검사
+  const endpointValidation = validateEndpoint(endpoint);
+  if (!endpointValidation.isValid) {
+    throw new Error(endpointValidation.error);
   }
+  
+  // API 요청 옵션 유효성 검사
+  const optionsValidation = validateApiRequestOptions(options);
+  if (!optionsValidation.isValid) {
+    throw new Error(optionsValidation.error);
+  }
+
+  const { method = 'GET', body, withToken = true, headers: customHeaders } = options || {};
+  // 토큰 기반 요청 유효성 검사
+  const tokenValidation = validateTokenBasedRequest(withToken);
+  if (!tokenValidation.isValid) {
+    if (tokenValidation.error === '토큰이 만료되었습니다.') {
+      FastAuthProvider.handleTokenExpired();
+    }
+    throw new Error(tokenValidation.error);
+  }
+  
+  const config = FastAuthProvider.getConfig();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...customHeaders };
+  
+  headers['Authorization'] = `Bearer ${getAccessToken()}`;
   const res = await fetch(config.baseUrl + endpoint, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) {
-    // API 요청 실패 시 응답 본문을 텍스트로 읽어 오류 메시지에 포함
-    const errorText = await res.text();
-    try {
-      const errorJson = JSON.parse(errorText);
-      throw new Error(`API 요청 실패: ${errorJson.message || errorText}`);
-    } catch {
-      throw new Error(`API 요청 실패: ${errorText || res.statusText}`);
-    }
-  }
-
-  // 응답 본문이 비어있을 수 있는 경우를 처리 (예: HTTP 204 No Content)
-  const contentLength = res.headers.get('content-length');
-  if (res.status === 204 || (contentLength === '0')) {
-    return {}; // 본문이 없는 경우 빈 객체 반환
-  }
 
   try {
-    return await res.json();
+    return (await handleApiResponse(res, '로그아웃')).body;
   } catch (error) {
     // 응답 본문이 있지만 JSON 파싱에 실패한 경우 (예: 빈 본문이 아니지만 유효한 JSON이 아님)
     console.warn(`[FastAuth] Failed to parse JSON for successful response (status: ${res.status}):`, error);
@@ -290,48 +348,70 @@ export async function fastAuthApiRequest(
   }
 }
 
-async function refreshTokenIfNeeded() {
-  const config = FastAuthProvider.getConfig();
-  if (!hasAccessToken()) return;
-  const token = getAccessToken() as string; // hasAccessToken()이 true이므로 string으로 단언
+// 토큰 갱신 필요 여부를 판단하는 함수
+function isTokenExpiringSoon(): boolean {
+  if (!hasAccessToken()) return false;
+  
   const exp = getAccessTokenExpiration();
-  if (!exp) return;
+  if (!exp) return false;
+  
   const now = Date.now();
   // 만료 1분 전 자동 갱신
-  if (exp - now < 60 * 1000) {
-    const refreshToken = getRefreshToken();
-    if (!refreshToken) {
-      console.log('[FastAuth] No refresh token found, handling token expired.');
-      return FastAuthProvider.handleTokenExpired();
+  return exp - now < 60 * 1000;
+}
+
+// 토큰을 실제로 갱신하는 함수
+async function refreshToken(): Promise<void> {
+  const config = FastAuthProvider.getConfig();
+  const refreshToken = getRefreshToken();
+  
+  // 리프레시 토큰 유효성 검사
+  const refreshTokenValidation = validateRefreshToken(refreshToken);
+  if (!refreshTokenValidation.isValid) {
+    console.log('[FastAuth] No refresh token found, handling token expired.');
+    return FastAuthProvider.handleTokenExpired();
+  }
+
+  // 토큰 갱신 요청 유효성 검사
+  const refreshRequestValidation = validateTokenRefreshRequest();
+  if (!refreshRequestValidation.isValid) {
+    console.error('[FastAuth] Token refresh endpoint not configured:', refreshRequestValidation.error);
+    return FastAuthProvider.handleTokenExpired();
+  }
+
+  console.log('[FastAuth] Attempting token refresh. Refresh Token present.');
+  console.log('[FastAuth] Refreshing from:', config.baseUrl + config.refreshEndpoint);
+
+  try {
+    const res = await fetch(config.baseUrl + config.refreshEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (res.ok) {
+      console.log('[FastAuth] Token refresh successful.');
+      const data = await res.json();
+      setAccessToken(data.accessToken);
+      setRefreshToken(data.refreshToken);
+      FastAuthProvider.disableAlertShown();
+      logAccessTokenExpiry();
+      setupAutoRefresh();
+    } else {
+      const errorText = await res.text();
+      console.error('[FastAuth] Token refresh failed:', res.status, res.statusText, '응답 본문:', errorText);
+      FastAuthProvider.handleTokenExpired();
     }
+  } catch (error) {
+    console.error('[FastAuth] Network error during token refresh:', error);
+    FastAuthProvider.handleTokenExpired(); // 네트워크 오류 시에도 토큰 만료 처리
+  }
+}
 
-    console.log('[FastAuth] Attempting token refresh. Refresh Token present.');
-    console.log('[FastAuth] Refreshing from:', config.baseUrl + config.refreshEndpoint);
-
-    try {
-      const res = await fetch(config.baseUrl + config.refreshEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (res.ok) {
-        console.log('[FastAuth] Token refresh successful.');
-        const data = await res.json();
-        setAccessToken(data.accessToken);
-        setRefreshToken(data.refreshToken);
-        FastAuthProvider.disableAlertShown();
-        logAccessTokenExpiry();
-        setupAutoRefresh();
-      } else {
-        const errorText = await res.text();
-        console.error('[FastAuth] Token refresh failed:', res.status, res.statusText, '응답 본문:', errorText);
-        FastAuthProvider.handleTokenExpired();
-      }
-    } catch (error) {
-      console.error('[FastAuth] Network error during token refresh:', error);
-      FastAuthProvider.handleTokenExpired(); // 네트워크 오류 시에도 토큰 만료 처리
-    }
+// 토큰 갱신 필요 여부를 판단하고 필요시 갱신하는 함수
+async function checkAndRefreshToken(): Promise<void> {
+  if (isTokenExpiringSoon()) {
+    await refreshToken();
   } else {
     console.log('[FastAuth] Token not expiring soon, setting up next auto-refresh.');
     setupAutoRefresh();
@@ -417,9 +497,9 @@ function setupAutoRefresh() {
     showSessionExpiryAlert();
   }
   if (msToRefresh !== null && msToRefresh > 0) {
-    refreshTimeout = setTimeout(refreshTokenIfNeeded, msToRefresh);
+    refreshTimeout = setTimeout(checkAndRefreshToken, msToRefresh);
   } else if (msToRefresh !== null) {
-    refreshTokenIfNeeded();
+    checkAndRefreshToken();
   }
 }
 
@@ -440,7 +520,7 @@ function showSessionExpiryAlert() {
   }
   
   // 전역 상태로 다이얼로그 표시
-  setSessionExpiryDialogState(true, refreshTokenIfNeeded, FastAuthProvider.handleTokenExpired);
+  setSessionExpiryDialogState(true, refreshToken, FastAuthProvider.handleTokenExpired);
   console.log('[FastAuth] 다이얼로그 상태 설정 완료');
 }
 
@@ -468,4 +548,7 @@ if (typeof window !== 'undefined') {
 }
 
 export { setupAutoRefresh };
-export { refreshTokenIfNeeded }; 
+
+// validator 함수들 export
+export * from './validator';
+export { checkAndRefreshToken, isTokenExpiringSoon, refreshToken }; 

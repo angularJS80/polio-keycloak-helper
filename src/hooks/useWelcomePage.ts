@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { getUserName, hasAccessToken } from 'fast-auth-with-keycloak/token';
+import { LOGIN_PATH } from '../utils/constants';
 
 export function useWelcomePage() {
   const [displayName, setDisplayName] = useState<string | null>(null);
@@ -72,12 +73,17 @@ export function useWelcomePage() {
     navigate('/profile');
   };
 
+  const handleGoToLogin = () => {
+    navigate(LOGIN_PATH);
+  };
+
   return {
     displayName,
     loading,
     refAnimationInstance,
     handleLogout,
     handleGoToProfile,
+    handleGoToLogin,
     hasAccessToken,
   };
 } 

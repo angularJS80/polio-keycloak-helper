@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
-import { hasAccessToken } from 'fast-auth-with-keycloak/token';
-import { getPasswordChangeEndpoint, hasPasswordChangeEndpoint } from 'fast-auth-with-keycloak/config';
+import { getPasswordChangeEndpoint } from 'fast-auth-with-keycloak/config';
+import { validateToken, validatePassword, validateEndpoint } from '../utils/requestValidators';
+import { handlePasswordChangeSuccess, handleApiError, resetFormState } from '../utils/apiResponseHandler';
 
 export function usePasswordChangePage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
   const [newPassword, setNewPassword] = useState('');
@@ -14,26 +15,26 @@ export function usePasswordChangePage(showSuccess?: (msg: string) => void, showE
     if (showError) showError('');
     setLoading(true);
 
-    if (!hasAccessToken()) {
-      if (showError) showError('로그인 상태가 아닙니다. 다시 로그인 해주세요.');
+    // 토큰 유효성 검사
+    const tokenValidation = validateToken();
+    if (!tokenValidation.isValid) {
+      if (showError) showError(tokenValidation.error!);
       setLoading(false);
       return;
     }
 
-    if (newPassword !== confirmNewPassword) {
-      if (showError) showError('새 비밀번호가 일치하지 않습니다.');
+    // 비밀번호 유효성 검사
+    const passwordValidation = validatePassword(newPassword, confirmNewPassword);
+    if (!passwordValidation.isValid) {
+      if (showError) showError(passwordValidation.error!);
       setLoading(false);
       return;
     }
 
-    if (newPassword.length < 6) {
-      if (showError) showError('새 비밀번호는 최소 6자 이상이어야 합니다.');
-      setLoading(false);
-      return;
-    }
-
-    if (!hasPasswordChangeEndpoint()) {
-      if (showError) showError('비밀번호 변경 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.');
+    // 엔드포인트 유효성 검사
+    const endpointValidation = validateEndpoint('passwordChange');
+    if (!endpointValidation.isValid) {
+      if (showError) showError(endpointValidation.error!);
       setLoading(false);
       return;
     }
@@ -46,14 +47,9 @@ export function usePasswordChangePage(showSuccess?: (msg: string) => void, showE
         },
       });
 
-      if (showSuccess) showSuccess('비밀번호가 성공적으로 변경되었습니다!');
-      setNewPassword('');
-      setConfirmNewPassword('');
+      handlePasswordChangeSuccess({ showSuccess, resetForm: () => resetFormState([setNewPassword, setConfirmNewPassword]) });
     } catch (err: any) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (showError) showError(`네트워크 오류 또는 서버 응답 없음: ${errorMessage}`);
-    } finally {
-      setLoading(false);
+      handleApiError(err, { showError, setLoading }, '비밀번호 변경 실패');
     }
   };
 

@@ -4,6 +4,7 @@ import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { hasAccessToken } from 'fast-auth-with-keycloak/token';
 import { getConfig, clearConfigCache } from 'fast-auth-with-keycloak/config';
 import { setItem } from 'fast-auth-with-keycloak/storage';
+import { LOGIN_PATH, DEFAULT_REDIRECT_PATH, CONFIG_PATH } from '../utils/constants';
 
 export function useInitPage() {
   const [initConfig, setInitConfig] = useState(getConfig());
@@ -26,13 +27,13 @@ export function useInitPage() {
       }
       if (hasAccessToken()) {
         const currentPath = window.location.pathname;
-        if (currentPath === '/config') {
-          navigate('/welcome');
+        if (currentPath === CONFIG_PATH) {
+          navigate(DEFAULT_REDIRECT_PATH);
         } else {
           navigate(-1);
         }
       } else {
-        navigate('/login');
+        navigate(LOGIN_PATH);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

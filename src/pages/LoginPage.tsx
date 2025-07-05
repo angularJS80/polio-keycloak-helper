@@ -24,14 +24,14 @@ export default function LoginPage() {
     handleSocialLogin,
     initConfig,
   } = useLoginPage();
-  const { message, showSuccess, showError, clearMessage } = useMessage();
+  const { message, clearMessage } = useMessage();
   const navigate = useNavigate();
 
   return (
     <Layout>
       <PageHeader 
         icon={LockIcon} 
-        title="인증이 뭔지 보여줄게" 
+        title="Cursor가 만든 200Kg 코드 40Kg다이어트 작전" 
         iconColor='#b04a5a'
         showSettingsIcon={true}
         onSettingsClick={()=>navigate('/config')}

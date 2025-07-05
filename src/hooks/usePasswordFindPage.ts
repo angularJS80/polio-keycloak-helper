@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
-import { getPasswordFindEndpoint, hasPasswordFindEndpoint } from 'fast-auth-with-keycloak/config';
+import { getPasswordFindEndpoint } from 'fast-auth-with-keycloak/config';
+import { validateEmail, validateEndpoint } from '../utils/requestValidators';
+import { handlePasswordFindSuccess, handleApiError, resetFormState } from '../utils/apiResponseHandler';
 
 export function usePasswordFindPage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
   const [email, setEmail] = useState('');
@@ -12,8 +14,18 @@ export function usePasswordFindPage(showSuccess?: (msg: string) => void, showErr
     if (showError) showError('');
     setLoading(true);
 
-    if (!hasPasswordFindEndpoint()) {
-      if (showError) showError('비밀번호 찾기 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.');
+    // 이메일 유효성 검사
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      if (showError) showError(emailValidation.error!);
+      setLoading(false);
+      return;
+    }
+
+    // 엔드포인트 유효성 검사
+    const endpointValidation = validateEndpoint('passwordFind');
+    if (!endpointValidation.isValid) {
+      if (showError) showError(endpointValidation.error!);
       setLoading(false);
       return;
     }
@@ -27,13 +39,12 @@ export function usePasswordFindPage(showSuccess?: (msg: string) => void, showErr
         withToken: false,
       });
 
-      if (showSuccess) showSuccess('비밀번호 재설정 이메일이 발송되었습니다. 이메일을 확인해주세요.');
-      setEmail('');
+      handlePasswordFindSuccess({ 
+        showSuccess, 
+        resetForm: () => resetFormState([setEmail]) 
+      });
     } catch (err: any) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (showError) showError(`비밀번호 찾기 실패: ${errorMessage}`);
-    } finally {
-      setLoading(false);
+      handleApiError(err, { showError, setLoading }, '비밀번호 찾기 실패');
     }
   };
 

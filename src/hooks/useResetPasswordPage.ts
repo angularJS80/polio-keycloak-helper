@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getConfig, getPasswordResetEndpoint, hasPasswordResetEndpoint } from 'fast-auth-with-keycloak/config';
+import { getConfig, getPasswordResetEndpoint } from 'fast-auth-with-keycloak/config';
+import { validateUrlToken, validatePassword, validateEndpoint } from '../utils/requestValidators';
+import { handlePasswordResetSuccess, handleApiError, handleHttpError, resetFormState } from '../utils/apiResponseHandler';
+import { LOGIN_PATH } from '../utils/constants';
 
 export function useResetPasswordPage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
   const [newPassword, setNewPassword] = useState('');
@@ -18,31 +21,31 @@ export function useResetPasswordPage(showSuccess?: (msg: string) => void, showEr
     const queryParams = new URLSearchParams(location.search);
     const urlAccessToken = queryParams.get('access_token');
 
-    if (!urlAccessToken) {
-      if (showError) showError('유효한 접근 토큰이 없습니다.');
+    // URL 토큰 유효성 검사
+    const tokenValidation = validateUrlToken(urlAccessToken);
+    if (!tokenValidation.isValid) {
+      if (showError) showError(tokenValidation.error!);
       setLoading(false);
       return;
     }
 
-    if (newPassword !== confirmNewPassword) {
-      if (showError) showError('새 비밀번호가 일치하지 않습니다.');
+    // 비밀번호 유효성 검사
+    const passwordValidation = validatePassword(newPassword, confirmNewPassword);
+    if (!passwordValidation.isValid) {
+      if (showError) showError(passwordValidation.error!);
       setLoading(false);
       return;
     }
 
-    if (newPassword.length < 6) { 
-      if (showError) showError('새 비밀번호는 최소 6자 이상이어야 합니다.');
+    // 엔드포인트 유효성 검사
+    const endpointValidation = validateEndpoint('passwordReset');
+    if (!endpointValidation.isValid) {
+      if (showError) showError(endpointValidation.error!);
       setLoading(false);
       return;
     }
 
     const initConfig = getConfig();
-    if (!hasPasswordResetEndpoint()) {
-      if (showError) showError('비밀번호 초기화 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.');
-      setLoading(false);
-      return;
-    }
-
     try {
       const response = await fetch(
         `${initConfig.baseUrl}${getPasswordResetEndpoint()}`,
@@ -57,23 +60,20 @@ export function useResetPasswordPage(showSuccess?: (msg: string) => void, showEr
       );
 
       if (response.ok) {
-        if (showSuccess) showSuccess('비밀번호가 성공적으로 변경되었습니다!');
-        setNewPassword('');
-        setConfirmNewPassword('');
+        handlePasswordResetSuccess({ 
+          showSuccess, 
+          resetForm: () => resetFormState([setNewPassword, setConfirmNewPassword]) 
+        });
       } else {
-        const errorData = await response.json();
-        if (showError) showError(`비밀번호 초기화 실패: ${errorData.message || '알 수 없는 오류'}`);
+        await handleHttpError(response, { showError, setLoading }, '비밀번호 초기화 실패');
       }
     } catch (err: any) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (showError) showError(`비밀번호 초기화 실패: ${errorMessage}`);
-    } finally {
-      setLoading(false);
+      handleApiError(err, { showError, setLoading }, '비밀번호 초기화 실패');
     }
   };
 
   const handleGoToLogin = () => {
-    navigate('/login');
+    navigate(LOGIN_PATH);
   };
 
   return {

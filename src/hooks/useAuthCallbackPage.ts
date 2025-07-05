@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FastAuthProvider, fastAuthApiRequest } from 'fast-auth-with-keycloak';
-import { setAccessToken, setRefreshToken } from 'fast-auth-with-keycloak/token';
-import { getConfig, getProfileConfig, getRedirectConfig } from 'fast-auth-with-keycloak/config';
-import { setItem } from 'fast-auth-with-keycloak/storage';
+import { FastAuthProvider } from 'fast-auth-with-keycloak';
+import { validateAuthCode } from '../utils/requestValidators';
+import { handleLoginSuccess, handleApiError } from '../utils/apiResponseHandler';
+import { LOGIN_PATH } from '../utils/constants';
 
 export function useAuthCallbackPage() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function useAuthCallbackPage() {
 
   const handleCloseError = () => {
     setError(null);
-    navigate('/login');
+    navigate(LOGIN_PATH);
   };
 
   useEffect(() => {
@@ -25,65 +25,29 @@ export function useAuthCallbackPage() {
     const processAuthCallback = async () => {
       const queryParams = new URLSearchParams(location.search);
       const code = queryParams.get('code');
-      if (!code) {
-        setError('인증 코드를 찾을 수 없습니다.');
+
+      // 인증 코드 유효성 검사
+      const codeValidation = validateAuthCode(code);
+      if (!codeValidation.isValid) {
+        setError(codeValidation.error!);
         setMessage('로그인 실패');
         return;
       }
 
       isApiCallMade.current = true;
 
-      const initConfig = getConfig();
-      const codeLoginEndpoint = initConfig.codeLoginEndpoint;
-      const baseUrl = initConfig.baseUrl;
-      if (!codeLoginEndpoint || !baseUrl) {
-        setError('초기화 설정에 코드 로그인 엔드포인트 또는 Base URL이 설정되지 않았습니다. 관리자에게 문의하세요.');
-        setMessage('로그인 실패');
-        return;
-      }
-
       try {
-        const response = await fetch(
-          `${baseUrl}${codeLoginEndpoint}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ code: code }),
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setAccessToken(data.accessToken);
-          setRefreshToken(data.refreshToken);
-
-          FastAuthProvider.resumeSession();
-          const { profileAfterLogin, profileEndpoint } = getProfileConfig();
-          if (profileAfterLogin) {
-            try {
-              const user = await fastAuthApiRequest(profileEndpoint);
-              setItem('session', 'fast-auth-username', user.username);
-            } catch (profileErr) {
-              // 프로필 조회 실패는 치명적이지 않으므로 무시
-            }
-          }
-
-          const { redirectAfterLogin, redirectPath } = getRedirectConfig();
-          if (redirectAfterLogin && redirectPath) {
-            navigate(redirectPath, { replace: true });
-          } else {
-            navigate('/welcome', { replace: true });
-          }
-          setMessage('로그인 성공!');
-        } else {
-          const errorData = await response.json();
-          setError(errorData.message || '코드 로그인 처리 중 오류가 발생했습니다.');
-          setMessage('로그인 실패');
-        }
-      } catch (err) {
-        setError('네트워크 오류 또는 서버 응답 없음.');
+        // FastAuthProvider.loginByCode 사용
+        const response = await FastAuthProvider.loginByCode(code!);
+        await handleLoginSuccess(response, { 
+          showSuccess: () => setMessage('로그인 성공!'),
+          navigate 
+        });
+      } catch (err: any) {
+        handleApiError(err, { 
+          showError: (msg) => setError(msg), 
+          setLoading: () => {} 
+        }, '코드 로그인 처리 중 오류가 발생했습니다.');
         setMessage('로그인 실패');
       }
     };

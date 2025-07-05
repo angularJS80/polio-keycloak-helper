@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getJoinEndpoint } from 'fast-auth-with-keycloak/config';
+import { validatePassword, validateEmail, validateUsername, validateEndpoint, validateMultiple } from '../utils/requestValidators';
+import { handleJoinSuccess, handleApiError, handleHttpError, resetFormState } from '../utils/apiResponseHandler';
 
 export function useAccountJoinPage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
   const [username, setUsername] = useState('');
@@ -15,8 +17,16 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
     if (showError) showError('');
     setLoading(true);
 
-    if (password !== confirmPassword) {
-      if (showError) showError('비밀번호가 일치하지 않습니다.');
+    // 복합 유효성 검사
+    const validation = validateMultiple([
+      validateUsername(username),
+      validateEmail(email),
+      validatePassword(password, confirmPassword),
+      validateEndpoint('join')
+    ]);
+    
+    if (!validation.isValid) {
+      if (showError) showError(validation.error!);
       setLoading(false);
       return;
     }
@@ -29,15 +39,15 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
       });
 
       if (response.ok) {
-        if (showSuccess) showSuccess('계정 등록이 성공적으로 완료되었습니다!');
+        handleJoinSuccess({ 
+          showSuccess, 
+          resetForm: () => resetFormState([setUsername, setEmail, setPassword, setConfirmPassword]) 
+        });
       } else {
-        const errorData = await response.json();
-        if (showError) showError(`계정 등록 실패: ${errorData.message || response.statusText}`);
+        await handleHttpError(response, { showError, setLoading }, '계정 등록 실패');
       }
     } catch (err: any) {
-      if (showError) showError(`네트워크 오류 또는 서버 응답 없음: ${err.message}`);
-    } finally {
-      setLoading(false);
+      handleApiError(err, { showError, setLoading }, '계정 등록 실패');
     }
   };
 

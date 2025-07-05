@@ -3,16 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FastAuthProvider, addDialogStateListener, removeDialogStateListener } from 'fast-auth-with-keycloak';
 import {  isTokenExpired, hasAccessToken } from 'fast-auth-with-keycloak/token';
 import { getConfig } from 'fast-auth-with-keycloak/config';
-
-// 초기화 설정 없이 접근 가능한 경로 목록
-const PUBLIC_PATHS = [
-  '/config',
-  '/login',
-  '/join',
-  '/password-find',
-  '/reset-password',
-  '/auth/callback',
-];
+import { PUBLIC_PATHS, LOGIN_PATH } from '../utils/constants';
 
 export function useAppCore() {
   const navigate = useNavigate();
@@ -66,17 +57,16 @@ export function useAppCore() {
     if (isNeedAuthPath(currentPath)) {
       
         if (hasAccessToken()) {
-          
-        
           if (isTokenExpired()) {
-            navigate('/login', { replace: true });
+            console.log("goto login path");
+            navigate(LOGIN_PATH, { replace: true });
           } else {
-            navigate('/welcome', { replace: true });
+           // 왜 토큰이 말료되지 않았는대 기본패이지로 가지?
+            //navigate(DEFAULT_REDIRECT_PATH, { replace: true });
           }
-
-        } else {
-          navigate('/login', { replace: true });
-        }
+      } else {
+        navigate(LOGIN_PATH, { replace: true });
+      }
       
     }
   }, [location.pathname, navigate]);

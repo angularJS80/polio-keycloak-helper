@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FastAuthProvider, fastAuthApiRequest } from 'fast-auth-with-keycloak';
+import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { hasAccessToken } from 'fast-auth-with-keycloak/token';
-import { getConfig, getProfileConfig, getRedirectConfig, getJoinEndpoint } from 'fast-auth-with-keycloak/config';
+import { getConfig, getJoinEndpoint } from 'fast-auth-with-keycloak/config';
+import { handleLoginSuccess } from '../utils/apiResponseHandler';
 
 export function useLoginPage() {
   const [loginState, setLoginState] = useState({ username: '', password: '', loading: false, error: '' });
@@ -25,16 +26,11 @@ export function useLoginPage() {
   const handleLogin = async () => {
     setLoginState(s => ({ ...s, loading: true, error: '' }));
     try {
-      await FastAuthProvider.login({ username: loginState.username, password: loginState.password });
-      const { profileAfterLogin, profileEndpoint } = getProfileConfig();
-      if (profileAfterLogin) {
-        const user = await fastAuthApiRequest(profileEndpoint);
-        sessionStorage.setItem('fast-auth-username', user.username);
-      }
-      const { redirectAfterLogin, redirectPath } = getRedirectConfig();
-      if (redirectAfterLogin && redirectPath) {
-        navigate(redirectPath);
-      }
+      const response = await FastAuthProvider.login({ username: loginState.username, password: loginState.password });
+      await handleLoginSuccess(response, { 
+        navigate,
+        setLoading: (loading) => setLoginState(s => ({ ...s, loading }))
+      });
     } catch (err) {
       setLoginState(s => ({ ...s, error: '로그인 실패', loading: false }));
     }

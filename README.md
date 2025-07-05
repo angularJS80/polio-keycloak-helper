@@ -55,15 +55,54 @@ yarn add fast-auth-with-keycloak
 
 ## 2024년 6월 리팩토링
 
+### 구조 개선
 - 모든 주요 페이지의 상태, 이펙트, 주요 핸들러를 커스텀 훅(`src/hooks/useXXXPage.ts`)으로 분리하여 UI와 로직을 완전히 분리함
 - 각 페이지 컴포넌트는 UI만 담당, 상태/핸들러/이펙트는 커스텀 훅에서 관리
 - 공통 메시지/다이얼로그 관리(`useMessage`, `CommonMessageDialog`)를 도입하여 성공/에러 메시지 처리 일원화
 - 세션 만료 다이얼로그, 메시지 다이얼로그 등도 전역 상태/공통 컴포넌트로 단순화
 - 페이지 이동(navigate)만 각 페이지에서 직접 처리, 나머지 로직은 모두 훅으로 이동
 - AuthCallbackPage, PasswordFindPage 등도 커스텀 훅(`useAuthCallbackPage`, `usePasswordFindPage`)으로 분리
+
+### 유틸리티 함수 분리 (NEW!)
+- `src/utils/requestValidators.ts`: 요청 전 유효성 검사 함수들
+  - 비밀번호, 토큰, 이메일, 사용자명, 엔드포인트 설정 검증
+  - 복합 검증 함수 (`validateMultiple`)로 여러 검증을 한번에 수행
+  - **인증 코드 유효성 검사 함수 추가** (`validateAuthCode`)
+- `src/utils/apiResponseHandler.ts`: API 호출 후 처리 함수들
+  - 성공/실패 응답 처리, 오류 처리, 폼 초기화
+- `src/utils/constants.ts`: 공통 상수들
+  - 경로 상수, 기본값 등
+
+### 코드 표준화
 - 코드 네이밍, 함수명, 상태 변수명 등 실무적이고 명확하게 개선
 - hooks 폴더 구조 및 네이밍 표준화
 - 각종 중복 코드/로직을 공통 훅, 컴포넌트로 통합하여 유지보수성 향상
+- 유효성 검사 및 응답 처리 로직 중앙화
+
+### fast-auth-with-keycloak 패키지 내부 유효성 검사 강화 (NEW!)
+- `packages/fast-auth-with-keycloak/validator.ts`: 패키지 내부 유효성 검사 함수들
+  - 설정, 로그인 요청, 토큰 기반 요청, 리프레시 토큰, 엔드포인트, API 요청 옵션 검증
+  - **필수 설정 유효성 검사 함수 추가** (`validateRequiredConfig`)
+  - 로그아웃, 토큰 갱신 요청 유효성 검사
+  - 복합 유효성 검사 함수 (`validateMultiple`)
+- `packages/fast-auth-with-keycloak/index.ts`의 주요 메서드들에 유효성 검사 적용
+  - `init`, `login`, `logout`, `fastAuthApiRequest`, `checkAndRefreshToken` 등
+
+### 토큰 갱신 로직 분리 (NEW!)
+- `isTokenExpiringSoon()`: 토큰 만료 시점 판단 함수
+- `refreshToken()`: 토큰 갱신 발급 함수  
+- `checkAndRefreshToken()`: 위 두 함수를 조합한 통합 함수 (기존 `refreshTokenIfNeeded`에서 이름 변경)
+- 각 함수의 책임을 명확히 분리하여 코드 가독성 및 유지보수성 향상
+
+### 인증 콜백 처리 개선 (NEW!)
+- `FastAuthProvider.loginByCode()` 메서드 추가
+  - 인증 코드를 받아서 API를 호출하는 전용 메서드
+  - 내부적으로 설정 유효성 검사 수행
+  - 토큰 설정 및 자동 갱신 설정 포함
+- `useAuthCallbackPage` 훅 리팩토링
+  - **이전**: 직접 fetch 호출과 복잡한 설정 검증
+  - **이후**: `validateAuthCode`로 코드 유효성 검사 + `FastAuthProvider.loginByCode`로 API 호출
+  - 더 간결하고 명확한 코드 구조
 
 # Getting Started with Create React App
 
@@ -124,6 +163,7 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 - 토큰 만료 시 지정 경로로 리다이렉트
 - 로그인 후 프로필 조회 및 환영 페이지 이동 등 커스텀 라우팅 지원
 - 모든 API 요청에 accessToken 자동 포함 (옵션으로 미포함 가능)
+- **API 호출 전 유효성 검사**: 설정, 토큰, 엔드포인트, 요청 옵션 등에 대한 자동 검증
 
 ## 사용법
 
@@ -165,6 +205,7 @@ const publicData = await fastAuthApiRequest('/public', { withToken: false });
 ### 5. 토큰 자동 갱신
 - accessToken의 exp(JWT 만료시간)를 클라이언트에서 파싱하여, 설정한 시점(초 전)에 자동으로 refresh
 - 만료 시 자동 로그아웃 및 지정 경로로 리다이렉트
+- **토큰 갱신 함수 분리**: `isTokenExpiringSoon()` (판단), `refreshToken()` (발급), `checkAndRefreshToken()` (통합)
 
 ---
 

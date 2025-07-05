@@ -1,0 +1,148 @@
+// fast-auth-with-keycloak 패키지 내부 유효성 검사 함수들
+
+import { hasAccessToken, isTokenExpired, getAccessToken } from './token';
+import { getConfig } from './config';
+
+// FastAuthConfig 유효성 검사
+export const validateFastAuthConfig = (config: any): { isValid: boolean; error?: string } => {
+  if (!config) {
+    return { isValid: false, error: 'FastAuthConfig가 제공되지 않았습니다.' };
+  }
+
+  if (!config.baseUrl) {
+    return { isValid: false, error: 'baseUrl이 설정되지 않았습니다.' };
+  }
+
+  if (!config.loginEndpoint) {
+    return { isValid: false, error: 'loginEndpoint가 설정되지 않았습니다.' };
+  }
+
+  if (!config.refreshEndpoint) {
+    return { isValid: false, error: 'refreshEndpoint가 설정되지 않았습니다.' };
+  }
+
+  return { isValid: true };
+};
+
+// 로그인 요청 유효성 검사
+export const validateLoginRequest = (username: string, password: string): { isValid: boolean; error?: string } => {
+  if (!username || !username.trim()) {
+    return { isValid: false, error: '사용자명을 입력해주세요.' };
+  }
+
+  if (!password || !password.trim()) {
+    return { isValid: false, error: '비밀번호를 입력해주세요.' };
+  }
+
+  return { isValid: true };
+};
+
+// 토큰 기반 API 요청 유효성 검사
+export const validateTokenBasedRequest = (): { isValid: boolean; error?: string } => {
+  if (!hasAccessToken()) {
+    return { isValid: false, error: '토큰이 없습니다.' };
+  }
+
+  if (isTokenExpired()) {
+    return { isValid: false, error: '토큰이 만료되었습니다.' };
+  }
+
+  return { isValid: true };
+};
+
+// 리프레시 토큰 유효성 검사
+export const validateRefreshToken = (refreshToken: string | null): { isValid: boolean; error?: string } => {
+  if (!refreshToken) {
+    return { isValid: false, error: '리프레시 토큰이 없습니다.' };
+  }
+
+  return { isValid: true };
+};
+
+// 엔드포인트 유효성 검사
+export const validateEndpoint = (endpoint: string): { isValid: boolean; error?: string } => {
+  if (!endpoint || !endpoint.trim()) {
+    return { isValid: false, error: '엔드포인트가 제공되지 않았습니다.' };
+  }
+
+  if (!endpoint.startsWith('/')) {
+    return { isValid: false, error: '엔드포인트는 "/"로 시작해야 합니다.' };
+  }
+
+  return { isValid: true };
+};
+
+// API 요청 옵션 유효성 검사
+export const validateApiRequestOptions = (options: any): { isValid: boolean; error?: string } => {
+  if (options && typeof options !== 'object') {
+    return { isValid: false, error: 'API 요청 옵션은 객체여야 합니다.' };
+  }
+
+  if (options?.method && !['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
+    return { isValid: false, error: '지원하지 않는 HTTP 메서드입니다.' };
+  }
+
+  if (options?.headers && typeof options.headers !== 'object') {
+    return { isValid: false, error: '헤더는 객체여야 합니다.' };
+  }
+
+  return { isValid: true };
+};
+
+// 설정 초기화 유효성 검사
+export const validateInitConfig = (): { isValid: boolean; error?: string } => {
+  try {
+    const config = getConfig();
+    return validateFastAuthConfig(config);
+  } catch (error) {
+    return { isValid: false, error: '설정을 로드할 수 없습니다.' };
+  }
+};
+
+// 필수 설정 유효성 검사
+export const validateRequiredConfig = (requiredFields: string[]): { isValid: boolean; error?: string } => {
+  const config = getConfig();
+  
+  for (const field of requiredFields) {
+    if (!config[field as keyof typeof config]) {
+      return { 
+        isValid: false, 
+        error: `초기화 설정에 ${field}이(가) 설정되지 않았습니다. 관리자에게 문의하세요.` 
+      };
+    }
+  }
+  
+  return { isValid: true };
+};
+
+// 로그아웃 요청 유효성 검사
+export const validateLogoutRequest = (): { isValid: boolean; error?: string } => {
+  const config = getConfig();
+  
+  if (!config.logoutEndpoint) {
+    return { isValid: false, error: '로그아웃 엔드포인트가 설정되지 않았습니다.' };
+  }
+
+  return { isValid: true };
+};
+
+// 토큰 갱신 요청 유효성 검사
+export const validateTokenRefreshRequest = (): { isValid: boolean; error?: string } => {
+  const config = getConfig();
+  
+  if (!config.refreshEndpoint) {
+    return { isValid: false, error: '토큰 갱신 엔드포인트가 설정되지 않았습니다.' };
+  }
+
+  return { isValid: true };
+};
+
+// 복합 유효성 검사 (여러 검증을 한번에 수행)
+export const validateMultiple = (validations: Array<{ isValid: boolean; error?: string }>): { isValid: boolean; error?: string } => {
+  for (const validation of validations) {
+    if (!validation.isValid) {
+      return validation;
+    }
+  }
+  return { isValid: true };
+}; 
