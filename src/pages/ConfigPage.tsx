@@ -6,10 +6,10 @@ import Checkbox from '@mui/material/Checkbox';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Layout from '../components/Layout';
 import PageHeader from '../components/PageHeader';
-import { useInitPage } from '../hooks/useInitPage';
+import { useConfigPage } from '../hooks/useConfigPage';
 
-export default function InitPage() {
-  const { initConfig, setInitConfig, handleSave } = useInitPage();
+export default function ConfigPage() {
+  const { config, setConfig, handleSave } = useConfigPage();
 
   return (
     <Layout>
@@ -19,87 +19,87 @@ export default function InitPage() {
         label="Base URL"
         variant="outlined"
         margin="normal"
-        value={initConfig.baseUrl}
-        onChange={e => setInitConfig({ ...initConfig, baseUrl: e.target.value })}
+        value={config.baseUrl}
+        onChange={e => setConfig({ ...config, baseUrl: e.target.value })}
       />
       <TextField
         fullWidth
         label="계정등록 엔드포인트"
         variant="outlined"
         margin="normal"
-        value={initConfig.joinEndpoint || ''}
-        onChange={e => setInitConfig({ ...initConfig, joinEndpoint: e.target.value })}
+        value={config.joinEndpoint || ''}
+        onChange={e => setConfig({ ...config, joinEndpoint: e.target.value })}
       />
       <TextField
         fullWidth
         label="로그인 엔드포인트"
         variant="outlined"
         margin="normal"
-        value={initConfig.loginEndpoint}
-        onChange={e => setInitConfig({ ...initConfig, loginEndpoint: e.target.value })}
+        value={config.loginEndpoint || ''}
+        onChange={e => setConfig({ ...config, loginEndpoint: e.target.value })}
       />
       <TextField
         fullWidth
         label="비밀번호 변경 엔드포인트"
         variant="outlined"
         margin="normal"
-        value={initConfig.passwordChangeEndpoint || ''}
-        onChange={e => setInitConfig({ ...initConfig, passwordChangeEndpoint: e.target.value })}
+        value={config.passwordChangeEndpoint || ''}
+        onChange={e => setConfig({ ...config, passwordChangeEndpoint: e.target.value })}
       />
       <TextField
         fullWidth
         label="비밀번호 초기화 엔드포인트"
         variant="outlined"
         margin="normal"
-        value={initConfig.passwordResetEndpoint || ''}
-        onChange={e => setInitConfig({ ...initConfig, passwordResetEndpoint: e.target.value })}
+        value={config.passwordResetEndpoint || ''}
+        onChange={e => setConfig({ ...config, passwordResetEndpoint: e.target.value })}
       />
       <TextField
         fullWidth
         label="비밀번호 찾기 엔드포인트"
         variant="outlined"
         margin="normal"
-        value={initConfig.passwordFindEndpoint || ''}
-        onChange={e => setInitConfig({ ...initConfig, passwordFindEndpoint: e.target.value })}
+        value={config.passwordFindEndpoint || ''}
+        onChange={e => setConfig({ ...config, passwordFindEndpoint: e.target.value })}
       />
       <TextField
         fullWidth
         label="로그아웃 엔드포인트"
         variant="outlined"
         margin="normal"
-        value={initConfig.logoutEndpoint || ''}
-        onChange={e => setInitConfig({ ...initConfig, logoutEndpoint: e.target.value })}
+        value={config.logoutEndpoint || ''}
+        onChange={e => setConfig({ ...config, logoutEndpoint: e.target.value })}
       />
       <TextField
         fullWidth
         label="소셜 로그인 링크"
         variant="outlined"
         margin="normal"
-        value={initConfig.socialLoginEndpoint || ''}
-        onChange={e => setInitConfig({ ...initConfig, socialLoginEndpoint: e.target.value })}
+        value={config.loginEndpoint || ''}
+        onChange={e => setConfig({ ...config, socialLoginEndpoint: e.target.value })}
       />
       <TextField
         fullWidth
         label="코드 로그인 엔드포인트"
         variant="outlined"
         margin="normal"
-        value={initConfig.loginByCodeEndpoint || ''}
-        onChange={e => setInitConfig({ ...initConfig, loginByCodeEndpoint: e.target.value })}
+        value={config.loginByCodeEndpoint || ''}
+        onChange={e => setConfig({ ...config, loginByCodeEndpoint: e.target.value })}
       />
       <TextField
         fullWidth
         label="리프레쉬 엔드포인트"
         variant="outlined"
         margin="normal"
-        value={initConfig.refreshEndpoint}
-        onChange={e => setInitConfig({ ...initConfig, refreshEndpoint: e.target.value })}
+        value={config.refreshEndpoint}
+        onChange={e => setConfig({ ...config, refreshEndpoint: e.target.value })}
       />
       <FormControlLabel
-        control={<Checkbox checked={initConfig.autoRefresh} onChange={e => setInitConfig({ ...initConfig, autoRefresh: e.target.checked })} />}
+        control={<Checkbox checked={config.autoRefresh} onChange={e => setConfig({ ...config, autoRefresh: e.target.checked })} />}
         label="토큰 자동 갱신"
         sx={{ mb: 1 }}
       />
-      {initConfig.autoRefresh && (
+      {config.autoRefresh && (
         <TextField
           fullWidth
           type="number"
@@ -107,18 +107,18 @@ export default function InitPage() {
           variant="outlined"
           margin="normal"
           inputProps={{ min: 1 }}
-          value={initConfig.refreshBeforeExpirySec || 1}
-          onChange={e => setInitConfig({ ...initConfig, refreshBeforeExpirySec: Number(e.target.value) })}
+          value={config.refreshBeforeExpirySec || 1}
+          onChange={e => setConfig({ ...config, refreshBeforeExpirySec: Number(e.target.value) })}
         />
       )}
-      {!initConfig.autoRefresh && (
+      {!config.autoRefresh && (
         <>
           <FormControlLabel
-            control={<Checkbox checked={initConfig.sessionExpiryAlertEnabled || false} onChange={e => setInitConfig({ ...initConfig, sessionExpiryAlertEnabled: e.target.checked })} />}
+            control={<Checkbox checked={config.sessionExpiryAlertEnabled || false} onChange={e => setConfig({ ...config, sessionExpiryAlertEnabled: e.target.checked })} />}
             label="토큰 만료 전 알림 활성화"
             sx={{ mb: 1 }}
           />
-          {initConfig.sessionExpiryAlertEnabled && (
+          {config.sessionExpiryAlertEnabled && (
             <TextField
               fullWidth
               type="number"
@@ -126,8 +126,8 @@ export default function InitPage() {
               variant="outlined"
               margin="normal"
               inputProps={{ min: 1 }}
-              value={initConfig.sessionExpiryAlertSec || 30}
-              onChange={e => setInitConfig({ ...initConfig, sessionExpiryAlertSec: Number(e.target.value) })}
+              value={config.sessionExpiryAlertSec || 30}
+              onChange={e => setConfig({ ...config, sessionExpiryAlertSec: Number(e.target.value) })}
             />
           )}
         </>
@@ -137,23 +137,23 @@ export default function InitPage() {
         label="만료시 리다이렉트 경로"
         variant="outlined"
         margin="normal"
-        value={initConfig.onTokenExpiredRedirect}
-        onChange={e => setInitConfig({ ...initConfig, onTokenExpiredRedirect: e.target.value })}
+        value={config.onTokenExpiredRedirect}
+        onChange={e => setConfig({ ...config, onTokenExpiredRedirect: e.target.value })}
       />
 
       <FormControlLabel
-        control={<Checkbox checked={initConfig.redirectAfterLogin} onChange={e => setInitConfig({ ...initConfig, redirectAfterLogin: e.target.checked })} />}
+        control={<Checkbox checked={config.redirectAfterLogin} onChange={e => setConfig({ ...config, redirectAfterLogin: e.target.checked })} />}
         label="로그인 후 이동"
         sx={{ mb: 1 }}
       />
-      {initConfig.redirectAfterLogin && (
+      {config.redirectAfterLogin && (
         <TextField
           fullWidth
           label="이동 경로"
           variant="outlined"
           margin="normal"
-          value={initConfig.redirectPath || ''}
-          onChange={e => setInitConfig({ ...initConfig, redirectPath: e.target.value })}
+          value={config.redirectPath || ''}
+          onChange={e => setConfig({ ...config, redirectPath: e.target.value })}
         />
       )}
       <Button

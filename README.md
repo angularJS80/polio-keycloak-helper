@@ -58,7 +58,7 @@ yarn add fast-auth-with-keycloak
 #### 프로필 조회 로직 제거 및 성능 최적화
 - **profileAfterLogin 설정 제거**: 불필요한 프로필 조회 로직 제거
 - **profileEndpoint 설정 제거**: 관련 설정 및 UI 제거
-- **InitPage UI 간소화**: 프로필 조회 관련 설정 필드 제거
+- **ConfigPage UI 간소화**: 프로필 조회 관련 설정 필드 제거
 - **성능 향상**: 로그인 후 불필요한 API 호출 제거로 성능 개선
 
 #### 코드 모듈화 및 재사용성 향상
@@ -80,24 +80,24 @@ yarn add fast-auth-with-keycloak
 - **토큰 파싱 기능 재사용성 강화**: JWT 토큰 파싱(`decodeToken`) 기능이 `fast-auth-with-keycloak` 패키지 내부로 이동하여 애플리케이션 전반에서 재사용할 수 있게 개선되었습니다.
 - **WelcomePage 프로필 아이콘 버튼 수정**: 마우스를 올릴 때만 보이던 프로필 아이콘 버튼을 항상 보이도록 수정하고, Material-UI Button 컴포넌트의 variant를 `contained`로, 배경색을 보라색으로, 크기를 정사각형으로 조정했습니다.
 - **ProfilePage 디자인 개선**: 사용자 프로필 페이지에서 이름과 이메일 정보가 입력 필드처럼 보이지 않도록 List, ListItem, ListItemIcon, ListItemText 컴포넌트를 활용하여 목록 형태로 표시하고, 각 정보 앞에 아이콘을 추가하여 조회 전용 느낌을 강화했습니다.
-- **모든 화면 상단 제목 글자 크기 통일**: WelcomePage, LoginPage, InitPage, ProfilePage의 상단 제목 Typography 컴포넌트 `variant`를 모두 `h5`로 통일하여 일관성을 확보했습니다.
+- **모든 화면 상단 제목 글자 크기 통일**: WelcomePage, LoginPage, ConfigPage, ProfilePage의 상단 제목 Typography 컴포넌트 `variant`를 모두 `h5`로 통일하여 일관성을 확보했습니다.
 - **WelcomePage 제목 앞 아이콘 변경**: WelcomePage 제목 앞에 `EmojiPeopleIcon` 대신 `WavingHandIcon`을 최종 적용했습니다.
 - **비밀번호 변경/재설정 기능 분리:**
     - `PasswordChangePage.tsx`는 로그인된 사용자의 비밀번호 변경을 전담하도록 수정되었습니다.
     - `ResetPasswordPage.tsx`를 새로 추가하여, URL 쿼리 파라미터를 통해 `access_token`을 받아 비밀번호를 재설정하는 기능을 구현했습니다. 이 페이지는 세션 기반의 토큰 갱신 로직을 사용하지 않습니다.
     - `src/App.tsx`에 `/reset-password` 경로로 `ResetPasswordPage.tsx`에 대한 라우팅을 추가했습니다.
-    - `src/utils/authConfig.ts`에 `passwordResetEndpoint`를 추가하고, `InitPage.tsx`에서 이 엔드포인트를 설정할 수 있도록 입력 필드를 추가했습니다.
+    - `src/utils/authConfig.ts`에 `passwordResetEndpoint`를 추가하고, `ConfigPage.tsx`에서 이 엔드포인트를 설정할 수 있도록 입력 필드를 추가했습니다.
 - **비밀번호 찾기 기능 추가 및 개선:**
-    - 초기화 설정 화면(`InitPage.tsx`)에 `비밀번호 찾기 엔드포인트` 설정 필드가 추가되었습니다.
+    - 초기화 설정 화면(`ConfigPage.tsx`)에 `비밀번호 찾기 엔드포인트` 설정 필드가 추가되었습니다.
     - 이메일 입력을 통해 비밀번호 재설정 이메일을 요청하는 `비밀번호 찾기 페이지(/password-find)`(`PasswordFindPage.tsx`)가 새로 추가되었습니다.
     - `PasswordFindPage.tsx`와 `ResetPasswordPage.tsx`에서 `FastAuthProvider` 의존성 없이 독립적으로 API 요청을 보낼 수 있도록 `fastAuthApiRequest` 대신 웹 표준 `fetch` API를 사용하도록 수정되었습니다.
     - 애플리케이션 초기화 설정 유무와 관계없이 `비밀번호 찾기` 및 `비밀번호 재설정` 페이지에 직접 접근할 수 있도록 `src/App.tsx`의 라우팅 로직이 개선되었습니다.
     - `src/utils/authConfig.ts` 내 엔드포인트 관련 유틸리티 함수들(`getJoinEndpoint`, `getPasswordResetEndpoint`, `getProfileConfig`, `getRedirectConfig`)이 `loadInitConfig()`를 통해 `DEFAULT_AUTH_CONFIG`의 기본값을 올바르게 참조하도록 수정되었습니다.
     - 로그인 페이지(`LoginPage.tsx`)에서 "비밀번호를 잊으셨나요?" 버튼 텍스트가 "비밀번호 찾기"로 변경되었으며, 다른 버튼들과 동일한 높이를 갖도록 `size="large"`로 조정되었습니다.
-    - 초기화 설정 화면(`InitPage.tsx`)의 "소셜 로그인 엔드포인트" 항목명이 "소셜 로그인 링크"로 변경되었습니다.
+    - 초기화 설정 화면(`ConfigPage.tsx`)의 "소셜 로그인 엔드포인트" 항목명이 "소셜 로그인 링크"로 변경되었습니다.
 - **`keycloak-js` 의존성 제거:** 클라이언트 애플리케이션에서 직접 `keycloak-js` 라이브러리를 사용하지 않도록 관련 임포트 및 코드를 `src/utils/authConfig.ts`에서 완전히 제거했습니다. 이는 백엔드가 Keycloak과 통신하고 클라이언트는 `fast-auth-with-keycloak` 패키지를 통해 백엔드와 통신하는 아키텍처에 맞게 코드를 정리한 것입니다.
 - **소셜/코드 로그인 통합 및 개선:**
-    - 초기화 설정 화면(`InitPage.tsx`)에 `소셜 로그인 링크`와 `코드 로그인 엔드포인트` 설정 필드가 추가되었습니다.
+    - 초기화 설정 화면(`ConfigPage.tsx`)에 `소셜 로그인 링크`와 `코드 로그인 엔드포인트` 설정 필드가 추가되었습니다.
     - `src/App.tsx`에 `/auth/callback` 경로를 추가하여 외부 인증 콜백을 처리하는 `LoginByOauthPage.tsx`를 구현했습니다. 이 경로는 초기화 설정 유무와 관계없이 접근 가능합니다.
     - `LoginByOauthPage.tsx`는 URL에서 `code` 파라미터를 추출하여, 초기화 설정에서 정의된 `코드 로그인 엔드포인트`로 JSON 본문(`code`)을 포함한 POST 요청을 보냅니다.
     - 코드 로그인 성공 시, ID/PW 로그인과 동일하게 백엔드로부터 받은 토큰(`accessToken`, `refreshToken`)을 `FastAuthProvider`에 설정하고 세션을 재개하며, 이후 프로필 조회 및 설정된 리다이렉트 경로로 이동합니다.
@@ -338,7 +338,7 @@ const publicData = await fastAuthApiRequest('/public', { withToken: false });
 ---
 
 ## 개발 및 확장
-- 각 페이지(InitPage, LoginPage, WelcomePage)는 src/pages에 분리되어 관리
+- 각 페이지(ConfigPage, LoginPage, WelcomePage)는 src/pages에 분리되어 관리
 - 인증 로직은 `packages/fast-auth-with-keycloak`에 모듈화되어 있습니다.
 - 설정값은 localStorage(fast-auth-init-config)에 저장
 

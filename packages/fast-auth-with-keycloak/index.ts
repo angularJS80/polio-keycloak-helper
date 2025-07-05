@@ -83,15 +83,36 @@ export function checkSessionExpiryDialogState() {
   return currentDialogState;
 }
 
+
+export function cleanTimers() {
+  // 기존 타이머들 완전 정리
+  if (refreshTimeout) {
+    clearTimeout(refreshTimeout);
+    refreshTimeout = null;
+    console.log('[FastAuth] refreshTimeout 정리 완료');
+  }
+  if (alertTimeout) {
+    clearTimeout(alertTimeout);
+    alertTimeout = null;
+    console.log('[FastAuth] alertTimeout 정리 완료');
+  }
+  if (expiryLogInterval) {
+    clearInterval(expiryLogInterval);
+    expiryLogInterval = null;
+    console.log('[FastAuth] expiryLogInterval 정리 완료');
+  }
+  
+  // 설정 캐시 무효화 (새로운 설정이 즉시 적용되도록)
+  if (typeof window !== 'undefined' && (window as any).clearConfigCache) {
+    (window as any).clearConfigCache();
+  }
+}
+
 export class FastAuthProvider {
   static init(config: FastAuthConfig) {
-    // 이미 초기화되었다면 중복 실행 방지
-    if (isInitialized) {
-      console.log('[FastAuth] 이미 초기화되어 있음, 중복 실행 방지');
-      return;
-    }
+    console.log('[FastAuth] FastAuthProvider 초기화 시작');
     
-    // 설정 유효성 검사
+    // 설정 유효성 검사를 먼저 수행
     const configValidation = validateFastAuthConfig(config);
     if (!configValidation.isValid) {
       console.error('[FastAuth] 설정 유효성 검사 실패:', configValidation.error);
@@ -104,48 +125,24 @@ export class FastAuthProvider {
       FastAuthProvider._onTokenExpiredNavigate = config.onTokenExpiredNavigate;
       console.log('[FastAuth] onTokenExpiredNavigate 콜백 등록됨');
     }
-    // onSessionExpiryAlert 제거 - 더 이상 필요 없음
+    
+    // 이미 초기화되어 있고 로그인 상태가 아닌 경우 중복 실행 방지
+    if (isInitialized) {
+      if(validateToken().isValid){
+        console.log('[FastAuth] 로그인 상태에서 재초기화, 기존 타이머 정리');
+        cleanTimers();  
+        setupNextRefresh();      
+      } else {
+        console.log('[FastAuth] 이미 초기화되어 있음, 중복 실행 방지');
+        return;
+      }
+    }
     
     isInitialized = true; // 초기화 완료 표시
-    setupAutoRefresh();
-  }
-
-  // 설정 변경 시 재초기화를 위한 메서드 추가
-  static reinit(config: FastAuthConfig) {
-    console.log('[FastAuth] FastAuthProvider 재초기화 시작');
     
-    // 기존 타이머들 완전 정리
-    if (refreshTimeout) {
-      clearTimeout(refreshTimeout);
-      refreshTimeout = null;
-      console.log('[FastAuth] refreshTimeout 정리 완료');
-    }
-    if (alertTimeout) {
-      clearTimeout(alertTimeout);
-      alertTimeout = null;
-      console.log('[FastAuth] alertTimeout 정리 완료');
-    }
-    if (expiryLogInterval) {
-      clearInterval(expiryLogInterval);
-      expiryLogInterval = null;
-      console.log('[FastAuth] expiryLogInterval 정리 완료');
-    }
-    
-    // 설정 캐시 무효화 (새로운 설정이 즉시 적용되도록)
-    if (typeof window !== 'undefined' && (window as any).clearConfigCache) {
-      (window as any).clearConfigCache();
-    }
-    
-    // 설정 업데이트
-    fastAuthConfig = { ...config };
-    console.log('[FastAuth] FastAuthProvider 재초기화 완료, 새로운 설정:', fastAuthConfig);
-    
-    // 새로운 설정으로 타이머 재설정
-    setupAutoRefresh();
   }
 
   static getConfig(): FastAuthConfig {
-    
     return getConfig();
   }
 
@@ -162,9 +159,7 @@ export class FastAuthProvider {
     setRefreshToken(data.refreshToken);
     FastAuthProvider.disableAlertShown();
     logAccessTokenExpiry();
-    if (FastAuthProvider.getConfig().autoRefresh) {
-      setupAutoRefresh();
-    }
+    setupNextRefresh();
     return data;
   }
 
@@ -193,9 +188,7 @@ export class FastAuthProvider {
     setRefreshToken(data.refreshToken);
     FastAuthProvider.disableAlertShown();
     logAccessTokenExpiry();
-    if (FastAuthProvider.getConfig().autoRefresh) {
-      setupAutoRefresh();
-    }
+    setupNextRefresh();
     return data;
   }
 
@@ -295,9 +288,6 @@ export class FastAuthProvider {
   static resumeSession() {
     if (hasAccessToken()) {
       logAccessTokenExpiry();
-      if (FastAuthProvider.getConfig().autoRefresh) {
-        setupAutoRefresh();
-      }
     }
   }
 
@@ -427,6 +417,7 @@ async function refreshToken(): Promise<void> {
     setRefreshToken(data.refreshToken);
     FastAuthProvider.disableAlertShown();
     logAccessTokenExpiry();
+    setupNextRefresh();
     console.log('[FastAuth] Token refreshed successfully');
   } catch (error) {
     console.error('[FastAuth] Token refresh error:', error);
@@ -435,11 +426,11 @@ async function refreshToken(): Promise<void> {
 
 // 토큰 갱신 필요 여부를 판단하고 필요시 갱신하는 함수
 async function checkAndRefreshToken(): Promise<void> {
+  console.log('checkAndRefreshToken');
   if (isTokenExpiringSoon()) {
     await refreshToken();
   } else {
-    console.log('[FastAuth] Token not expiring soon, setting up next auto-refresh.');
-    setupAutoRefresh();
+    console.log('[FastAuth] Token not expiring soon, no action needed.');
   }
 }
 
@@ -485,13 +476,13 @@ function logAccessTokenExpiry() {
   expiryLogInterval = setInterval(() => handleExpiryIntervalTick(initialToken, config.autoRefresh), 2000);
 }
 
-function setupAutoRefresh() {
+function setupNextRefresh() {
   if (refreshTimeout) clearTimeout(refreshTimeout);
   if (alertTimeout) clearTimeout(alertTimeout);
   
   // 항상 최신 설정을 가져오기 위해 getConfig() 강제 새로고침 사용
   const config = getConfig(true); // 강제 새로고침으로 최신 설정 가져오기
-  console.log('[FastAuth] setupAutoRefresh - 현재 설정:', {
+  console.log('[FastAuth] setupNextRefresh - 현재 설정:', {
     autoRefresh: config.autoRefresh,
     sessionExpiryAlertEnabled: config.sessionExpiryAlertEnabled,
     sessionExpiryAlertSec: config.sessionExpiryAlertSec,
@@ -506,25 +497,37 @@ function setupAutoRefresh() {
     // 이미 만료된 토큰이면 아무것도 하지 않음
     return;
   }
+
   logAccessTokenExpiry();
   const refreshBeforeSec = getRefreshBeforeExpirySec();
   const alertBeforeSec = getSessionExpiryAlertSec();
   const alertEnabled = getSessionExpiryAlertEnabled();
-  const msToRefresh = config.autoRefresh ? exp - now - refreshBeforeSec * 1000 : null;
-  const msToAlert = (!config.autoRefresh && alertEnabled) ? exp - now - alertBeforeSec * 1000 : null;
+
+
+  if(config.autoRefresh){
+    const remainingTimeToRefresh =  exp - now - refreshBeforeSec * 1000 ;
   
-  if (msToAlert !== null && msToAlert > 1000) {
-    console.log('[fast-auth] 알림 타이머 설정:', msToAlert, 'ms 후 (설정값:', alertBeforeSec, '초)');
-    alertTimeout = setTimeout(showSessionExpiryAlert, msToAlert);
-  } else if (msToAlert !== null && msToAlert <= 1000) {
-    console.log('[fast-auth] 알림 즉시 실행 (설정값:', alertBeforeSec, '초)');
-    showSessionExpiryAlert();
+    if (remainingTimeToRefresh !== null && remainingTimeToRefresh > 0) {
+      refreshTimeout = setTimeout(checkAndRefreshToken, remainingTimeToRefresh);
+    } else if (remainingTimeToRefresh !== null) {
+      checkAndRefreshToken();
+    }
   }
-  if (msToRefresh !== null && msToRefresh > 0) {
-    refreshTimeout = setTimeout(checkAndRefreshToken, msToRefresh);
-  } else if (msToRefresh !== null) {
-    checkAndRefreshToken();
+  
+  if((!config.autoRefresh && alertEnabled)){
+    const msToAlert = exp - now - alertBeforeSec * 1000;
+  
+    if(msToAlert !== null){
+      if (msToAlert > 1000) {
+        console.log('[fast-auth] 알림 타이머 설정:', msToAlert, 'ms 후 (설정값:', alertBeforeSec, '초)');
+        alertTimeout = setTimeout(showSessionExpiryAlert, msToAlert);
+      } else if (msToAlert <= 1000) {
+        console.log('[fast-auth] 알림 즉시 실행 (설정값:', alertBeforeSec, '초)');
+        showSessionExpiryAlert();
+      }
+    }
   }
+
 }
 
 function showSessionExpiryAlert() {
@@ -571,7 +574,7 @@ if (typeof window !== 'undefined') {
   };
 }
 
-export { setupAutoRefresh };
+export { setupNextRefresh };
 
 // validator 함수들 export
 export * from './validator';

@@ -11,7 +11,7 @@ export function useLoginPage() {
   const [loginState, setLoginState] = useState({ username: '', password: '', loading: false, error: '' });
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-  const initConfig = getConfig();
+  const config = getConfig();
 
   useEffect(() => {
     if (hasAccessToken()) {
@@ -61,10 +61,10 @@ export function useLoginPage() {
 
 
   const handleSocialLogin = () => {
-    if (initConfig.socialLoginEndpoint) {
-      const socialLoginUrl = initConfig.socialLoginEndpoint.startsWith('http://') || initConfig.socialLoginEndpoint.startsWith('https://')
-        ? initConfig.socialLoginEndpoint
-        : `${initConfig.baseUrl}${initConfig.socialLoginEndpoint}`;
+    if (config.socialLoginEndpoint) {
+      const socialLoginUrl = config.socialLoginEndpoint.startsWith('http://') || config.socialLoginEndpoint.startsWith('https://')
+        ? config.socialLoginEndpoint
+        : `${config.baseUrl}${config.socialLoginEndpoint}`;
       window.location.href = socialLoginUrl;
     }
   };
@@ -77,6 +77,6 @@ export function useLoginPage() {
     handleCloseAlert,
     handleLogin,
     handleSocialLogin,
-    initConfig,
+    config,
   };
 } 

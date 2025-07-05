@@ -10,16 +10,6 @@ import {
   EndpointType
 } from './config';
 
-// 설정 초기화 유효성 검사
-export const validateInitConfig = (): { isValid: boolean; error?: string } => {
-  try {
-    const config = getConfig();
-    return validateFastAuthConfig(config);
-  } catch (error) {
-    return { isValid: false, error: '설정을 로드할 수 없습니다.' };
-  }
-};
-
 // FastAuthConfig 유효성 검사
 export const validateFastAuthConfig = (config: any): { isValid: boolean; error?: string } => {
   if (!config) {

@@ -22,7 +22,7 @@ export default function LoginPage() {
     setLoginState,
     handleLogin,
     handleSocialLogin,
-    initConfig,
+    config,
   } = useLoginPage();
   const { message, clearMessage } = useMessage();
   const navigate = useNavigate();
@@ -88,7 +88,7 @@ export default function LoginPage() {
         >
           계정 등록
         </Button>
-        {initConfig.socialLoginEndpoint && (
+        {config.socialLoginEndpoint && (
           <Button
             variant="outlined"
             color="info"

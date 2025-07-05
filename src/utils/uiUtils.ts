@@ -9,7 +9,7 @@ export const PUBLIC_PATHS = [
   '/join',
   '/find-password',
   '/reset-password',
-  '/auth/callback',
+  '/login-by-code',
 ];
 
 // 기본 리다이렉트 경로

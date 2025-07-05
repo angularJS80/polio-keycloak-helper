@@ -37,8 +37,8 @@ if (typeof window !== 'undefined') {
   (window as any).__clearConfigCache = clearConfigCache;
 }
 
-function _initConfig(): Config {
-  const saved = getItem('local', 'fast-auth-init-config');
+function _config(): Config {
+  const saved = getItem('local', 'fast-auth-config');
   if (saved) {
     try {
       const parsedConfig = JSON.parse(saved);
@@ -60,7 +60,7 @@ export const DEFAULT_INIT_AUTH_CONFIG = {
   loginEndpoint: '/auth/login',
   refreshEndpoint: '/auth/refresh',
   logoutEndpoint: '/auth/logout',
-  autoRefresh: false,
+  autoRefresh: true,
   onTokenExpiredRedirect: '/login',
   joinEndpoint: '/auth/join',
   passwordChangeEndpoint: '/auth/change-password',
@@ -71,7 +71,7 @@ export const DEFAULT_INIT_AUTH_CONFIG = {
   redirectAfterLogin: true,
   redirectPath: '/welcome',
   refreshBeforeExpirySec: 20,
-  sessionExpiryAlertEnabled: true,
+  sessionExpiryAlertEnabled: false,
   sessionExpiryAlertSec: 20
 
 };
@@ -82,7 +82,7 @@ export function getConfig(forceRefresh: boolean = false): Config {
   }
 
   // 캐시가 없거나 강제 새로고침인 경우 내부 로딩 함수 호출
-  _cachedConfig = _initConfig();
+  _cachedConfig = _config();
   return _cachedConfig;
 }
 
@@ -145,6 +145,6 @@ export function getRedirectConfig() {
   };
 }
 
-export function getLoadedInitConfig(): Config | null {
+export function getLoadedconfig(): Config | null {
   return _cachedConfig;
 } 

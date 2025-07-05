@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import InitPage from './pages/InitPage';
+import ConfigPage from './pages/ConfigPage';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import AccountJoinPage from './pages/AccountJoinPage';
@@ -88,7 +88,7 @@ function App() {
       <CssBaseline />
       <Routes>
         <Route path="/" element={<div>Loading...</div>} />
-        <Route path="/config" element={<InitPage />} />
+        <Route path="/config" element={<ConfigPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login-by-code" element={<LoginByOauthPage />} />
         <Route path="/welcome" element={<WelcomePage />} />
