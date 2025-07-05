@@ -32,18 +32,7 @@ export const validateFastAuthConfig = (config: any): { isValid: boolean; error?:
 
 
 
-// 토큰 기반 API 요청 유효성 검사
-export const validateTokenBasedRequest = (): { isValid: boolean; error?: string } => {
-  if (!hasAccessToken()) {
-    return { isValid: false, error: '토큰이 없습니다.' };
-  }
 
-  if (isTokenExpired()) {
-    return { isValid: false, error: '토큰이 만료되었습니다.' };
-  }
-
-  return { isValid: true };
-};
 
 // 리프레시 토큰 유효성 검사
 export const validateRefreshToken = (refreshToken: string | null): { isValid: boolean; error?: string } => {
@@ -131,14 +120,20 @@ export const validateMultiple = (validations: Array<{ isValid: boolean; error?: 
   return { isValid: true };
 };
 
-// 토큰 유효성 검사
-export const validateToken = (): { isValid: boolean; error?: string } => {
+// 토큰 유효성 검사 (통합)
+export const validateToken = (userFriendly: boolean = true): { isValid: boolean; error?: string } => {
   if (!hasAccessToken()) {
-    return { isValid: false, error: '로그인 상태가 아닙니다. 다시 로그인 해주세요.' };
+    return { 
+      isValid: false, 
+      error: userFriendly ? '로그인 상태가 아닙니다. 다시 로그인 해주세요.' : '토큰이 없습니다.' 
+    };
   }
   
   if (isTokenExpired()) {
-    return { isValid: false, error: '토큰이 만료되었습니다. 다시 로그인 해주세요.' };
+    return { 
+      isValid: false, 
+      error: userFriendly ? '토큰이 만료되었습니다. 다시 로그인 해주세요.' : '토큰이 만료되었습니다.' 
+    };
   }
   
   return { isValid: true };

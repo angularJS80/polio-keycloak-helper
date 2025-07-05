@@ -32,9 +32,10 @@ yarn add fast-auth-with-keycloak
 
 #### fast-auth-with-keycloak 패키지 내부 유효성 검사 강화
 - **validator.ts 확장**: 패키지 내부에 모든 API 호출 전 유효성 검사 함수들을 집중
-  - `validateFastAuthConfig`, `validateTokenBasedRequest`, `validateRefreshToken` 등
+  - `validateFastAuthConfig`, `validateRefreshToken` 등
   - `validateEndpoint`, `validateApiRequestOptions`, `validateAuthCode` 등
   - `validateRequiredConfig`, `validateToken`, `validateUrlToken` 등
+  - **토큰 검증 함수 통합**: `validateToken`과 `validateTokenBasedRequest`를 하나로 통합하여 `userFriendly` 매개변수로 에러 메시지 구분
 - **FastAuthProvider 메서드 보강**: 모든 주요 메서드에 유효성 검사 적용
   - `init`, `login`, `logout`, `fastAuthApiRequest`, `checkAndRefreshToken` 등
 
