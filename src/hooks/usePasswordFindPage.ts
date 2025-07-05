@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getPasswordFindEndpoint } from 'fast-auth-with-keycloak/config';
-import { validateEndpoint } from 'fast-auth-with-keycloak';
+
 
 import { validateEmail } from '../utils/uiUtils';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
@@ -25,14 +25,6 @@ export function usePasswordFindPage(showSuccess?: (msg: string) => void, showErr
       return;
     }
 
-    // 엔드포인트 유효성 검사
-    const endpointValidation = validateEndpoint('passwordFind');
-    if (!endpointValidation.isValid) {
-      if (showError) showError(endpointValidation.error!);
-      setLoading(false);
-      return;
-    }
-
     try {
       await fastAuthApiRequest(getPasswordFindEndpoint(), {
         method: 'POST',
@@ -40,6 +32,7 @@ export function usePasswordFindPage(showSuccess?: (msg: string) => void, showErr
           email: email,
         },
         withToken: false,
+        endpointType: 'passwordFind',
       });
 
       handleApiSuccess({ 

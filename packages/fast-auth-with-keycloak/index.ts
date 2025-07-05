@@ -326,12 +326,26 @@ export class FastAuthProvider {
 
 export async function fastAuthApiRequest(
   endpoint: string,
-  options?: { method?: string; body?: any; withToken?: boolean; headers?: Record<string, string> }
+  options?: { 
+    method?: string; 
+    body?: any; 
+    withToken?: boolean; 
+    headers?: Record<string, string>;
+    endpointType?: 'passwordChange' | 'passwordReset' | 'passwordFind' | 'join';
+  }
 ): Promise<any> {
   // API 요청 옵션 유효성 검사
   const optionsValidation = validateApiRequestOptions(options);
   if (!optionsValidation.isValid) {
     throw new Error(optionsValidation.error);
+  }
+
+  // 엔드포인트 타입이 지정된 경우 유효성 검사
+  if (options?.endpointType) {
+    const endpointValidation = validateEndpoint(options.endpointType);
+    if (!endpointValidation.isValid) {
+      throw new Error(endpointValidation.error);
+    }
   }
 
   const { method = 'GET', body, withToken = true, headers: customHeaders } = options || {};

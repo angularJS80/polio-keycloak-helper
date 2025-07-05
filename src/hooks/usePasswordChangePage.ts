@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getPasswordChangeEndpoint } from 'fast-auth-with-keycloak/config';
-import { validateToken, validateEndpoint } from 'fast-auth-with-keycloak';
+import { validateToken } from 'fast-auth-with-keycloak';
 import { validatePassword } from '../utils/uiUtils';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
 import { resetFormState } from '../utils/uiUtils';
@@ -33,20 +33,13 @@ export function usePasswordChangePage(showSuccess?: (msg: string) => void, showE
       return;
     }
 
-    // 엔드포인트 유효성 검사
-    const endpointValidation = validateEndpoint('passwordChange');
-    if (!endpointValidation.isValid) {
-      if (showError) showError(endpointValidation.error!);
-      setLoading(false);
-      return;
-    }
-
     try {
       await fastAuthApiRequest(getPasswordChangeEndpoint(), {
         method: 'PUT',
         body: {
           newPassword: newPassword,
         },
+        endpointType: 'passwordChange',
       });
 
       handleApiSuccess({ showSuccess, resetForm: () => resetFormState([setNewPassword, setConfirmNewPassword]) }, '비밀번호가 성공적으로 변경되었습니다!');

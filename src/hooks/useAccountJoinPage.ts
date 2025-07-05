@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
 import { getJoinEndpoint } from 'fast-auth-with-keycloak/config';
-import { validateEndpoint } from 'fast-auth-with-keycloak';
+
 
 import { validatePassword, validateEmail, validateUsername, validateMultiple } from '../utils/uiUtils';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
@@ -24,8 +24,7 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
     const validation = validateMultiple([
       validateUsername(username),
       validateEmail(email),
-      validatePassword(password, confirmPassword),
-      validateEndpoint('join')
+      validatePassword(password, confirmPassword)
     ]);
     
     if (!validation.isValid) {
@@ -39,6 +38,7 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
         method: 'POST',
         body: JSON.stringify({ username, email, password }),
         withToken: false,
+        endpointType: 'join',
       });
 
       if (response.ok) {
