@@ -14,6 +14,10 @@ export const handleApiSuccess = (
   handler: ApiResponseHandler,
   message: string
 ): void => {
+  if (handler.setLoading) {
+    handler.setLoading(false);
+  }
+  
   if (handler.showSuccess) {
     handler.showSuccess(message);
   }

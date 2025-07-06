@@ -15,8 +15,6 @@ export function useResetPasswordPage(showSuccess?: (msg: string) => void, showEr
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (showSuccess) showSuccess('');
-    if (showError) showError('');
     setLoading(true);
 
     const queryParams = new URLSearchParams(location.search);

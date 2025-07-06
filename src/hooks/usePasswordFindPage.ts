@@ -13,8 +13,6 @@ export function usePasswordFindPage(showSuccess?: (msg: string) => void, showErr
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (showSuccess) showSuccess('');
-    if (showError) showError('');
     setLoading(true);
 
     // 이메일 유효성 검사

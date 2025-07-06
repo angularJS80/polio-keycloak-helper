@@ -360,8 +360,9 @@ export async function fastAuthApiRequest(
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
-
   try {
+
+    
     return (await handleApiResponse(res, '로그아웃')).body;
   } catch (error) {
     // 응답 본문이 있지만 JSON 파싱에 실패한 경우 (예: 빈 본문이 아니지만 유효한 JSON이 아님)

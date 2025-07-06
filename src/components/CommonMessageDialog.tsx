@@ -9,6 +9,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import { MessageType } from '../hooks/useMessage';
 
 export default function CommonMessageDialog({ message, onClose }: { message: MessageType, onClose: () => void }) {
+ 
   if (!message) return null;
   return (
     <Dialog open={!!message} onClose={onClose} aria-labelledby="alert-dialog-title" aria-describedby="alert-dialog-description">

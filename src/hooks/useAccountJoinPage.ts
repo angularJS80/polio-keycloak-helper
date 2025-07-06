@@ -16,8 +16,6 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (showSuccess) showSuccess('');
-    if (showError) showError('');
     setLoading(true);
 
     // 복합 유효성 검사
