@@ -343,8 +343,8 @@ export async function fastAuthApiRequest(
 
   const { method = 'GET', body, withToken = true, headers: customHeaders } = options || {};
   // 토큰 기반 요청 유효성 검사
-  const tokenValidation = validateToken(true);
-  if (!tokenValidation.isValid) {
+  const tokenValidation = validateToken(withToken);
+  if (withToken&& !tokenValidation.isValid) {
     if (tokenValidation.error === '토큰이 만료되었습니다.') {
       FastAuthProvider.handleTokenExpired();
     }
