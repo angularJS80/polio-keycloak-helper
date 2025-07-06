@@ -2,7 +2,7 @@
 
 import { setAccessToken, removeAccessToken, getAccessToken, getAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, hasAccessToken, getAccessTokenInfo ,isTokenExpiringSoon} from './token';
 import { handleApiResponse } from './apiResultHandler';
-import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, } from './config';
+import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, clearConfigCache } from './config';
 import { 
   validateFastAuthConfig, 
   validateEndpoint, 
@@ -108,9 +108,7 @@ export function cleanTimers() {
   }
   
   // 설정 캐시 무효화 (새로운 설정이 즉시 적용되도록)
-  if (typeof window !== 'undefined' && (window as any).clearConfigCache) {
-    (window as any).clearConfigCache();
-  }
+  clearConfigCache();
 }
 
 export class FastAuthProvider {
@@ -278,10 +276,6 @@ export class FastAuthProvider {
     }
     afterLogout(config)
     
-  }
-
-  static enableExpiryLog(enable: boolean) {
-    enableExpiryLog = enable;
   }
 
   static resumeSession() {
@@ -539,27 +533,7 @@ function showSessionExpiryAlert() {
 }
 
 // 앱이 시작될 때 accessToken이 있으면 만료 전까지 로그만 출력 (초기화 여부와 무관)
-if (typeof window !== 'undefined') {
-  logAccessTokenExpiry();
-  
-  // 디버깅을 위한 전역 함수 추가
-  (window as any).resetAlertShownFlag = () => {
-    alertShownForThisSession = false;
-    console.log('[FastAuth] alertShownForThisSession 플래그가 수동으로 리셋되었습니다.');
-  };
-  
-  (window as any).checkAlertShownFlag = () => {
-    console.log('[FastAuth] alertShownForThisSession 현재 상태:', alertShownForThisSession);
-  };
-  
-  // 설정 캐시 무효화 함수를 전역으로 노출
-  (window as any).clearConfigCache = () => {
-    // config.ts의 clearConfigCache 함수 호출
-    if (typeof window !== 'undefined' && (window as any).__clearConfigCache) {
-      (window as any).__clearConfigCache();
-    }
-  };
-}
+logAccessTokenExpiry();
 
 // validator 함수들 export
 export * from './validator';

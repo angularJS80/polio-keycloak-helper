@@ -73,10 +73,7 @@ export function clearConfigCache() {
   console.log('[Config] 설정 캐시가 무효화되었습니다.');
 }
 
-// 전역으로 노출 (다른 모듈에서 사용하기 위해)
-if (typeof window !== 'undefined') {
-  (window as any).__clearConfigCache = clearConfigCache;
-}
+
 
 function _config(): Config {
   const saved = getItem('local', 'fast-auth-config');
