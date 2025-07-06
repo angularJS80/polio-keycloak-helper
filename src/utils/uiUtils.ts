@@ -12,6 +12,10 @@ export const PUBLIC_PATHS = [
   '/login-by-code',
 ];
 
+export const isPublicPaths = (path: any) =>{
+  return PUBLIC_PATHS.includes(path) || path === '/';
+}
+
 // 기본 리다이렉트 경로
 export const DEFAULT_REDIRECT_PATH = '/welcome';
 

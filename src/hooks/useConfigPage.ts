@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FastAuthProvider } from 'fast-auth-with-keycloak';
-import { hasAccessToken } from 'fast-auth-with-keycloak/token';
+import { FastAuthProvider, validateToken } from 'fast-auth-with-keycloak';
 import { getConfig, clearConfigCache } from 'fast-auth-with-keycloak/config';
 import { setItem } from 'fast-auth-with-keycloak/storage';
 import { LOGIN_PATH, DEFAULT_REDIRECT_PATH, CONFIG_PATH } from '../utils/uiUtils';
@@ -26,7 +25,7 @@ export function useConfigPage() {
       FastAuthProvider.init(config);
       
       // 네비게이션 처리
-      if (hasAccessToken()) {
+      if (validateToken().isValid) {
         const currentPath = window.location.pathname;
         if (currentPath === CONFIG_PATH) {
           navigate(DEFAULT_REDIRECT_PATH);

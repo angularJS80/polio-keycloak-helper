@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FastAuthProvider } from 'fast-auth-with-keycloak';
-import { getUserName, hasAccessToken } from 'fast-auth-with-keycloak/token';
+import { FastAuthProvider, validateToken } from 'fast-auth-with-keycloak';
+import { getUserName } from 'fast-auth-with-keycloak/token';
 import { LOGIN_PATH } from '../utils/uiUtils';
 
 export function useWelcomePage() {
@@ -47,7 +47,7 @@ export function useWelcomePage() {
 
   useEffect(() => {
     fireConfetti();
-    if (hasAccessToken()) {
+    if (validateToken().isValid) {
       try {
         const userName = getUserName();
         setDisplayName(userName || '알 수 없는 사용자');
@@ -84,6 +84,5 @@ export function useWelcomePage() {
     handleLogout,
     handleGoToProfile,
     handleGoToLogin,
-    hasAccessToken,
   };
 } 

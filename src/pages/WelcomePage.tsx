@@ -11,6 +11,7 @@ import PageHeader from '../components/PageHeader';
 import { Rocket } from '@mui/icons-material';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useWelcomePage } from '../hooks/useWelcomePage';
+import { validateToken } from 'fast-auth-with-keycloak';
 
 export default function WelcomePage() {
   const {
@@ -19,12 +20,11 @@ export default function WelcomePage() {
     refAnimationInstance,
     handleLogout,
     handleGoToProfile,
-    hasAccessToken,
   } = useWelcomePage();
 
   return (
     <Layout>
-      {hasAccessToken() && (
+      {validateToken().isValid && (
         <>
           <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 3 }}>
             <Button

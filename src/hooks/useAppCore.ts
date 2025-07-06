@@ -1,9 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FastAuthProvider, addDialogStateListener, removeDialogStateListener, validateToken } from 'fast-auth-with-keycloak';
-import {  isTokenExpired, hasAccessToken } from 'fast-auth-with-keycloak/token';
 import { getConfig } from 'fast-auth-with-keycloak/config';
-import { PUBLIC_PATHS, LOGIN_PATH, DEFAULT_REDIRECT_PATH } from '../utils/uiUtils';
+import { isPublicPaths, LOGIN_PATH, DEFAULT_REDIRECT_PATH } from '../utils/uiUtils';
 
 export function useAppCore() {
   const navigate = useNavigate();
@@ -21,14 +20,6 @@ export function useAppCore() {
   const updateDialogState = (state: any) => {
     setDialogState(state);
   };
-
-  const isNeedAuthPath = (path: any) =>{
-    return !isPublicPaths(path);
-  }
-
-  const isPublicPaths = (path: any) =>{
-    return PUBLIC_PATHS.includes(path) || path === '/';
-  }
 
   // 다이얼로그 상태 변경 감지
   useEffect(() => {

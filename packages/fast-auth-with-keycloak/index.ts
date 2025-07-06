@@ -1,6 +1,6 @@
 // fast-auth-with-keycloak 패키지 진입점
 
-import { setAccessToken, removeAccessToken, getAccessToken, getAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, hasAccessToken, getAccessTokenInfo ,isTokenExpiringSoon} from './token';
+import { setAccessToken, removeAccessToken, getAccessToken, getAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, getAccessTokenInfo ,isTokenExpiringSoon} from './token';
 import { handleApiResponse } from './apiResultHandler';
 import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, clearConfigCache } from './config';
 import { 
@@ -227,11 +227,10 @@ export class FastAuthProvider {
     const config = FastAuthProvider.getConfig();
     const refreshToken = getRefreshToken();
 
-    // 로그아웃 요청 유효성 검사
-    const logoutValidation = validateEndpoint('logout');
-    if (!logoutValidation.isValid) {
-      alert('로그아웃 경로를 지정해 주세요');
-      return;
+    // 엔드포인트 유효성 검사
+    const endpointValidation = validateEndpoint('logout');
+    if (!endpointValidation.isValid) {
+      throw new Error(endpointValidation.error);
     }
     
     if (!refreshToken) {
@@ -279,7 +278,7 @@ export class FastAuthProvider {
   }
 
   static resumeSession() {
-    if (hasAccessToken()) {
+    if (validateToken().isValid) {
       logAccessTokenExpiry();
     }
   }
@@ -450,7 +449,7 @@ function handleExpiryIntervalTick(initialToken: string, isAutoRefresh: boolean) 
 
 function logAccessTokenExpiry() {
   if (expiryLogInterval) clearInterval(expiryLogInterval);
-  if (!hasAccessToken()) return;
+  if (!validateToken().isValid) return;
   
   const initialToken = getAccessToken() as string; // setInterval이 시작될 때의 토큰 스냅샷
   const config = getConfig(); // 항상 최신 설정을 가져오기 위해 getConfig() 직접 사용
@@ -471,7 +470,7 @@ function setupNextRefresh() {
     refreshBeforeExpirySec: config.refreshBeforeExpirySec
   });
   
-  if (!hasAccessToken()) return;
+  if (!validateToken().isValid) return;
   const exp = getAccessTokenExpiration();
   if (!exp) return;
   const now = Date.now();

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FastAuthProvider } from 'fast-auth-with-keycloak';
+import { FastAuthProvider, validateToken } from 'fast-auth-with-keycloak';
 import { hasAccessToken } from 'fast-auth-with-keycloak/token';
 import { getConfig, getRedirectConfig } from 'fast-auth-with-keycloak/config';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
@@ -14,7 +14,7 @@ export function useLoginPage() {
   const config = getConfig();
 
   useEffect(() => {
-    if (hasAccessToken()) {
+    if (validateToken().isValid) {
       try {
         FastAuthProvider.getConfig();
       } catch {}
