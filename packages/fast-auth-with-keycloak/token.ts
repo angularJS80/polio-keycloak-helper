@@ -131,3 +131,14 @@ export function getAccessTokenInfo(initialToken: string): AccessTokenInfo {
     remain,
   };
 } 
+
+export function isTokenExpiringSoon(): boolean {
+  if (!hasAccessToken()) return false;
+  
+  const exp = getAccessTokenExpiration();
+  if (!exp) return false;
+  
+  const now = Date.now();
+  // 만료 1분 전 자동 갱신
+  return exp - now < 60 * 1000;
+}

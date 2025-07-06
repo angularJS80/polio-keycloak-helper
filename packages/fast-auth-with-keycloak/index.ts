@@ -1,6 +1,6 @@
 // fast-auth-with-keycloak 패키지 진입점
 
-import { setAccessToken, removeAccessToken, getAccessToken, getAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, hasAccessToken, getAccessTokenInfo } from './token';
+import { setAccessToken, removeAccessToken, getAccessToken, getAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, hasAccessToken, getAccessTokenInfo ,isTokenExpiringSoon} from './token';
 import { handleApiResponse } from './apiResultHandler';
 import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, } from './config';
 import { 
@@ -32,9 +32,12 @@ export type FastAuthConfig = {
 let fastAuthConfig: FastAuthConfig | null = null;
 let refreshTimeout: ReturnType<typeof setTimeout> | null = null;
 let expiryLogInterval: ReturnType<typeof setInterval> | null = null;
-let enableExpiryLog = true;
 let alertShownForThisSession = false;
 let isInitialized = false; // 초기화 플래그 추가
+
+
+
+// Event Listenr 관련 코드 start 
 
 // 이벤트 시스템으로 다이얼로그 상태 관리
 type DialogState = {
@@ -42,6 +45,7 @@ type DialogState = {
   onExtend: (() => void) | null;
   onLogout: (() => void) | null;
 };
+
 
 type DialogStateListener = (state: DialogState) => void;
 
@@ -82,6 +86,8 @@ export function setSessionExpiryDialogState(show: boolean, onExtend?: () => void
 export function checkSessionExpiryDialogState() {
   return currentDialogState;
 }
+
+// Event Listenr 관련 코드 End  
 
 
 export function cleanTimers() {
@@ -377,18 +383,6 @@ export async function fastAuthApiRequest(
   }
 }
 
-// 토큰 갱신 필요 여부를 판단하는 함수
-function isTokenExpiringSoon(): boolean {
-  if (!hasAccessToken()) return false;
-  
-  const exp = getAccessTokenExpiration();
-  if (!exp) return false;
-  
-  const now = Date.now();
-  // 만료 1분 전 자동 갱신
-  return exp - now < 60 * 1000;
-}
-
 // 토큰을 실제로 갱신하는 함수
 async function refreshToken(): Promise<void> {
   const config = getConfig();
@@ -574,13 +568,11 @@ if (typeof window !== 'undefined') {
   };
 }
 
-export { setupNextRefresh };
-
 // validator 함수들 export
 export * from './validator';
 export { 
+  setupNextRefresh,
   checkAndRefreshToken, 
-  isTokenExpiringSoon, 
   refreshToken,
   validateToken,
   validateEndpoint,
