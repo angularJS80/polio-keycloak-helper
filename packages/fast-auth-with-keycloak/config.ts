@@ -1,7 +1,5 @@
 import { getItem } from './storage';
 
-// 엔드포인트 타입 정의
-export type EndpointType = 'passwordChange' | 'passwordReset' | 'passwordFind' | 'join' | 'logout' | 'refresh';
 
 interface Config {
   baseUrl: string;
@@ -23,6 +21,49 @@ interface Config {
   redirectPath?: string;
   onSessionExpiryAlert?: (onExtend: () => void, onLogout: () => void) => void;
 }
+
+interface EndpointMeta {
+  name: string;
+  isValid: () => boolean;
+}
+
+
+export const DEFAULT_INIT_AUTH_CONFIG = {
+  baseUrl: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080',
+  loginEndpoint: '/auth/login',
+  refreshEndpoint: '/auth/refresh',
+  logoutEndpoint: '/auth/logout',
+  autoRefresh: true,
+  onTokenExpiredRedirect: '/login',
+  joinEndpoint: '/auth/join',
+  passwordChangeEndpoint: '/auth/change-password',
+  passwordFindEndpoint: '/auth/find-password',
+  passwordResetEndpoint: '/auth/reset-password',
+  socialLoginEndpoint: '/auth/social-login?idp=github&scope=openid email profile&redirectUrl=http://localhost:3000/login-by-code',
+  loginByCodeEndpoint: '/auth/login-by-code',
+  redirectAfterLogin: true,
+  redirectPath: '/welcome',
+  refreshBeforeExpirySec: 20,
+  sessionExpiryAlertEnabled: false,
+  sessionExpiryAlertSec: 20
+
+};
+
+// 엔드포인트 타입 정의
+export type EndpointType = 'passwordChange' | 'passwordReset' | 'passwordFind' | 'join' | 'logout' | 'refresh' | 'socialLogin' | 'loginByCode';
+
+
+export const endpointMeta: Record<EndpointType, EndpointMeta> = {
+  passwordChange:    { name: '비밀번호 변경', isValid: hasPasswordChangeEndpoint },
+  passwordReset:     { name: '비밀번호 초기화', isValid: hasPasswordResetEndpoint },
+  passwordFind:      { name: '비밀번호 찾기', isValid: hasPasswordFindEndpoint },
+  join:              { name: '계정 등록', isValid: hasJoinEndpoint },
+  logout:            { name: '로그아웃', isValid: hasLogoutEndpoint },
+  refresh:           { name: '토큰 갱신', isValid: hasRefreshEndpoint },
+  socialLogin:       { name: '소셜 로그인', isValid: hasSocialLoginEndpoint },
+  loginByCode:       { name: '코드 로그인', isValid: hasLoginByCodeEndpoint },
+};
+
 
 let _cachedConfig: Config | null = null;
 
@@ -55,26 +96,7 @@ function _config(): Config {
   return { ...DEFAULT_INIT_AUTH_CONFIG };
 }
 
-export const DEFAULT_INIT_AUTH_CONFIG = {
-  baseUrl: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080',
-  loginEndpoint: '/auth/login',
-  refreshEndpoint: '/auth/refresh',
-  logoutEndpoint: '/auth/logout',
-  autoRefresh: true,
-  onTokenExpiredRedirect: '/login',
-  joinEndpoint: '/auth/join',
-  passwordChangeEndpoint: '/auth/change-password',
-  passwordFindEndpoint: '/auth/find-password',
-  passwordResetEndpoint: '/auth/reset-password',
-  socialLoginEndpoint: '/auth/social-login?idp=github&scope=openid email profile&redirectUrl=http://localhost:3000/login-by-code',
-  loginByCodeEndpoint: '/auth/login-by-code',
-  redirectAfterLogin: true,
-  redirectPath: '/welcome',
-  refreshBeforeExpirySec: 20,
-  sessionExpiryAlertEnabled: false,
-  sessionExpiryAlertSec: 20
 
-};
 
 export function getConfig(forceRefresh: boolean = false): Config {
   if (_cachedConfig && !forceRefresh) {
@@ -136,7 +158,37 @@ export function hasPasswordResetEndpoint(): boolean {
   return !!getPasswordResetEndpoint();
 }
 
+export function getSocialLoginEndpoint() {
+  return getConfig().socialLoginEndpoint || DEFAULT_INIT_AUTH_CONFIG.socialLoginEndpoint || '';
+}
 
+export function hasSocialLoginEndpoint(): boolean {
+  return !!getSocialLoginEndpoint();
+}
+
+export function getLoginByCodeEndpoint() {
+  return getConfig().loginByCodeEndpoint || DEFAULT_INIT_AUTH_CONFIG.loginByCodeEndpoint || '';
+}
+
+export function hasLoginByCodeEndpoint(): boolean {
+  return !!getLoginByCodeEndpoint();
+}
+
+export function getLogoutEndpoint() {
+  return getConfig().logoutEndpoint || DEFAULT_INIT_AUTH_CONFIG.logoutEndpoint || '';
+}
+
+export function hasLogoutEndpoint(): boolean {
+  return !!getLogoutEndpoint();
+}
+
+export function getRefreshEndpoint() {
+  return getConfig().refreshEndpoint || DEFAULT_INIT_AUTH_CONFIG.refreshEndpoint || '';
+}
+
+export function hasRefreshEndpoint(): boolean {
+  return !!getRefreshEndpoint();
+}
 
 export function getRedirectConfig() {
   return {

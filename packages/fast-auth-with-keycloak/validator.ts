@@ -2,12 +2,8 @@
 
 import { hasAccessToken, isTokenExpired } from './token';
 import { 
-  getConfig, 
-  hasPasswordChangeEndpoint, 
-  hasPasswordResetEndpoint, 
-  hasPasswordFindEndpoint,
-  hasJoinEndpoint,
-  EndpointType
+  EndpointType,
+  endpointMeta,
 } from './config';
 
 // FastAuthConfig 유효성 검사
@@ -24,6 +20,10 @@ export const validateFastAuthConfig = (config: any): { isValid: boolean; error?:
     return { isValid: false, error: 'loginEndpoint가 설정되지 않았습니다.' };
   }
 
+  if (!config.loginByCodeEndpoint) {
+    return { isValid: false, error: 'loginByCodeEndpoint가 설정되지 않았습니다.' };
+  }
+
   // refreshEndpoint 검증을 ENDPOINT_CONFIG를 사용하도록 수정
   const refreshValidation = validateEndpoint('refresh');
   if (!refreshValidation.isValid) {
@@ -33,50 +33,19 @@ export const validateFastAuthConfig = (config: any): { isValid: boolean; error?:
   return { isValid: true };
 };
 
-// 필수 설정 유효성 검사
-export const validateRequiredConfig = (requiredFields: string[]): { isValid: boolean; error?: string } => {
-  const config = getConfig();
-  
-  for (const field of requiredFields) {
-    if (!config[field as keyof typeof config]) {
-      return { 
-        isValid: false, 
-        error: `초기화 설정에 ${field}이(가) 설정되지 않았습니다. 관리자에게 문의하세요.` 
-      };
-    }
-  }
-  
-  return { isValid: true };
-};
-
 // 엔드포인트 설정 유효성 검사
-export const validateEndpoint = (endpointType: EndpointType): { isValid: boolean; error?: string } => {
-  const endpointChecks: Record<EndpointType, () => boolean> = {
-    passwordChange: hasPasswordChangeEndpoint,
-    passwordReset: hasPasswordResetEndpoint,
-    passwordFind: hasPasswordFindEndpoint,
-    join: hasJoinEndpoint,
-    logout: () => !!getConfig().logoutEndpoint,
-    refresh: () => !!getConfig().refreshEndpoint
-  };
+export const validateEndpoint = (
+  endpointType: EndpointType
+): { isValid: boolean; error?: string } => {
+  const { name, isValid } = endpointMeta[endpointType];
   
-  const endpointNames: Record<EndpointType, string> = {
-    passwordChange: '비밀번호 변경',
-    passwordReset: '비밀번호 초기화',
-    passwordFind: '비밀번호 찾기',
-    join: '계정 등록',
-    logout: '로그아웃',
-    refresh: '토큰 갱신'
-  };
-  
-  const check = endpointChecks[endpointType];
-  if (!check()) {
-    return { 
-      isValid: false, 
-      error: `${endpointNames[endpointType]} 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.` 
+  if (!isValid()) {
+    return {
+      isValid: false,
+      error: `${name} 엔드포인트가 초기화 설정에 설정되지 않았습니다. 초기화면에서 설정해주세요.`,
     };
   }
-  
+
   return { isValid: true };
 };
 

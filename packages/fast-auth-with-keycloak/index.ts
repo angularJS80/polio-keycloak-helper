@@ -7,7 +7,6 @@ import {
   validateFastAuthConfig, 
   validateEndpoint, 
   validateApiRequestOptions,
-  validateRequiredConfig,
   validateToken,
   validateAuthCode
 } from './validator';
@@ -171,12 +170,6 @@ export class FastAuthProvider {
 
   static async loginByCode(code: string) {
     const config = FastAuthProvider.getConfig();
-    
-    // 필수 설정 유효성 검사
-    const configValidation = validateRequiredConfig(['loginByCodeEndpoint', 'baseUrl']);
-    if (!configValidation.isValid) {
-      throw new Error(configValidation.error);
-    }
     
     const res = await fetch(config.baseUrl + config.loginByCodeEndpoint, {
       method: 'POST',
