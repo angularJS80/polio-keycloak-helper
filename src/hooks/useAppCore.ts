@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FastAuthProvider, addDialogStateListener, removeDialogStateListener } from 'fast-auth-with-keycloak';
+import { FastAuthProvider, addDialogStateListener, removeDialogStateListener, validateToken } from 'fast-auth-with-keycloak';
 import {  isTokenExpired, hasAccessToken } from 'fast-auth-with-keycloak/token';
 import { getConfig } from 'fast-auth-with-keycloak/config';
-import { PUBLIC_PATHS, LOGIN_PATH } from '../utils/uiUtils';
+import { PUBLIC_PATHS, LOGIN_PATH, DEFAULT_REDIRECT_PATH } from '../utils/uiUtils';
 
 export function useAppCore() {
   const navigate = useNavigate();
@@ -23,7 +23,11 @@ export function useAppCore() {
   };
 
   const isNeedAuthPath = (path: any) =>{
-    return !PUBLIC_PATHS.includes(path) || path === '/';
+    return !isPublicPaths(path);
+  }
+
+  const isPublicPaths = (path: any) =>{
+    return PUBLIC_PATHS.includes(path) || path === '/';
   }
 
   // 다이얼로그 상태 변경 감지
@@ -54,21 +58,23 @@ export function useAppCore() {
     const currentPath = location.pathname;
     console.log("location.pathname: " + currentPath);
 
-    if (isNeedAuthPath(currentPath)) {
-      
-        if (hasAccessToken()) {
-          if (isTokenExpired()) {
-            console.log("goto login path");
-            navigate(LOGIN_PATH, { replace: true });
-          } else {
-           // 왜 토큰이 말료되지 않았는대 기본패이지로 가지?
-            //navigate(DEFAULT_REDIRECT_PATH, { replace: true });
-          }
-      } else {
+    const { isValid } = validateToken();
+
+    if (currentPath === '/') {
+      if(isValid){
+        navigate(DEFAULT_REDIRECT_PATH, { replace: true });
+      }else{
         navigate(LOGIN_PATH, { replace: true });
       }
-      
     }
+
+    if (isPublicPaths(currentPath)) return;
+    if (!isValid) {
+      navigate(LOGIN_PATH, { replace: true });
+      return;
+    }
+
+    
   }, [location.pathname, navigate]);
 
   return { dialogState };
