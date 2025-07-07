@@ -39,8 +39,6 @@ export function useLoginByOauthPage() {
         showSuccess: () => setMessage('로그인 성공!')
       }, '로그인 성공!');
 
-      // FastAuthProvider.loginByCode에서 이미 토큰이 설정되었으므로 세션만 재개
-      FastAuthProvider.resumeSession();
       
       // 리다이렉트 처리
       const { redirectAfterLogin, redirectPath } = getRedirectConfig();

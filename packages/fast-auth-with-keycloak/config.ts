@@ -193,7 +193,3 @@ export function getRedirectConfig() {
     redirectPath: getConfig().redirectPath || DEFAULT_INIT_AUTH_CONFIG.onTokenExpiredRedirect || '/welcome',
   };
 }
-
-export function getLoadedconfig(): Config | null {
-  return _cachedConfig;
-} 

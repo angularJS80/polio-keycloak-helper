@@ -12,23 +12,26 @@ export const validateFastAuthConfig = (config: any): { isValid: boolean; error?:
     return { isValid: false, error: 'FastAuthConfig가 제공되지 않았습니다.' };
   }
 
-  if (!config.baseUrl) {
-    return { isValid: false, error: 'baseUrl이 설정되지 않았습니다.' };
-  }
-
-  if (!config.loginEndpoint) {
-    return { isValid: false, error: 'loginEndpoint가 설정되지 않았습니다.' };
-  }
-
-  if (!config.loginByCodeEndpoint) {
-    return { isValid: false, error: 'loginByCodeEndpoint가 설정되지 않았습니다.' };
-  }
-
   // refreshEndpoint 검증을 ENDPOINT_CONFIG를 사용하도록 수정
   const refreshValidation = validateEndpoint('refresh');
   if (!refreshValidation.isValid) {
     return { isValid: false, error: refreshValidation.error };
   }
+
+
+  // 엔드포인트 유효성 검사
+  const passwordResetValidation = validateEndpoint('passwordReset');
+  if (!passwordResetValidation.isValid) {
+    throw new Error(passwordResetValidation.error);
+  }
+    
+
+    // 엔드포인트 유효성 검사
+  const logoutEendpointValidation = validateEndpoint('logout');
+  if (!logoutEendpointValidation.isValid) {
+    throw new Error(logoutEendpointValidation.error);
+  }
+
 
   return { isValid: true };
 };

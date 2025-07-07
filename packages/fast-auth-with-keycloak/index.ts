@@ -30,7 +30,7 @@ export type FastAuthConfig = {
 
 let fastAuthConfig: FastAuthConfig | null = null;
 let refreshTimeout: ReturnType<typeof setTimeout> | null = null;
-let expiryLogInterval: ReturnType<typeof setInterval> | null = null;
+let tokenWatchInterval: ReturnType<typeof setInterval> | null = null;
 let alertShownForThisSession = false;
 let isInitialized = false; // 초기화 플래그 추가
 
@@ -101,14 +101,12 @@ export function cleanTimers() {
     alertTimeout = null;
     console.log('[FastAuth] alertTimeout 정리 완료');
   }
-  if (expiryLogInterval) {
-    clearInterval(expiryLogInterval);
-    expiryLogInterval = null;
-    console.log('[FastAuth] expiryLogInterval 정리 완료');
+  if (tokenWatchInterval) {
+    clearInterval(tokenWatchInterval);
+    tokenWatchInterval = null;
+    console.log('[FastAuth] tokenWatchInterval 정리 완료');
   }
   
-  // 설정 캐시 무효화 (새로운 설정이 즉시 적용되도록)
-  clearConfigCache();
 }
 
 export class FastAuthProvider {
@@ -134,6 +132,8 @@ export class FastAuthProvider {
       if(validateToken().isValid){
         console.log('[FastAuth] 로그인 상태에서 재초기화, 기존 타이머 정리');
         cleanTimers();  
+        // 설정 캐시 무효화 (새로운 설정이 즉시 적용되도록)
+        clearConfigCache();
         setupNextRefresh();      
       } else {
         console.log('[FastAuth] 이미 초기화되어 있음, 중복 실행 방지');
@@ -161,7 +161,6 @@ export class FastAuthProvider {
     setAccessToken(data.accessToken);
     setRefreshToken(data.refreshToken);
     FastAuthProvider.disableAlertShown();
-    logAccessTokenExpiry();
     setupNextRefresh();
     return data;
   }
@@ -184,7 +183,6 @@ export class FastAuthProvider {
     setAccessToken(data.accessToken);
     setRefreshToken(data.refreshToken);
     FastAuthProvider.disableAlertShown();
-    logAccessTokenExpiry();
     setupNextRefresh();
     return data;
   }
@@ -198,12 +196,6 @@ export class FastAuthProvider {
         FastAuthProvider.handleTokenExpired();
       }
       throw new Error(tokenValidation.error);
-    }
-    
-    // 엔드포인트 유효성 검사
-    const endpointValidation = validateEndpoint('passwordReset');
-    if (!endpointValidation.isValid) {
-      throw new Error(endpointValidation.error);
     }
     
     const res = await fetch(config.baseUrl + config.passwordResetEndpoint, {
@@ -227,11 +219,6 @@ export class FastAuthProvider {
     const config = FastAuthProvider.getConfig();
     const refreshToken = getRefreshToken();
 
-    // 엔드포인트 유효성 검사
-    const endpointValidation = validateEndpoint('logout');
-    if (!endpointValidation.isValid) {
-      throw new Error(endpointValidation.error);
-    }
     
     if (!refreshToken) {
       console.log('[FastAuth] Refresh token is missing. Performing client-side logout only.');
@@ -275,12 +262,6 @@ export class FastAuthProvider {
     }
     afterLogout(config)
     
-  }
-
-  static resumeSession() {
-    if (validateToken().isValid) {
-      logAccessTokenExpiry();
-    }
   }
 
   private static _onTokenExpiredNavigate: ((path: string) => void) | undefined;
@@ -397,7 +378,6 @@ async function refreshToken(): Promise<void> {
     setAccessToken(data.accessToken);
     setRefreshToken(data.refreshToken);
     FastAuthProvider.disableAlertShown();
-    logAccessTokenExpiry();
     setupNextRefresh();
     console.log('[FastAuth] Token refreshed successfully');
   } catch (error) {
@@ -418,19 +398,19 @@ async function checkAndRefreshToken(): Promise<void> {
 let alertTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // setInterval 내부에 있던 로직을 분리한 도우미 함수
-function handleExpiryIntervalTick(initialToken: string, isAutoRefresh: boolean) {
+function handleTokenExpiryCheck(initialToken: string, isAutoRefresh: boolean) {
   const { isStaleOrInvalid, exp, remain } = getAccessTokenInfo(initialToken);
 
   if (isStaleOrInvalid) {
-    clearInterval(expiryLogInterval!);
-    expiryLogInterval = null;
-    logAccessTokenExpiry(); // 새로운 토큰으로 타이머 재설정 시도
+    clearInterval(tokenWatchInterval!);
+    tokenWatchInterval = null;
+    startTokenExpiryWatcher(); // 새로운 토큰으로 타이머 재설정 시도
     return;
   }
   
   if (!exp) {
-    clearInterval(expiryLogInterval!);
-    expiryLogInterval = null;
+    clearInterval(tokenWatchInterval!);
+    tokenWatchInterval = null;
     return;
   }
   
@@ -442,19 +422,20 @@ function handleExpiryIntervalTick(initialToken: string, isAutoRefresh: boolean) 
     }
   }
   if (remain !== null && remain <= 0) {
-    clearInterval(expiryLogInterval!);
-    expiryLogInterval = null;
+    clearInterval(tokenWatchInterval!);
+    tokenWatchInterval = null;
   }
 }
 
-function logAccessTokenExpiry() {
-  if (expiryLogInterval) clearInterval(expiryLogInterval);
+function startTokenExpiryWatcher() {
+  console.log("startTokenExpiryWatcher");
+  if (tokenWatchInterval) clearInterval(tokenWatchInterval);
   if (!validateToken().isValid) return;
   
   const initialToken = getAccessToken() as string; // setInterval이 시작될 때의 토큰 스냅샷
   const config = getConfig(); // 항상 최신 설정을 가져오기 위해 getConfig() 직접 사용
 
-  expiryLogInterval = setInterval(() => handleExpiryIntervalTick(initialToken, config.autoRefresh), 2000);
+  tokenWatchInterval = setInterval(() => handleTokenExpiryCheck(initialToken, config.autoRefresh), 2000);
 }
 
 function setupNextRefresh() {
@@ -479,7 +460,7 @@ function setupNextRefresh() {
     return;
   }
 
-  logAccessTokenExpiry();
+  startTokenExpiryWatcher();
   const refreshBeforeSec = getRefreshBeforeExpirySec();
   const alertBeforeSec = getSessionExpiryAlertSec();
   const alertEnabled = getSessionExpiryAlertEnabled();
@@ -522,9 +503,9 @@ function showSessionExpiryAlert() {
   FastAuthProvider.enableAlertShown();
   console.log('[FastAuth] enableAlertShown 호출 완료');
   
-  if (expiryLogInterval) {
-    clearInterval(expiryLogInterval);
-    expiryLogInterval = null;
+  if (tokenWatchInterval) {
+    clearInterval(tokenWatchInterval);
+    tokenWatchInterval = null;
   }
   
   // 전역 상태로 다이얼로그 표시
@@ -533,7 +514,7 @@ function showSessionExpiryAlert() {
 }
 
 // 앱이 시작될 때 accessToken이 있으면 만료 전까지 로그만 출력 (초기화 여부와 무관)
-logAccessTokenExpiry();
+startTokenExpiryWatcher();
 
 // validator 함수들 export
 export * from './validator';
@@ -542,6 +523,5 @@ export {
   checkAndRefreshToken, 
   refreshToken,
   validateToken,
-  validateEndpoint,
   validateAuthCode
 }; 
