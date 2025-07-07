@@ -8,30 +8,21 @@ import {
 
 // FastAuthConfig 유효성 검사
 export const validateFastAuthConfig = (config: any): { isValid: boolean; error?: string } => {
+  console.log("validateFastAuthConfig");
   if (!config) {
     return { isValid: false, error: 'FastAuthConfig가 제공되지 않았습니다.' };
   }
 
-  // refreshEndpoint 검증을 ENDPOINT_CONFIG를 사용하도록 수정
-  const refreshValidation = validateEndpoint('refresh');
-  if (!refreshValidation.isValid) {
-    return { isValid: false, error: refreshValidation.error };
-  }
+  const allEndpointTypes = Object.keys(endpointMeta) as EndpointType[];
 
-
-  // 엔드포인트 유효성 검사
-  const passwordResetValidation = validateEndpoint('passwordReset');
-  if (!passwordResetValidation.isValid) {
-    throw new Error(passwordResetValidation.error);
-  }
+  for (const endpoint of allEndpointTypes) {
     
-
-    // 엔드포인트 유효성 검사
-  const logoutEendpointValidation = validateEndpoint('logout');
-  if (!logoutEendpointValidation.isValid) {
-    throw new Error(logoutEendpointValidation.error);
+    const validation = validateEndpoint(endpoint);
+    if (!validation.isValid) {
+      const friendlyName = endpointMeta[endpoint].name;
+      throw new Error(`${friendlyName} 엔드포인트 유효성 검사 실패: ${validation.error}`);
+    }
   }
-
 
   return { isValid: true };
 };
