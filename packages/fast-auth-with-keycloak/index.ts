@@ -189,15 +189,6 @@ export class FastAuthProvider {
 
   static async resetPassword(accessToken: string, newPassword: string) {
     const config = FastAuthProvider.getConfig();
-    
-    const tokenValidation = validateToken(true);
-    if (!tokenValidation.isValid) {
-      if (tokenValidation.error === '토큰이 만료되었습니다.') {
-        FastAuthProvider.handleTokenExpired();
-      }
-      throw new Error(tokenValidation.error);
-    }
-    
     const res = await fetch(config.baseUrl + config.passwordResetEndpoint, {
       method: 'PUT',
       headers: {
@@ -208,11 +199,25 @@ export class FastAuthProvider {
     });
     
     if (!res.ok) {
-      const errorData = await res.json();
+      const errorData = await res.json(); // 에러 발생 시에는 JSON 본문이 있을 가능성이 높으므로 유지
       throw new Error(errorData.message || '비밀번호 초기화 처리 중 오류가 발생했습니다.');
     }
     
-    return await res.json();
+    // 변경된 부분: 성공 시 리턴할 데이터가 없을 경우
+    // 1. 서버가 204 No Content를 반환하는 경우
+    if (res.status === 204) {
+      return {}; // 또는 true, undefined 등. 호출하는 쪽에서 이 값을 어떻게 처리할지에 따라 결정.
+    }
+    
+    // 2. 서버가 200 OK 등을 반환하지만 본문이 없는 경우 (res.json()이 에러를 낼 수 있음)
+    //    이 경우 본문이 비어있을 수 있으므로 res.json() 호출 전에 확인하거나,
+    //    안전하게 빈 객체를 반환하는 방식을 사용
+    try {
+      return await res.json(); // 본문이 있다면 JSON 파싱
+    } catch (e) {
+      console.warn("API 응답에 JSON 본문이 없거나 파싱할 수 없습니다. 빈 객체를 반환합니다.", e);
+      return {}; // 본문이 없거나 파싱 실패 시 빈 객체 반환
+    }
   }
 
   static async logout() {
