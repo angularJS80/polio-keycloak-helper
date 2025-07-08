@@ -16,7 +16,25 @@ yarn add fast-auth-with-keycloak
 
 ## 최근 변경사항
 
-### 2024년 12월 코드 구조 개선 및 모듈화
+## 작업 기록
+
+### 2024년 06월 06일 (목) - 핵심 인증 로직 리팩토링 및 아키텍처 개선
+
+*   **API 호출 계층 분리 (`fast-auth-with-keycloak` 패키지):**
+    *   `FastAuthProvider` 내부에 특정 API 호출을 위한 전용 함수 (`findPassword`, `changePassword`, `accountJoin`)를 추가하여 각 API의 책임을 명확히 분리했습니다.
+    *   이 함수들에서 `fastAuthApiRequest` 대신 `fetch`를 직접 사용하여 API 호출 로직의 독립성을 강화하고, `handleApiResponse`를 통해 일관된 응답 처리 및 에러 전파를 구현했습니다.
+    *   `handleApiResponse`에서 API 호출 실패 시 에러 객체에 구체적인 메시지를 포함하여 `throw`하도록 변경, 메시지 표현은 상위 계층에서 결정하도록 했습니다.
+*   **React 훅 계층 개선 (`src/hooks`):**
+    *   `useLoginPage.ts`, `useAccountJoinPage.ts`, `usePasswordFindPage.ts` 등의 훅에서 `FastAuthProvider`의 새 함수들을 호출하도록 업데이트했습니다.
+    *   UI 컴포넌트(`tsx`)에서 직접 성공 및 실패 메시지 문자열을 훅의 핸들러 함수(예: `handleLogin`, `handleJoin`)로 전달받아 사용하는 방식으로 메시지 관리 로직을 개선했습니다. (표현 정의는 `.tsx`에서, 전달받아 사용은 훅에서)
+    *   `useLoginPage.ts`의 중복 로그인 상태 확인 `useEffect` 훅을 제거하고, 해당 로직을 `useAppCore.ts`로 옮겨 역할 분담을 명확히 했습니다.
+*   **UI 계층 수정 (`src/pages`):**
+    *   `LoginPage.tsx` 및 `AccountJoinPage.tsx`의 버튼 `onClick` 핸들러에서 훅의 함수를 호출할 때, 사용자에게 표시될 성공/실패 메시지를 직접 문자열로 정의하여 전달하도록 변경했습니다.
+    *   `AccountJoinPage.tsx`에서 폼 제출 방식(`form onSubmit`)을 `Button`의 `onClick`에 직접 연결하는 방식으로 변경하여 일관성을 맞췄습니다. (주의: `Enter` 키 제출 기능은 제외됨)
+
+---
+
+### 2025년 6월 코드 구조 개선 및 모듈화
 
 #### 유틸리티 함수 통합 및 분리
 - **UI 관련 유틸리티 통합**: `src/utils/uiUtils.ts`로 모든 UI/폼 관련 함수들을 통합
