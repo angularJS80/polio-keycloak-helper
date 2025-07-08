@@ -2,13 +2,12 @@
 
 import { setAccessToken, removeAccessToken, getAccessToken, getAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, getAccessTokenInfo ,isTokenExpiringSoon} from './token';
 import { handleApiResponse } from './apiResultHandler';
-import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, clearConfigCache, getJoinEndpoint, getPasswordFindEndpoint } from './config';
+import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, clearConfigCache,  endpointMeta } from './config';
 import { 
   validateFastAuthConfig, 
   validateToken,
   validateAuthCode
 } from './validator';
-import { EndpointType } from './config';
 
 export type FastAuthConfig = {
   baseUrl: string;
@@ -142,19 +141,13 @@ export class FastAuthProvider {
     
   }
 
-  static getConfig(): FastAuthConfig {
-    console.log("loggin getConfig")
-    return getConfig();
-  }
-
   static async login({ username, password }: { username: string; password: string }) {
-    const config = FastAuthProvider.getConfig();
-    const res = await fetch(config.baseUrl + config.loginEndpoint, {
+    const res = await fetch( endpointMeta.login.apiUri(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
-    if (!res.ok) throw new Error('로그인 실패');
+    if (!res.ok) throw new Error(endpointMeta.login.name+' 실패');
     const data = await res.json();
     setAccessToken(data.accessToken);
     setRefreshToken(data.refreshToken);
@@ -163,10 +156,13 @@ export class FastAuthProvider {
     return data;
   }
 
+
+  static socialLoginEndpoint(){
+    return `${endpointMeta.socialLogin.apiUri()}`;
+  }
+
   static async loginByCode(code: string) {
-    const config = FastAuthProvider.getConfig();
-    
-    const res = await fetch(config.baseUrl + config.loginByCodeEndpoint, {
+    const res = await fetch( endpointMeta.loginByCode.apiUri(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code }),
@@ -174,7 +170,7 @@ export class FastAuthProvider {
     
     if (!res.ok) {
       const errorData = await res.json();
-      throw new Error(errorData.message || '코드 로그인 처리 중 오류가 발생했습니다.');
+      throw new Error(errorData.message || endpointMeta.loginByCode.name+'처리 중 오류가 발생했습니다.');
     }
     
     const data = await res.json();
@@ -186,8 +182,7 @@ export class FastAuthProvider {
   }
 
   static async resetPassword(accessToken: string, newPassword: string) {
-    const config = FastAuthProvider.getConfig();
-    const res = await fetch(config.baseUrl + config.passwordResetEndpoint, {
+    const res = await fetch(endpointMeta.passwordReset.apiUri(), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -198,18 +193,13 @@ export class FastAuthProvider {
     
     if (!res.ok) {
       const errorData = await res.json(); // 에러 발생 시에는 JSON 본문이 있을 가능성이 높으므로 유지
-      throw new Error(errorData.message || '비밀번호 초기화 처리 중 오류가 발생했습니다.');
+      throw new Error(errorData.message || endpointMeta.passwordReset.name+' 처리 중 오류가 발생했습니다.');
     }
     
-    // 변경된 부분: 성공 시 리턴할 데이터가 없을 경우
-    // 1. 서버가 204 No Content를 반환하는 경우
     if (res.status === 204) {
       return {}; // 또는 true, undefined 등. 호출하는 쪽에서 이 값을 어떻게 처리할지에 따라 결정.
     }
-    
-    // 2. 서버가 200 OK 등을 반환하지만 본문이 없는 경우 (res.json()이 에러를 낼 수 있음)
-    //    이 경우 본문이 비어있을 수 있으므로 res.json() 호출 전에 확인하거나,
-    //    안전하게 빈 객체를 반환하는 방식을 사용
+
     try {
       return await res.json(); // 본문이 있다면 JSON 파싱
     } catch (e) {
@@ -219,7 +209,7 @@ export class FastAuthProvider {
   }
 
   static async logout() {
-    const config = FastAuthProvider.getConfig();
+    const config = getConfig();;
     const refreshToken = getRefreshToken();
 
     
@@ -230,7 +220,7 @@ export class FastAuthProvider {
     
     
     try {
-      const res = await fetch(`${config.baseUrl}${config.logoutEndpoint}`, {
+      const res = await fetch(`${endpointMeta.logout.apiUri()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
@@ -238,11 +228,11 @@ export class FastAuthProvider {
     
       if (!res.ok) {
         const errorText = await res.text();
-        console.error('로그아웃 엔드포인트 호출 실패:', res.status, res.statusText, '응답 본문:', errorText);
+        console.error(endpointMeta.logout.name+' 엔드포인트 호출 실패:', res.status, res.statusText, '응답 본문:', errorText);
         return;
       }
     } catch (error) {
-      console.error('로그아웃 엔드포인트 호출 중 오류 발생:', error);
+      console.error(endpointMeta.logout.name+' 엔드포인트 호출 중 오류 발생:', error);
     }
 
     const afterLogout = (config: FastAuthConfig) => {
@@ -271,7 +261,7 @@ export class FastAuthProvider {
   // onSessionExpiryAlert 제거 - 더 이상 필요 없음
 
   static handleTokenExpired() {
-    const config = FastAuthProvider.getConfig();
+    const config = getConfig();
     removeAccessToken();
     removeRefreshToken();
     
@@ -288,15 +278,11 @@ export class FastAuthProvider {
   }
 
   static disableAlertShown() {
-    console.log('[FastAuth] disableAlertShown 호출, 이전 상태:', alertShownForThisSession);
     alertShownForThisSession = false;
-    console.log('[FastAuth] disableAlertShown 완료, 현재 상태:', alertShownForThisSession);
   }
 
   static enableAlertShown() {
-    console.log('[FastAuth] enableAlertShown 호출, 이전 상태:', alertShownForThisSession);
     alertShownForThisSession = true;
-    console.log('[FastAuth] enableAlertShown 완료, 현재 상태:', alertShownForThisSession);
   }
 
   /**
@@ -306,8 +292,6 @@ export class FastAuthProvider {
    * @returns Promise<any>
    */
   static async changePassword(newPassword: string): Promise<any> {
-    const config = FastAuthProvider.getConfig();
-    const endpoint = config.passwordChangeEndpoint; // 비밀번호 변경 엔드포인트
 
     // 토큰 유효성 검사 및 헤더 설정 (fastAuthApiRequest에서 하던 로직을 직접 포함)
     const tokenValidation = validateToken(true);
@@ -323,7 +307,7 @@ export class FastAuthProvider {
       'Authorization': `Bearer ${getAccessToken()}`, // 로그인 토큰 추가
     };
 
-    const res = await fetch(config.baseUrl + endpoint, {
+    const res = await fetch(endpointMeta.passwordChange.apiUri(), {
       method: 'PUT',
       headers: headers,
       body: JSON.stringify({
@@ -334,7 +318,7 @@ export class FastAuthProvider {
     // 응답 처리 (handleApiResponse 재사용)
     try {
       // '비밀번호 변경'과 관련된 메시지를 handleApiResponse에 전달
-      return (await handleApiResponse(res, '비밀번호 변경')).body;
+      return (await handleApiResponse(res, endpointMeta.passwordChange.name)).body;
     } catch (error) {
       console.warn(`[FastAuth] Failed to parse JSON for successful password change response (status: ${res.status}):`, error);
       return {}; // 이 경우에도 빈 객체를 반환하여 클라이언트에서 오류를 받지 않도록 함
@@ -353,14 +337,12 @@ export class FastAuthProvider {
     password: string;
     [key: string]: any
   }): Promise<any> {
-    const config = FastAuthProvider.getConfig();
-    const endpoint = getJoinEndpoint(); // 사용자 등록 엔드포인트
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    const res = await fetch(config.baseUrl + endpoint, {
+    const res = await fetch( endpointMeta.join.apiUri(), {
       method: 'POST', // 사용자 등록은 일반적으로 POST 메소드 사용
       headers: headers,
       body: JSON.stringify(params), // 전달받은 모든 파라미터를 body에 포함
@@ -368,7 +350,7 @@ export class FastAuthProvider {
 
     // 응답 처리 (handleApiResponse 재사용)
     try {
-      return (await handleApiResponse(res, '사용자 등록')).body;
+      return (await handleApiResponse(res, endpointMeta.join.name)).body;
     } catch (error) {
       console.warn(`[FastAuth] Failed to parse JSON for successful account join response (status: ${res.status}):`, error);
       return {};
@@ -382,14 +364,12 @@ export class FastAuthProvider {
    * @returns Promise<any>
    */
   static async findPassword(params: { email?: string; username?: string }): Promise<any> {
-    const config = FastAuthProvider.getConfig();
-    const endpoint = getPasswordFindEndpoint(); // 비밀번호 찾기 엔드포인트
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    const res = await fetch(config.baseUrl + endpoint, {
+    const res = await fetch( endpointMeta.passwordFind.apiUri(), {
       method: 'POST', // 비밀번호 찾기는 일반적으로 POST 메소드 사용
       headers: headers,
       body: JSON.stringify(params), // 전달받은 파라미터를 body에 포함
@@ -397,7 +377,7 @@ export class FastAuthProvider {
 
     // 응답 처리 (handleApiResponse 재사용)
     try {
-      return (await handleApiResponse(res, '비밀번호 찾기')).body;
+      return (await handleApiResponse(res, endpointMeta.passwordFind.name)).body;
     } catch (error) {
       // 에러를 외부로 throw하여 호출부가 catch하도록 함
       throw error; // 에러를 다시 던집니다.
@@ -414,8 +394,8 @@ async function refreshToken(): Promise<void> {
   }
 
   try {
-    console.log('[FastAuth] Refreshing from:', config.baseUrl + config.refreshEndpoint);
-    const res = await fetch(config.baseUrl + config.refreshEndpoint, {
+    console.log('[FastAuth] Refreshing from:', config.refreshEndpoint);
+    const res = await fetch( endpointMeta.refresh.apiUri(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
@@ -423,7 +403,7 @@ async function refreshToken(): Promise<void> {
 
     if (!res.ok) {
       const errorText = await res.text();
-      console.error('[FastAuth] Token refresh failed:', res.status, res.statusText, 'Response:', errorText);
+      console.error('[FastAuth] '+endpointMeta.refresh.name+' failed:', res.status, res.statusText, 'Response:', errorText);
       return;
     }
 

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FastAuthProvider, validateToken } from 'fast-auth-with-keycloak';
-import { getConfig, getRedirectConfig } from 'fast-auth-with-keycloak/config';
+import { FastAuthProvider } from 'fast-auth-with-keycloak';
+import { getRedirectConfig } from 'fast-auth-with-keycloak/config';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
 import { validateLoginRequest } from '../utils/uiUtils';
 import { DEFAULT_REDIRECT_PATH } from '../utils/uiUtils';
@@ -10,7 +10,6 @@ export function useLoginPage() {
   const [loginState, setLoginState] = useState({ username: '', password: '', loading: false, error: '' });
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const navigate = useNavigate();
-  const config = getConfig();
 
   const handleCloseAlert = () => {
     setAlertMessage(null);
@@ -52,12 +51,8 @@ export function useLoginPage() {
 
 
   const handleSocialLogin = () => {
-    if (config.socialLoginEndpoint) {
-      const socialLoginUrl = config.socialLoginEndpoint.startsWith('http://') || config.socialLoginEndpoint.startsWith('https://')
-        ? config.socialLoginEndpoint
-        : `${config.baseUrl}${config.socialLoginEndpoint}`;
-      window.location.href = socialLoginUrl;
-    }
+    window.location.href = FastAuthProvider.socialLoginEndpoint();
+
   };
 
   return {

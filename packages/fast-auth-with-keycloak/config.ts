@@ -25,6 +25,7 @@ interface Config {
 interface EndpointMeta {
   name: string;
   isValid: () => boolean;
+  apiUri:() => string;
 }
 
 
@@ -50,19 +51,23 @@ export const DEFAULT_INIT_AUTH_CONFIG = {
 };
 
 // 엔드포인트 타입 정의
-export type EndpointType = 'passwordChange' | 'passwordReset' | 'passwordFind' | 'join' | 'logout' | 'refresh' | 'socialLogin' | 'loginByCode';
+export type EndpointType = 'login'|'passwordChange' | 'passwordReset' | 'passwordFind' | 'join' | 'logout' | 'refresh' | 'socialLogin' | 'loginByCode';
+
+
 
 
 export const endpointMeta: Record<EndpointType, EndpointMeta> = {
-  passwordChange:    { name: '비밀번호 변경', isValid: hasPasswordChangeEndpoint },
-  passwordReset:     { name: '비밀번호 초기화', isValid: hasPasswordResetEndpoint },
-  passwordFind:      { name: '비밀번호 찾기', isValid: hasPasswordFindEndpoint },
-  join:              { name: '계정 등록', isValid: hasJoinEndpoint },
-  logout:            { name: '로그아웃', isValid: hasLogoutEndpoint },
-  refresh:           { name: '토큰 갱신', isValid: hasRefreshEndpoint },
-  socialLogin:       { name: '소셜 로그인', isValid: hasSocialLoginEndpoint },
-  loginByCode:       { name: '코드 로그인', isValid: hasLoginByCodeEndpoint },
+  login:             { name: '로그인', isValid: hasLoginEndpoint ,apiUri: getLoginUri},
+  passwordChange:    { name: '비밀번호 변경', isValid: hasPasswordChangeEndpoint ,apiUri: getPasswordChangeUri},
+  passwordReset:     { name: '비밀번호 초기화', isValid: hasPasswordResetEndpoint ,apiUri: getPasswordResetUri},
+  passwordFind:      { name: '비밀번호 찾기', isValid: hasPasswordFindEndpoint ,apiUri: getPasswordFindUri},
+  join:              { name: '계정 등록', isValid: hasJoinEndpoint ,apiUri: getJoinUri},
+  logout:            { name: '로그아웃', isValid: hasLogoutEndpoint ,apiUri: getLogoutUri},
+  refresh:           { name: '토큰 갱신', isValid: hasRefreshEndpoint ,apiUri: getRefreshUri},
+  socialLogin:       { name: '소셜 로그인', isValid: hasSocialLoginEndpoint ,apiUri: getSocialLoginUri},
+  loginByCode:       { name: '코드 로그인', isValid: hasLoginByCodeEndpoint ,apiUri: getLoginByCodeUri},
 };
+
 
 
 let _cachedConfig: Config | null = null;
@@ -120,9 +125,9 @@ export function getSessionExpiryAlertEnabled() {
 }
 
 export function getJoinEndpoint() {
-  
   return getConfig().joinEndpoint || DEFAULT_INIT_AUTH_CONFIG.joinEndpoint || '/join';
 }
+
 
 export function hasJoinEndpoint(): boolean {
   return !!getJoinEndpoint();
@@ -175,8 +180,16 @@ export function getLogoutEndpoint() {
   return getConfig().logoutEndpoint || DEFAULT_INIT_AUTH_CONFIG.logoutEndpoint || '';
 }
 
+export function getLoginEndpoint() {
+  return getConfig().loginEndpoint || DEFAULT_INIT_AUTH_CONFIG.loginByCodeEndpoint || '';
+}
+
 export function hasLogoutEndpoint(): boolean {
   return !!getLogoutEndpoint();
+}
+
+export function hasLoginEndpoint(): boolean {
+  return !!getLoginEndpoint();
 }
 
 export function getRefreshEndpoint() {
@@ -193,3 +206,40 @@ export function getRedirectConfig() {
     redirectPath: getConfig().redirectPath || DEFAULT_INIT_AUTH_CONFIG.onTokenExpiredRedirect || '/welcome',
   };
 }
+
+export function getJoinUri() {
+  return (getConfig().baseUrl || '') + getJoinEndpoint();
+}
+
+export function getPasswordChangeUri() {
+  return (getConfig().baseUrl || '') + getPasswordChangeEndpoint();
+}
+
+export function getPasswordFindUri() {
+  return (getConfig().baseUrl || '') + getPasswordFindEndpoint();
+}
+
+export function getPasswordResetUri() {
+  return (getConfig().baseUrl || '') + getPasswordResetEndpoint();
+}
+
+export function getSocialLoginUri() {
+  return (getConfig().baseUrl || '') + getSocialLoginEndpoint();
+}
+
+export function getLoginByCodeUri() {
+  return (getConfig().baseUrl || '') + getLoginByCodeEndpoint();
+}
+
+export function getLogoutUri() {
+  return (getConfig().baseUrl || '') + getLogoutEndpoint();
+}
+
+export function getLoginUri() {
+  return (getConfig().baseUrl || '') + getLoginEndpoint();
+}
+
+export function getRefreshUri() {
+  return (getConfig().baseUrl || '') + getRefreshEndpoint();
+}
+
