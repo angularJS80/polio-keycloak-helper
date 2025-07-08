@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider, validateToken } from 'fast-auth-with-keycloak';
-import { hasAccessToken } from 'fast-auth-with-keycloak/token';
 import { getConfig, getRedirectConfig } from 'fast-auth-with-keycloak/config';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
 import { validateLoginRequest } from '../utils/uiUtils';
@@ -13,13 +12,13 @@ export function useLoginPage() {
   const navigate = useNavigate();
   const config = getConfig();
 
-  useEffect(() => {
-    if (validateToken().isValid) {
-      try {
-        FastAuthProvider.getConfig();
-      } catch {}
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (validateToken().isValid) {
+  //     try {
+  //       FastAuthProvider.getConfig();
+  //     } catch {}
+  //   }
+  // }, []);
 
   const handleCloseAlert = () => {
     setAlertMessage(null);

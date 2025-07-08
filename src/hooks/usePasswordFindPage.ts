@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { fastAuthApiRequest } from 'fast-auth-with-keycloak';
-import { getPasswordFindEndpoint } from 'fast-auth-with-keycloak/config';
-
-
-import { validateEmail } from '../utils/uiUtils';
-import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
-import { resetFormState } from '../utils/uiUtils';
+import {
+  FastAuthProvider
+} from 'fast-auth-with-keycloak'; // FastAuthProvider 임포트 경로 확인
+import {
+  handleApiError,
+  handleApiSuccess
+} from '../utils/apiResponseHandler';
 
 export function usePasswordFindPage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
   const [email, setEmail] = useState('');
@@ -15,37 +15,29 @@ export function usePasswordFindPage(showSuccess?: (msg: string) => void, showErr
     event.preventDefault();
     setLoading(true);
 
-    // 이메일 유효성 검사
-    const emailValidation = validateEmail(email);
-    if (!emailValidation.isValid) {
-      if (showError) showError(emailValidation.error!);
-      setLoading(false);
-      return;
-    }
-
     try {
-      await fastAuthApiRequest(getPasswordFindEndpoint(), {
-        method: 'POST',
-        body: {
-          email: email,
-        },
-        withToken: false,
-        endpointType: 'passwordFind',
+      // 변경된 부분: FastAuthProvider.findPassword 함수 사용
+      await FastAuthProvider.findPassword({
+        email: email
       });
 
-      handleApiSuccess({ 
-        showSuccess, 
-        resetForm: () => resetFormState([setEmail]) 
-      }, '비밀번호 재설정 이메일이 발송되었습니다. 이메일을 확인해주세요.');
+      handleApiSuccess({ showSuccess, setLoading, /* resetForm */ }, '초기화 메일 전송이 완료되었습니다!');
+      // 회원가입 성공 후 리다이렉트 로직 등
+      // navigate('/login');
     } catch (err: any) {
-      handleApiError(err, { showError, setLoading }, '비밀번호 찾기 실패');
+      // 변경된 부분: alert(err) 대신 err.message 사용, showError에 err.message 전달
+      // alert(err); // 이제 이 부분 대신 showError를 주로 사용
+      handleApiError(err, { showError, setLoading }, err.message || '알 수 없는 초기화 메일전송  실패'); // err.message를 직접 전달
+    } finally {
+      setLoading(false);
     }
+   
   };
 
   return {
     email,
     setEmail,
-    loading,
     handleSubmit,
+    loading,
   };
 } 

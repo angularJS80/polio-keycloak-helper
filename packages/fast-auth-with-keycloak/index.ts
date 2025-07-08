@@ -2,11 +2,9 @@
 
 import { setAccessToken, removeAccessToken, getAccessToken, getAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, getAccessTokenInfo ,isTokenExpiringSoon} from './token';
 import { handleApiResponse } from './apiResultHandler';
-import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, clearConfigCache } from './config';
+import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, clearConfigCache, getJoinEndpoint, getPasswordFindEndpoint } from './config';
 import { 
   validateFastAuthConfig, 
-  validateEndpoint, 
-  validateApiRequestOptions,
   validateToken,
   validateAuthCode
 } from './validator';
@@ -106,7 +104,6 @@ export function cleanTimers() {
     tokenWatchInterval = null;
     console.log('[FastAuth] tokenWatchInterval 정리 완료');
   }
-  
 }
 
 export class FastAuthProvider {
@@ -146,6 +143,7 @@ export class FastAuthProvider {
   }
 
   static getConfig(): FastAuthConfig {
+    console.log("loggin getConfig")
     return getConfig();
   }
 
@@ -300,62 +298,112 @@ export class FastAuthProvider {
     alertShownForThisSession = true;
     console.log('[FastAuth] enableAlertShown 완료, 현재 상태:', alertShownForThisSession);
   }
-}
 
-export async function fastAuthApiRequest(
-  endpoint: string,
-  options?: { 
-    method?: string; 
-    body?: any; 
-    withToken?: boolean; 
-    headers?: Record<string, string>;
-    endpointType?: EndpointType;
-  }
-): Promise<any> {
-  // API 요청 옵션 유효성 검사
-  const optionsValidation = validateApiRequestOptions(options);
-  if (!optionsValidation.isValid) {
-    throw new Error(optionsValidation.error);
-  }
+  /**
+   * 사용자(로그인된 상태)의 비밀번호를 변경하는 API 호출
+   * 이 함수는 주로 로그인된 사용자가 자신의 비밀번호를 변경할 때 사용됩니다.
+   * @param newPassword 새 비밀번호
+   * @returns Promise<any>
+   */
+  static async changePassword(newPassword: string): Promise<any> {
+    const config = FastAuthProvider.getConfig();
+    const endpoint = config.passwordChangeEndpoint; // 비밀번호 변경 엔드포인트
 
-  // 엔드포인트 타입이 지정된 경우 유효성 검사
-  if (options?.endpointType) {
-    const endpointValidation = validateEndpoint(options.endpointType);
-    if (!endpointValidation.isValid) {
-      throw new Error(endpointValidation.error);
+    // 토큰 유효성 검사 및 헤더 설정 (fastAuthApiRequest에서 하던 로직을 직접 포함)
+    const tokenValidation = validateToken(true);
+    if (!tokenValidation.isValid) {
+      if (tokenValidation.error === '토큰이 만료되었습니다.') {
+        FastAuthProvider.handleTokenExpired();
+      }
+      throw new Error(tokenValidation.error);
+    }
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getAccessToken()}`, // 로그인 토큰 추가
+    };
+
+    const res = await fetch(config.baseUrl + endpoint, {
+      method: 'PUT',
+      headers: headers,
+      body: JSON.stringify({
+        newPassword
+      }),
+    });
+
+    // 응답 처리 (handleApiResponse 재사용)
+    try {
+      // '비밀번호 변경'과 관련된 메시지를 handleApiResponse에 전달
+      return (await handleApiResponse(res, '비밀번호 변경')).body;
+    } catch (error) {
+      console.warn(`[FastAuth] Failed to parse JSON for successful password change response (status: ${res.status}):`, error);
+      return {}; // 이 경우에도 빈 객체를 반환하여 클라이언트에서 오류를 받지 않도록 함
     }
   }
 
-  const { method = 'GET', body, withToken = true, headers: customHeaders } = options || {};
-  // 토큰 기반 요청 유효성 검사
-  const tokenValidation = validateToken(withToken);
-  if (withToken&& !tokenValidation.isValid) {
-    if (tokenValidation.error === '토큰이 만료되었습니다.') {
-      FastAuthProvider.handleTokenExpired();
-    }
-    throw new Error(tokenValidation.error);
-  }
-  
-  const config = FastAuthProvider.getConfig();
-  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...customHeaders };
-  
-  headers['Authorization'] = `Bearer ${getAccessToken()}`;
-  const res = await fetch(config.baseUrl + endpoint, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  try {
+  /**
+   * 사용자 계정 등록 (회원가입) API 호출
+   * 이 함수는 주로 새로운 사용자를 시스템에 등록할 때 사용됩니다.
+   * @param params { username: string, email: string, password: string, ... } 등 회원가입에 필요한 모든 정보
+   * @returns Promise<any>
+   */
+  static async join(params: {
+    username: string;
+    email: string;
+    password: string;
+    [key: string]: any
+  }): Promise<any> {
+    const config = FastAuthProvider.getConfig();
+    const endpoint = getJoinEndpoint(); // 사용자 등록 엔드포인트
 
-    
-    return (await handleApiResponse(res, '로그아웃')).body;
-  } catch (error) {
-    // 응답 본문이 있지만 JSON 파싱에 실패한 경우 (예: 빈 본문이 아니지만 유효한 JSON이 아님)
-    console.warn(`[FastAuth] Failed to parse JSON for successful response (status: ${res.status}):`, error);
-    return {}; // 이 경우에도 빈 객체를 반환하여 클라이언트에서 오류를 받지 않도록 함
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    const res = await fetch(config.baseUrl + endpoint, {
+      method: 'POST', // 사용자 등록은 일반적으로 POST 메소드 사용
+      headers: headers,
+      body: JSON.stringify(params), // 전달받은 모든 파라미터를 body에 포함
+    });
+
+    // 응답 처리 (handleApiResponse 재사용)
+    try {
+      return (await handleApiResponse(res, '사용자 등록')).body;
+    } catch (error) {
+      console.warn(`[FastAuth] Failed to parse JSON for successful account join response (status: ${res.status}):`, error);
+      return {};
+    }
+  }
+
+  /**
+   * 비밀번호 찾기 (비밀번호 재설정 이메일 발송) API 호출
+   * 이 함수는 로그인 없이 사용자의 이메일/ID를 통해 비밀번호 재설정 흐름을 시작합니다.
+   * @param params { email: string } 또는 { username: string } 등 비밀번호 찾기에 필요한 파라미터
+   * @returns Promise<any>
+   */
+  static async findPassword(params: { email?: string; username?: string }): Promise<any> {
+    const config = FastAuthProvider.getConfig();
+    const endpoint = getPasswordFindEndpoint(); // 비밀번호 찾기 엔드포인트
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    const res = await fetch(config.baseUrl + endpoint, {
+      method: 'POST', // 비밀번호 찾기는 일반적으로 POST 메소드 사용
+      headers: headers,
+      body: JSON.stringify(params), // 전달받은 파라미터를 body에 포함
+    });
+
+    // 응답 처리 (handleApiResponse 재사용)
+    try {
+      return (await handleApiResponse(res, '비밀번호 찾기')).body;
+    } catch (error) {
+      // 에러를 외부로 throw하여 호출부가 catch하도록 함
+      throw error; // 에러를 다시 던집니다.
+    }
   }
 }
-
 // 토큰을 실제로 갱신하는 함수
 async function refreshToken(): Promise<void> {
   const config = getConfig();

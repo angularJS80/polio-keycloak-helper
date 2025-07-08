@@ -14,8 +14,8 @@ export default function PasswordFindPage() {
   const {
     email,
     setEmail,
-    loading,
     handleSubmit,
+    loading,
   } = usePasswordFindPage(showSuccess, showError);
 
   return (

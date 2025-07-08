@@ -51,13 +51,15 @@ export function useAppCore() {
 
     const { isValid } = validateToken();
 
-    if (currentPath === '/') {
+    if (currentPath === '/' || currentPath==='/login') {
       if(isValid){
         navigate(DEFAULT_REDIRECT_PATH, { replace: true });
       }else{
         navigate(LOGIN_PATH, { replace: true });
       }
     }
+    
+    
 
     if (isPublicPaths(currentPath)) return;
     if (!isValid) {
