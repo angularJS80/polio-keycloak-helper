@@ -10,8 +10,10 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleJoin =async (
+    successMessage: string = '등록에 성공했습니다!', // 기본값 설정
+    failureMessage: string = '등록에 실패했습니다!'  // 기본값 설정
+  ) => {
     setLoading(true);
 
     // 복합 유효성 검사
@@ -37,13 +39,10 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
         // 기타 필요한 필드들 (예: confirmPassword는 백엔드로 보내지 않을 수 있음)
       });
       
-      handleApiSuccess({ showSuccess, setLoading, /* resetForm */ }, '회원가입이 성공적으로 완료되었습니다!');
-      // 회원가입 성공 후 리다이렉트 로직 등
-      // navigate('/login');
+      handleApiSuccess({ showSuccess, setLoading, /* resetForm */ }, successMessage);
     } catch (err: any) {
-      // 변경된 부분: alert(err) 대신 err.message 사용, showError에 err.message 전달
-      // alert(err); // 이제 이 부분 대신 showError를 주로 사용
-      handleApiError(err, { showError, setLoading }, err.message || '알 수 없는 회원가입 실패'); // err.message를 직접 전달
+    
+      handleApiError(err, { showError, setLoading }, err.message || failureMessage); // err.message를 직접 전달
     } finally {
       setLoading(false);
     }
@@ -59,7 +58,7 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
     setPassword,
     confirmPassword,
     setConfirmPassword,
-    handleSubmit,
+    handleJoin,
     loading,
   };
 } 

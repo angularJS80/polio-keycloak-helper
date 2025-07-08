@@ -58,8 +58,6 @@ export function useAppCore() {
         navigate(LOGIN_PATH, { replace: true });
       }
     }
-    
-    
 
     if (isPublicPaths(currentPath)) return;
     if (!isValid) {

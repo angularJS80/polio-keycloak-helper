@@ -11,8 +11,10 @@ export function usePasswordFindPage(showSuccess?: (msg: string) => void, showErr
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleFindPassword =async (
+    successMessage: string = '전송에 성공했습니다!', // 기본값 설정
+    failureMessage: string = '전송에 실패했습니다!'  // 기본값 설정
+  ) => {
     setLoading(true);
 
     try {
@@ -21,13 +23,10 @@ export function usePasswordFindPage(showSuccess?: (msg: string) => void, showErr
         email: email
       });
 
-      handleApiSuccess({ showSuccess, setLoading, /* resetForm */ }, '초기화 메일 전송이 완료되었습니다!');
-      // 회원가입 성공 후 리다이렉트 로직 등
-      // navigate('/login');
+      handleApiSuccess({ showSuccess, setLoading, /* resetForm */ }, successMessage);
     } catch (err: any) {
-      // 변경된 부분: alert(err) 대신 err.message 사용, showError에 err.message 전달
-      // alert(err); // 이제 이 부분 대신 showError를 주로 사용
-      handleApiError(err, { showError, setLoading }, err.message || '알 수 없는 초기화 메일전송  실패'); // err.message를 직접 전달
+    
+      handleApiError(err, { showError, setLoading }, err.message || failureMessage); // err.message를 직접 전달
     } finally {
       setLoading(false);
     }
@@ -37,7 +36,7 @@ export function usePasswordFindPage(showSuccess?: (msg: string) => void, showErr
   return {
     email,
     setEmail,
-    handleSubmit,
+    handleFindPassword,
     loading,
   };
 } 

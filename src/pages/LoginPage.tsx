@@ -22,7 +22,6 @@ export default function LoginPage() {
     setLoginState,
     handleLogin,
     handleSocialLogin,
-    config,
   } = useLoginPage();
   const { message, clearMessage } = useMessage();
   const navigate = useNavigate();
@@ -61,7 +60,7 @@ export default function LoginPage() {
         size="large"
         sx={{ mt: 2, mb: 1, fontWeight: 700 }}
         disabled={loginState.loading}
-        onClick={handleLogin}
+        onClick={() => handleLogin('로그인에 성공하였습니다!', '로그인에 실패하였습니다.')}
         startIcon={<LoginIcon />}
       >
         {loginState.loading ? '로그인 중...' : '로그인'}
@@ -88,7 +87,7 @@ export default function LoginPage() {
         >
           계정 등록
         </Button>
-        {config.socialLoginEndpoint && (
+        { (
           <Button
             variant="outlined"
             color="info"

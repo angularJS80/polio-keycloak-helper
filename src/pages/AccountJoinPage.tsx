@@ -20,16 +20,16 @@ export default function AccountJoinPage() {
     setPassword,
     confirmPassword,
     setConfirmPassword,
-    handleSubmit,
+    handleJoin,
     loading,
   } = useAccountJoinPage(showSuccess, showError);
+
 
   return (
     <Layout>
       <PageHeader icon={PersonAddIcon} title="계정 등록" iconColor='#4CAF50' />
       <CommonMessageDialog message={message} onClose={clearMessage} />
       <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
-        <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
             label="사용자 이름"
@@ -75,7 +75,8 @@ export default function AccountJoinPage() {
             color="primary"
             size="large"
             sx={{ mt: 2, fontWeight: 700 }}
-            type="submit"
+           
+            onClick={() => handleJoin('등록에 성공하였습니다!', '등록에 실패하였습니다.')}
             disabled={loading}
           >
             {loading ? '등록 중...' : '등록'}
@@ -91,7 +92,6 @@ export default function AccountJoinPage() {
           >
             로그인으로 돌아가기
           </Button>
-        </form>
       </Box>
     </Layout>
   );

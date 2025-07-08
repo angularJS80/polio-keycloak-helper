@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
 import { validatePassword } from '../utils/uiUtils';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
-import { resetFormState } from '../utils/uiUtils';
 import { LOGIN_PATH } from '../utils/uiUtils';
 
 export function useResetPasswordPage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
@@ -13,8 +12,10 @@ export function useResetPasswordPage(showSuccess?: (msg: string) => void, showEr
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleResetPassword = async (
+    successMessage: string = '변경에 성공했습니다!', // 기본값 설정
+    failureMessage: string = '변경에 실패했습니다!'  // 기본값 설정
+  ) => {
     setLoading(true);
 
     const queryParams = new URLSearchParams(location.search);
@@ -31,12 +32,12 @@ export function useResetPasswordPage(showSuccess?: (msg: string) => void, showEr
     try {
       // FastAuthProvider.resetPassword 사용 (내부에서 validateUrlToken 수행)
       await FastAuthProvider.resetPassword(urlAccessToken!, newPassword);
-      handleApiSuccess({ 
-        showSuccess, 
-        resetForm: () => resetFormState([setNewPassword, setConfirmNewPassword]) 
-      }, '비밀번호가 성공적으로 변경되었습니다!');
+      handleApiSuccess({ showSuccess, setLoading, /* resetForm */ }, successMessage);
     } catch (err: any) {
-      handleApiError(err, { showError, setLoading }, '비밀번호 초기화 실패');
+    
+      handleApiError(err, { showError, setLoading }, err.message || failureMessage); // err.message를 직접 전달
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,7 +50,7 @@ export function useResetPasswordPage(showSuccess?: (msg: string) => void, showEr
     setNewPassword,
     confirmNewPassword,
     setConfirmNewPassword,
-    handleSubmit,
+    handleResetPassword,
     loading,
     handleGoToLogin,
   };

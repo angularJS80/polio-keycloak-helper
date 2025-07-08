@@ -12,19 +12,14 @@ export function useLoginPage() {
   const navigate = useNavigate();
   const config = getConfig();
 
-  // useEffect(() => {
-  //   if (validateToken().isValid) {
-  //     try {
-  //       FastAuthProvider.getConfig();
-  //     } catch {}
-  //   }
-  // }, []);
-
   const handleCloseAlert = () => {
     setAlertMessage(null);
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (
+    successMessage: string = '로그인에 성공했습니다!', // 기본값 설정
+    failureMessage: string = '로그인에 실패했습니다!'  // 기본값 설정
+  ) => {
     // 로그인 요청 유효성 검사
     const loginValidation = validateLoginRequest(loginState.username, loginState.password);
     if (!loginValidation.isValid) {
@@ -38,7 +33,7 @@ export function useLoginPage() {
       // handleApiSuccess 재사용
       handleApiSuccess({ 
         setLoading: (loading) => setLoginState(s => ({ ...s, loading }))
-      }, '로그인 성공!');
+      }, successMessage); // 전달받은 성공 메시지 사용
 
       // 리다이렉트 처리
       const { redirectAfterLogin, redirectPath } = getRedirectConfig();
@@ -51,7 +46,7 @@ export function useLoginPage() {
       handleApiError(err, { 
         showError: (msg) => setLoginState(s => ({ ...s, error: msg, loading: false })), 
         setLoading: (loading) => setLoginState(s => ({ ...s, loading }))
-      }, '로그인 실패');
+      }, err.message || failureMessage); // 전달받은 실패 메시지 사용 또는 err.message
     }
   };
 
@@ -73,6 +68,5 @@ export function useLoginPage() {
     handleCloseAlert,
     handleLogin,
     handleSocialLogin,
-    config,
   };
 } 

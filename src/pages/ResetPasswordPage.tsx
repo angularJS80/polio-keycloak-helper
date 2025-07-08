@@ -12,7 +12,7 @@ export default function ResetPasswordPage() {
     setNewPassword,
     confirmNewPassword,
     setConfirmNewPassword,
-    handleSubmit,
+    handleResetPassword,
     loading,
     handleGoToLogin,
   } = useResetPasswordPage(showSuccess, showError);
@@ -24,7 +24,6 @@ export default function ResetPasswordPage() {
         <Typography variant="h5" sx={{ fontWeight: 700 }}>비밀번호 재설정</Typography>
       </Box>
       <CommonMessageDialog message={message} onClose={clearMessage} />
-      <form onSubmit={handleSubmit}>
         <TextField
           fullWidth
           label="새 비밀번호"
@@ -51,7 +50,7 @@ export default function ResetPasswordPage() {
           color="primary"
           size="large"
           sx={{ mt: 2, fontWeight: 700 }}
-          type="submit"
+          onClick={() => handleResetPassword('비밀번호 재설정 성공','비밀번호 재설정 실패')}
           disabled={loading}
         >
           {loading ? '변경 중...' : '비밀번호 재설정'}
@@ -67,7 +66,6 @@ export default function ResetPasswordPage() {
         >
           로그인 페이지로 돌아가기
         </Button>
-      </form>
     </Box>
   );
 } 

@@ -14,7 +14,7 @@ export default function PasswordFindPage() {
   const {
     email,
     setEmail,
-    handleSubmit,
+    handleFindPassword,
     loading,
   } = usePasswordFindPage(showSuccess, showError);
 
@@ -23,7 +23,6 @@ export default function PasswordFindPage() {
       <PageHeader icon={SearchIcon} title="비밀번호 찾기" iconColor='#FFD700' />
       <CommonMessageDialog message={message} onClose={clearMessage} />
       <Box sx={{ maxWidth: 400, mx: 'auto', my: 5, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
-        <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
             label="이메일"
@@ -39,7 +38,7 @@ export default function PasswordFindPage() {
             color="primary"
             size="large"
             sx={{ mt: 2, fontWeight: 700 }}
-            type="submit"
+            onClick={() => handleFindPassword('이메일 전송 성공','이메일 전송 실패')}
             disabled={loading}
           >
             {loading ? '전송 중...' : '비밀번호 찾기'}
@@ -55,7 +54,6 @@ export default function PasswordFindPage() {
           >
             로그인 페이지로 돌아가기
           </Button>
-        </form>
       </Box>
     </Layout>
   );

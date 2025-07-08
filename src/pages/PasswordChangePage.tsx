@@ -16,7 +16,7 @@ export default function PasswordChangePage() {
     setNewPassword,
     confirmNewPassword,
     setConfirmNewPassword,
-    handleSubmit,
+    handleChangePassword,
     loading,
   } = usePasswordChangePage(showSuccess, showError);
 
@@ -50,8 +50,7 @@ export default function PasswordChangePage() {
             color="primary"
             size="large"
             sx={{ mt: 2, fontWeight: 700 }}
-            type="submit"
-            onClick={handleSubmit}
+            onClick={() => handleChangePassword('비밀번호 변경 성공','비밀번호 변경 실패')}
             disabled={loading}
           >
             {loading ? '변경 중...' : '비밀번호 변경'}

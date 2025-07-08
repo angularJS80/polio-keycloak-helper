@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 import { validatePassword } from '../utils/uiUtils';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
-import { resetFormState } from '../utils/uiUtils';
 import { FastAuthProvider } from 'fast-auth-with-keycloak';
 
 export function usePasswordChangePage(showSuccess?: (msg: string) => void, showError?: (msg: string) => void) {
@@ -10,10 +9,10 @@ export function usePasswordChangePage(showSuccess?: (msg: string) => void, showE
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-
-
-    event.preventDefault();
+  const handleChangePassword =  async (
+    successMessage: string = '등록에 성공했습니다!', // 기본값 설정
+    failureMessage: string = '등록에 실패했습니다!'  // 기본값 설정
+  ) => {
     
 
     setLoading(true);
@@ -29,18 +28,12 @@ export function usePasswordChangePage(showSuccess?: (msg: string) => void, showE
       // 변경된 부분: FastAuthProvider.changePassword 함수 사용
       await FastAuthProvider.changePassword(newPassword);
 
-      handleApiSuccess({
-        showSuccess,
-        setLoading,
-        resetForm: () => resetFormState([setNewPassword, setConfirmNewPassword])
-      }, '비밀번호가 성공적으로 변경되었습니다!');
+      
+      handleApiSuccess({ showSuccess, setLoading, /* resetForm */ }, successMessage);
     } catch (err: any) {
-      handleApiError(err, {
-        showError,
-        setLoading
-      }, '비밀번호 변경 실패');
+      handleApiError(err, { showError, setLoading }, err.message || failureMessage); // err.message를 직접 전달
     } finally {
-      setLoading(false); // 로딩 상태를 항상 해제하도록 추가
+      setLoading(false);
     }
   };
 
@@ -49,7 +42,7 @@ export function usePasswordChangePage(showSuccess?: (msg: string) => void, showE
     setNewPassword,
     confirmNewPassword,
     setConfirmNewPassword,
-    handleSubmit,
+    handleChangePassword,
     loading,
   };
 } 
