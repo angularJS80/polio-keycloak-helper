@@ -3,19 +3,19 @@ import {
     getAccessTokenInfo, isTokenExpiringSoon,removeAccessToken, removeRefreshToken
 } from './token';
 import { refreshToken } from './api'
-import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled,setInitialized} from './config';
+import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryPublishSec, getSessionExpirypublishEnabled,setInitialized} from './config';
 import { validateToken } from './validator';
 let refreshTimeout: ReturnType<typeof setTimeout> | null = null;
-let alertTimeout: ReturnType<typeof setTimeout> | null = null;
+let publishTimeout: ReturnType<typeof setTimeout> | null = null;
 let tokenWatchInterval: ReturnType<typeof setInterval> | null = null;
-let alertShownForThisSession = false;
+let publishForThisSession = false;
 
-export function disableAlertShown() {
-    alertShownForThisSession = false;
+export function disablePublish() {
+    publishForThisSession = false;
 }
 
-export function enableAlertShown() {
-    alertShownForThisSession = true;
+export function enablePublish() {
+    publishForThisSession = true;
 }
 
 
@@ -26,10 +26,10 @@ export function cleanTimers() {
         refreshTimeout = null;
         console.log('[FastAuth] refreshTimeout 정리 완료');
     }
-    if (alertTimeout) {
-        clearTimeout(alertTimeout);
-        alertTimeout = null;
-        console.log('[FastAuth] alertTimeout 정리 완료');
+    if (publishTimeout) {
+        clearTimeout(publishTimeout);
+        publishTimeout = null;
+        console.log('[FastAuth] publishTimeout 정리 완료');
     }
     if (tokenWatchInterval) {
         clearInterval(tokenWatchInterval);
@@ -61,11 +61,11 @@ export function handleTokenExpiryCheck(initialToken: string, isAutoRefresh: bool
         return;
     }
 
-    const alertBeforeSec = getSessionExpiryAlertSec();
+    const publishBeforeSec = getSessionExpiryPublishSec();
     if (isAutoRefresh) {
     } else {
-        if (!alertShownForThisSession && remain !== null && remain <= alertBeforeSec) {
-            showSessionExpiryAlert(); // enableAlertShown 호출 제거
+        if (!publishForThisSession && remain !== null && remain <= publishBeforeSec) {
+            publishSessionExpiry(); // enablePublish 호출 제거
         }
     }
     if (remain !== null && remain <= 0) {
@@ -87,14 +87,14 @@ export function startTokenExpiryWatcher() {
 
 export function setupNextRefresh() {
     if (refreshTimeout) clearTimeout(refreshTimeout);
-    if (alertTimeout) clearTimeout(alertTimeout);
+    if (publishTimeout) clearTimeout(publishTimeout);
 
     // 항상 최신 설정을 가져오기 위해 getConfig() 강제 새로고침 사용
     const config = getConfig(true); // 강제 새로고침으로 최신 설정 가져오기
     console.log('[FastAuth] setupNextRefresh - 현재 설정:', {
         autoRefresh: config.autoRefresh,
-        sessionExpiryAlertEnabled: config.sessionExpiryAlertEnabled,
-        sessionExpiryAlertSec: config.sessionExpiryAlertSec,
+        sessionExpirypublishEnabled: config.sessionExpirypublishEnabled,
+        sessionExpiryPublishSec: config.sessionExpiryPublishSec,
         refreshBeforeExpirySec: config.refreshBeforeExpirySec
     });
 
@@ -109,8 +109,8 @@ export function setupNextRefresh() {
 
     startTokenExpiryWatcher();
     const refreshBeforeSec = getRefreshBeforeExpirySec();
-    const alertBeforeSec = getSessionExpiryAlertSec();
-    const alertEnabled = getSessionExpiryAlertEnabled();
+    const publishBeforeSec = getSessionExpiryPublishSec();
+    const publishEnabled = getSessionExpirypublishEnabled();
 
     if (config.autoRefresh) {
         const remainingTimeToRefresh = exp - now - refreshBeforeSec * 1000;
@@ -122,32 +122,32 @@ export function setupNextRefresh() {
         }
     }
 
-    if ((!config.autoRefresh && alertEnabled)) {
-        const msToAlert = exp - now - alertBeforeSec * 1000;
+    if ((!config.autoRefresh && publishEnabled)) {
+        const msToAlert = exp - now - publishBeforeSec * 1000;
 
         if (msToAlert !== null) {
             if (msToAlert > 1000) {
-                console.log('[fast-auth] 알림 타이머 설정:', msToAlert, 'ms 후 (설정값:', alertBeforeSec, '초)');
-                alertTimeout = setTimeout(showSessionExpiryAlert, msToAlert);
+                console.log('[fast-auth] 알림 타이머 설정:', msToAlert, 'ms 후 (설정값:', publishBeforeSec, '초)');
+                publishTimeout = setTimeout(publishSessionExpiry, msToAlert);
             } else if (msToAlert <= 1000) {
-                console.log('[fast-auth] 알림 즉시 실행 (설정값:', alertBeforeSec, '초)');
-                showSessionExpiryAlert();
+                console.log('[fast-auth] 알림 즉시 실행 (설정값:', publishBeforeSec, '초)');
+                publishSessionExpiry();
             }
         }
     }
 
 }
 
-export function showSessionExpiryAlert() {
-    console.log('[FastAuth] showSessionExpiryAlert 진입, alertShownForThisSession:', alertShownForThisSession);
+export function publishSessionExpiry() {
+    console.log('[FastAuth] publishSessionExpiry 진입, publishForThisSession:', publishForThisSession);
 
-    if (alertShownForThisSession) {
+    if (publishForThisSession) {
         console.log('[FastAuth] 이미 알림을 띄웠으므로 return');
         return;
     }
 
-    enableAlertShown();
-    console.log('[FastAuth] enableAlertShown 호출 완료');
+    enablePublish();
+    console.log('[FastAuth] enablePublish 호출 완료');
 
     if (tokenWatchInterval) {
         clearInterval(tokenWatchInterval);
@@ -155,59 +155,59 @@ export function showSessionExpiryAlert() {
     }
 
     // 전역 상태로 다이얼로그 표시
-    setSessionExpiryDialogState(true, refreshToken, handleTokenExpired);
+    setSessionExpiryState(true, refreshToken, handleTokenExpired);
     console.log('[FastAuth] 다이얼로그 상태 설정 완료');
 }
 
 
 // 이벤트 시스템으로 다이얼로그 상태 관리
-type DialogState = {
+type sessionExpiryState = {
     show: boolean;
     onExtend: (() => void) | null;
     onLogout: (() => void) | null;
 };
 
 
-type DialogStateListener = (state: DialogState) => void;
+type sessionExpiryStateStateListener = (state: sessionExpiryState) => void;
 
-let dialogStateListeners: DialogStateListener[] = [];
-let currentDialogState: DialogState = {
+let sessionExpiryStateListeners: sessionExpiryStateStateListener[] = [];
+let currentSessionExpiryState: sessionExpiryState = {
     show: false,
     onExtend: null,
     onLogout: null
 };
 
 // 이벤트 리스너 등록/해제
-export function addDialogStateListener(listener: DialogStateListener) {
-    dialogStateListeners.push(listener);
+export function addSessionExpiryStateListener(listener: sessionExpiryStateStateListener) {
+    sessionExpiryStateListeners.push(listener);
     // 등록 즉시 현재 상태 전달
-    listener(currentDialogState);
+    listener(currentSessionExpiryState);
 }
 
-export function removeDialogStateListener(listener: DialogStateListener) {
-    dialogStateListeners = dialogStateListeners.filter(l => l !== listener);
+export function removeSessionExpiryStateListener(listener: sessionExpiryStateStateListener) {
+    sessionExpiryStateListeners = sessionExpiryStateListeners.filter(l => l !== listener);
 }
 
 // 상태 변경 시 모든 리스너에게 알림
-export function notifyDialogStateChange(state: DialogState) {
-    currentDialogState = state;
-    dialogStateListeners.forEach(listener => listener(state));
+export function notifySessionExpiryStateChange(state: sessionExpiryState) {
+    currentSessionExpiryState = state;
+    sessionExpiryStateListeners.forEach(listener => listener(state));
 }
 
 
-export function checkSessionExpiryDialogState() {
-    return currentDialogState;
+export function checkSessionExpirysessionExpiryState() {
+    return currentSessionExpiryState;
 }
 
 
 // 전역 함수로 다이얼로그 상태 관리
-export function setSessionExpiryDialogState(show: boolean, onExtend?: () => void, onLogout?: () => void) {
+export function setSessionExpiryState(show: boolean, onExtend?: () => void, onLogout?: () => void) {
     const newState = {
         show,
         onExtend: onExtend || null,
         onLogout: onLogout || null
     };
-    notifyDialogStateChange(newState);
+    notifySessionExpiryStateChange(newState);
 }
 
 let _onTokenExpiredNavigate: ((path: string) => void) | undefined;

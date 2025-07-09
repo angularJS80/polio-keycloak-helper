@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FastAuthProvider, addDialogStateListener, removeDialogStateListener, validateToken } from 'fast-auth-with-keycloak';
+import { FastAuthProvider, addSessionExpiryStateListener,removeSessionExpiryStateListener, validateToken } from 'fast-auth-with-keycloak';
 import { getConfig } from 'fast-auth-with-keycloak/config';
 import { isPublicPaths, LOGIN_PATH, DEFAULT_REDIRECT_PATH } from '../utils/uiUtils';
 
@@ -15,19 +15,19 @@ export function useAppCore() {
   }, [navigate]);
 
   // 전역 상태에서 다이얼로그 상태 가져오기
-  const [dialogState, setDialogState] = useState({ show: false, onExtend: null, onLogout: null });
+  const [dialogState, setSessionExpiryState] = useState({ show: false, onExtend: null, onLogout: null });
   
-  const updateDialogState = (state: any) => {
-    setDialogState(state);
+  const updatesessionExpiryState = (state: any) => {
+    setSessionExpiryState(state);
   };
 
   // 다이얼로그 상태 변경 감지
   useEffect(() => {
     // 이벤트 리스너 등록
-    addDialogStateListener(updateDialogState);
+    addSessionExpiryStateListener(updatesessionExpiryState);
 
     return () => {
-      removeDialogStateListener(updateDialogState);
+      removeSessionExpiryStateListener(updatesessionExpiryState);
     };
   }, []);
 

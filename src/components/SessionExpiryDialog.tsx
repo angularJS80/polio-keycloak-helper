@@ -8,7 +8,7 @@ import {
   Typography,
   Box
 } from '@mui/material';
-import { setSessionExpiryDialogState } from 'fast-auth-with-keycloak';
+import { setSessionExpiryState } from 'fast-auth-with-keycloak';
 
 interface SessionExpiryDialogProps {
   open: boolean;
@@ -26,15 +26,14 @@ const SessionExpiryDialog: React.FC<SessionExpiryDialogProps> = ({
       onExtend();
     }
     // 다이얼로그 닫기
-    setSessionExpiryDialogState(false);
+    setSessionExpiryState(false);
   };
 
   const handleLogout = () => {
     if (onLogout) {
       onLogout();
     }
-    // 다이얼로그 닫기
-    setSessionExpiryDialogState(false);
+    setSessionExpiryState(false);
   };
 
   return (

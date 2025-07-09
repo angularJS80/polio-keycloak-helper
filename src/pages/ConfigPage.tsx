@@ -114,20 +114,20 @@ export default function ConfigPage() {
       {!config.autoRefresh && (
         <>
           <FormControlLabel
-            control={<Checkbox checked={config.sessionExpiryAlertEnabled || false} onChange={e => setConfig({ ...config, sessionExpiryAlertEnabled: e.target.checked })} />}
-            label="토큰 만료 전 알림 활성화"
+            control={<Checkbox checked={config.sessionExpirypublishEnabled || false} onChange={e => setConfig({ ...config, sessionExpirypublishEnabled: e.target.checked })} />}
+            label="토큰 만료 전 전파 활성화"
             sx={{ mb: 1 }}
           />
-          {config.sessionExpiryAlertEnabled && (
+          {config.sessionExpirypublishEnabled && (
             <TextField
               fullWidth
               type="number"
-              label="토큰 만료 전 알림 시간(초)"
+              label="토큰 만료 전 전파 시간(초)"
               variant="outlined"
               margin="normal"
               inputProps={{ min: 1 }}
-              value={config.sessionExpiryAlertSec || 30}
-              onChange={e => setConfig({ ...config, sessionExpiryAlertSec: Number(e.target.value) })}
+              value={config.sessionExpiryPublishSec || 30}
+              onChange={e => setConfig({ ...config, sessionExpiryPublishSec: Number(e.target.value) })}
             />
           )}
         </>

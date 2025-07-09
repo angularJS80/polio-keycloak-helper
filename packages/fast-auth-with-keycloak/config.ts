@@ -15,8 +15,8 @@ interface Config {
   socialLoginEndpoint: string;
   loginByCodeEndpoint: string;
   refreshBeforeExpirySec?: number;
-  sessionExpiryAlertSec?: number;
-  sessionExpiryAlertEnabled: boolean;
+  sessionExpiryPublishSec?: number;
+  sessionExpirypublishEnabled: boolean;
   redirectAfterLogin?: boolean;
   redirectPath?: string;
   onSessionExpiryAlert?: (onExtend: () => void, onLogout: () => void) => void;
@@ -56,8 +56,8 @@ export const DEFAULT_INIT_AUTH_CONFIG = {
   redirectAfterLogin: true,
   redirectPath: '/welcome',
   refreshBeforeExpirySec: 20,
-  sessionExpiryAlertEnabled: false,
-  sessionExpiryAlertSec: 20
+  sessionExpirypublishEnabled: false,
+  sessionExpiryPublishSec: 20
 
 };
 
@@ -125,14 +125,14 @@ export function getRefreshBeforeExpirySec() {
   return Number(getConfig().refreshBeforeExpirySec) || 1;
 }
 
-export function getSessionExpiryAlertSec() {
+export function getSessionExpiryPublishSec() {
   
-  return Number(getConfig().sessionExpiryAlertSec) || 30;
+  return Number(getConfig().sessionExpiryPublishSec) || 30;
 }
 
-export function getSessionExpiryAlertEnabled() {
+export function getSessionExpirypublishEnabled() {
   
-  return !!getConfig().sessionExpiryAlertEnabled;
+  return !!getConfig().sessionExpirypublishEnabled;
 }
 
 export function getJoinEndpoint() {
