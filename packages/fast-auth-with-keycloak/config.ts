@@ -28,6 +28,17 @@ interface EndpointMeta {
   apiUri:() => string;
 }
 
+let initialized = false;
+
+export function setInitialized( enable:boolean){
+  initialized = enable;
+}
+
+export function isInitialized(){
+  return initialized;
+}
+
+
 
 export const DEFAULT_INIT_AUTH_CONFIG = {
   baseUrl: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080',

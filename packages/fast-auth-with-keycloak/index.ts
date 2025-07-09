@@ -1,14 +1,13 @@
 // fast-auth-with-keycloak 패키지 진입점
 
-import { setAccessToken, removeAccessToken, getAccessToken, getAccessTokenExpiration, setRefreshToken, removeRefreshToken, getRefreshToken, getAccessTokenInfo ,isTokenExpiringSoon} from './token';
-import { handleApiResponse } from './apiResultHandler';
-import { getConfig, getRefreshBeforeExpirySec, getSessionExpiryAlertSec, getSessionExpiryAlertEnabled, clearConfigCache,  endpointMeta } from './config';
+import { getConfig, clearConfigCache,  endpointMeta, isInitialized, setInitialized} from './config';
 import { 
   validateFastAuthConfig, 
   validateToken,
   validateAuthCode
 } from './validator';
-
+import {login, loginByCode, refreshToken , resetPassword, logout, changePassword, join, findPassword} from './api'
+import {cleanTimers, checkAndRefreshToken, setupNextRefresh, addDialogStateListener, setSessionExpiryDialogState,removeDialogStateListener, disableAlertShown, setOnTokenExpiredNavigate, getOnTokenExpiredNavigate} from './sessionManager'
 export type FastAuthConfig = {
   baseUrl: string;
   loginEndpoint: string;
@@ -27,83 +26,8 @@ export type FastAuthConfig = {
 
 let fastAuthConfig: FastAuthConfig | null = null;
 let refreshTimeout: ReturnType<typeof setTimeout> | null = null;
-let tokenWatchInterval: ReturnType<typeof setInterval> | null = null;
-let alertShownForThisSession = false;
-let isInitialized = false; // 초기화 플래그 추가
 
-
-
-// Event Listenr 관련 코드 start 
-
-// 이벤트 시스템으로 다이얼로그 상태 관리
-type DialogState = {
-  show: boolean;
-  onExtend: (() => void) | null;
-  onLogout: (() => void) | null;
-};
-
-
-type DialogStateListener = (state: DialogState) => void;
-
-let dialogStateListeners: DialogStateListener[] = [];
-let currentDialogState: DialogState = {
-  show: false,
-  onExtend: null,
-  onLogout: null
-};
-
-// 이벤트 리스너 등록/해제
-export function addDialogStateListener(listener: DialogStateListener) {
-  dialogStateListeners.push(listener);
-  // 등록 즉시 현재 상태 전달
-  listener(currentDialogState);
-}
-
-export function removeDialogStateListener(listener: DialogStateListener) {
-  dialogStateListeners = dialogStateListeners.filter(l => l !== listener);
-}
-
-// 상태 변경 시 모든 리스너에게 알림
-function notifyDialogStateChange(state: DialogState) {
-  currentDialogState = state;
-  dialogStateListeners.forEach(listener => listener(state));
-}
-
-// 전역 함수로 다이얼로그 상태 관리
-export function setSessionExpiryDialogState(show: boolean, onExtend?: () => void, onLogout?: () => void) {
-  const newState = {
-    show,
-    onExtend: onExtend || null,
-    onLogout: onLogout || null
-  };
-  notifyDialogStateChange(newState);
-}
-
-export function checkSessionExpiryDialogState() {
-  return currentDialogState;
-}
-
-// Event Listenr 관련 코드 End  
-
-
-export function cleanTimers() {
-  // 기존 타이머들 완전 정리
-  if (refreshTimeout) {
-    clearTimeout(refreshTimeout);
-    refreshTimeout = null;
-    console.log('[FastAuth] refreshTimeout 정리 완료');
-  }
-  if (alertTimeout) {
-    clearTimeout(alertTimeout);
-    alertTimeout = null;
-    console.log('[FastAuth] alertTimeout 정리 완료');
-  }
-  if (tokenWatchInterval) {
-    clearInterval(tokenWatchInterval);
-    tokenWatchInterval = null;
-    console.log('[FastAuth] tokenWatchInterval 정리 완료');
-  }
-}
+setInitialized(false);
 
 export class FastAuthProvider {
   static init(config: FastAuthConfig) {
@@ -119,12 +43,12 @@ export class FastAuthProvider {
     fastAuthConfig = { ...config };
     console.log('[FastAuth] FastAuthProvider initialized with config:', fastAuthConfig);
     if (config.onTokenExpiredNavigate) {
-      FastAuthProvider._onTokenExpiredNavigate = config.onTokenExpiredNavigate;
+      setOnTokenExpiredNavigate(config.onTokenExpiredNavigate);
       console.log('[FastAuth] onTokenExpiredNavigate 콜백 등록됨');
     }
     
     // 이미 초기화되어 있고 로그인 상태가 아닌 경우 중복 실행 방지
-    if (isInitialized) {
+    if (isInitialized()) {
       if(validateToken().isValid){
         console.log('[FastAuth] 로그인 상태에서 재초기화, 기존 타이머 정리');
         cleanTimers();  
@@ -137,417 +61,71 @@ export class FastAuthProvider {
       }
     }
     
-    isInitialized = true; // 초기화 완료 표시
+    setInitialized(true);
     
   }
 
   static async login({ username, password }: { username: string; password: string }) {
-    const res = await fetch( endpointMeta.login.apiUri(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    });
-    if (!res.ok) throw new Error(endpointMeta.login.name+' 실패');
-    const data = await res.json();
-    setAccessToken(data.accessToken);
-    setRefreshToken(data.refreshToken);
-    FastAuthProvider.disableAlertShown();
+    const data = await login({username, password});
+    disableAlertShown();
     setupNextRefresh();
     return data;
   }
 
+  static async loginByCode(code: string) {
+    const data = loginByCode(code)
+    disableAlertShown();
+    setupNextRefresh();
+    return data;
+  }
 
   static socialLoginEndpoint(){
     return `${endpointMeta.socialLogin.apiUri()}`;
   }
 
-  static async loginByCode(code: string) {
-    const res = await fetch( endpointMeta.loginByCode.apiUri(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
-    });
-    
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || endpointMeta.loginByCode.name+'처리 중 오류가 발생했습니다.');
-    }
-    
-    const data = await res.json();
-    setAccessToken(data.accessToken);
-    setRefreshToken(data.refreshToken);
-    FastAuthProvider.disableAlertShown();
-    setupNextRefresh();
-    return data;
-  }
 
-  static async resetPassword(accessToken: string, newPassword: string) {
-    const res = await fetch(endpointMeta.passwordReset.apiUri(), {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ newPassword }),
-    });
-    
-    if (!res.ok) {
-      const errorData = await res.json(); // 에러 발생 시에는 JSON 본문이 있을 가능성이 높으므로 유지
-      throw new Error(errorData.message || endpointMeta.passwordReset.name+' 처리 중 오류가 발생했습니다.');
-    }
-    
-    if (res.status === 204) {
-      return {}; // 또는 true, undefined 등. 호출하는 쪽에서 이 값을 어떻게 처리할지에 따라 결정.
-    }
-
-    try {
-      return await res.json(); // 본문이 있다면 JSON 파싱
-    } catch (e) {
-      console.warn("API 응답에 JSON 본문이 없거나 파싱할 수 없습니다. 빈 객체를 반환합니다.", e);
-      return {}; // 본문이 없거나 파싱 실패 시 빈 객체 반환
-    }
-  }
-
-  static async logout() {
-    const config = getConfig();;
-    const refreshToken = getRefreshToken();
-
-    
-    if (!refreshToken) {
-      console.log('[FastAuth] Refresh token is missing. Performing client-side logout only.');
-      return;
-    }
-    
-    
-    try {
-      const res = await fetch(`${endpointMeta.logout.apiUri()}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-    
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error(endpointMeta.logout.name+' 엔드포인트 호출 실패:', res.status, res.statusText, '응답 본문:', errorText);
-        return;
-      }
-    } catch (error) {
-      console.error(endpointMeta.logout.name+' 엔드포인트 호출 중 오류 발생:', error);
-    }
-
-    const afterLogout = (config: FastAuthConfig) => {
-      removeAccessToken();
-      removeRefreshToken();
-      FastAuthProvider.disableAlertShown();
-      if (refreshTimeout) clearTimeout(refreshTimeout);
-
-      // 초기화 플래그 리셋 (다음 로그인 시 정상 초기화를 위해)
-      isInitialized = false;
-
-      if (config.onTokenExpiredRedirect) {
-        if (FastAuthProvider._onTokenExpiredNavigate) {
-          FastAuthProvider._onTokenExpiredNavigate(config.onTokenExpiredRedirect);
-        } else {
-          window.location.href = config.onTokenExpiredRedirect;
-        }
-      }
-
-    }
-    afterLogout(config)
-    
-  }
-
-  private static _onTokenExpiredNavigate: ((path: string) => void) | undefined;
-  // onSessionExpiryAlert 제거 - 더 이상 필요 없음
-
-  static handleTokenExpired() {
-    const config = getConfig();
-    removeAccessToken();
-    removeRefreshToken();
-    
-    // 초기화 플래그 리셋 (다음 로그인 시 정상 초기화를 위해)
-    isInitialized = false;
-    
-    if (config.onTokenExpiredRedirect) {
-      if (FastAuthProvider._onTokenExpiredNavigate) {
-        FastAuthProvider._onTokenExpiredNavigate(config.onTokenExpiredRedirect);
-      } else {
-        window.location.href = config.onTokenExpiredRedirect;
-      }
-    }
-  }
-
-  static disableAlertShown() {
-    alertShownForThisSession = false;
-  }
-
-  static enableAlertShown() {
-    alertShownForThisSession = true;
-  }
-
-  /**
-   * 사용자(로그인된 상태)의 비밀번호를 변경하는 API 호출
-   * 이 함수는 주로 로그인된 사용자가 자신의 비밀번호를 변경할 때 사용됩니다.
-   * @param newPassword 새 비밀번호
-   * @returns Promise<any>
-   */
   static async changePassword(newPassword: string): Promise<any> {
-
-    // 토큰 유효성 검사 및 헤더 설정 (fastAuthApiRequest에서 하던 로직을 직접 포함)
-    const tokenValidation = validateToken(true);
-    if (!tokenValidation.isValid) {
-      if (tokenValidation.error === '토큰이 만료되었습니다.') {
-        FastAuthProvider.handleTokenExpired();
-      }
-      throw new Error(tokenValidation.error);
-    }
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${getAccessToken()}`, // 로그인 토큰 추가
-    };
-
-    const res = await fetch(endpointMeta.passwordChange.apiUri(), {
-      method: 'PUT',
-      headers: headers,
-      body: JSON.stringify({
-        newPassword
-      }),
-    });
-
-    // 응답 처리 (handleApiResponse 재사용)
-    try {
-      // '비밀번호 변경'과 관련된 메시지를 handleApiResponse에 전달
-      return (await handleApiResponse(res, endpointMeta.passwordChange.name)).body;
-    } catch (error) {
-      console.warn(`[FastAuth] Failed to parse JSON for successful password change response (status: ${res.status}):`, error);
-      return {}; // 이 경우에도 빈 객체를 반환하여 클라이언트에서 오류를 받지 않도록 함
-    }
+    return await changePassword(newPassword);
   }
 
-  /**
-   * 사용자 계정 등록 (회원가입) API 호출
-   * 이 함수는 주로 새로운 사용자를 시스템에 등록할 때 사용됩니다.
-   * @param params { username: string, email: string, password: string, ... } 등 회원가입에 필요한 모든 정보
-   * @returns Promise<any>
-   */
   static async join(params: {
     username: string;
     email: string;
     password: string;
     [key: string]: any
   }): Promise<any> {
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    const res = await fetch( endpointMeta.join.apiUri(), {
-      method: 'POST', // 사용자 등록은 일반적으로 POST 메소드 사용
-      headers: headers,
-      body: JSON.stringify(params), // 전달받은 모든 파라미터를 body에 포함
-    });
-
-    // 응답 처리 (handleApiResponse 재사용)
-    try {
-      return (await handleApiResponse(res, endpointMeta.join.name)).body;
-    } catch (error) {
-      console.warn(`[FastAuth] Failed to parse JSON for successful account join response (status: ${res.status}):`, error);
-      return {};
-    }
-  }
-
-  /**
-   * 비밀번호 찾기 (비밀번호 재설정 이메일 발송) API 호출
-   * 이 함수는 로그인 없이 사용자의 이메일/ID를 통해 비밀번호 재설정 흐름을 시작합니다.
-   * @param params { email: string } 또는 { username: string } 등 비밀번호 찾기에 필요한 파라미터
-   * @returns Promise<any>
-   */
-  static async findPassword(params: { email?: string; username?: string }): Promise<any> {
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    const res = await fetch( endpointMeta.passwordFind.apiUri(), {
-      method: 'POST', // 비밀번호 찾기는 일반적으로 POST 메소드 사용
-      headers: headers,
-      body: JSON.stringify(params), // 전달받은 파라미터를 body에 포함
-    });
-
-    // 응답 처리 (handleApiResponse 재사용)
-    try {
-      return (await handleApiResponse(res, endpointMeta.passwordFind.name)).body;
-    } catch (error) {
-      // 에러를 외부로 throw하여 호출부가 catch하도록 함
-      throw error; // 에러를 다시 던집니다.
-    }
-  }
-}
-// 토큰을 실제로 갱신하는 함수
-async function refreshToken(): Promise<void> {
-  const config = getConfig();
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    console.log('[FastAuth] No refresh token available');
-    return;
-  }
-
-  try {
-    console.log('[FastAuth] Refreshing from:', config.refreshEndpoint);
-    const res = await fetch( endpointMeta.refresh.apiUri(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error('[FastAuth] '+endpointMeta.refresh.name+' failed:', res.status, res.statusText, 'Response:', errorText);
-      return;
-    }
-
-    const data = await res.json();
-    setAccessToken(data.accessToken);
-    setRefreshToken(data.refreshToken);
-    FastAuthProvider.disableAlertShown();
-    setupNextRefresh();
-    console.log('[FastAuth] Token refreshed successfully');
-  } catch (error) {
-    console.error('[FastAuth] Token refresh error:', error);
-  }
-}
-
-// 토큰 갱신 필요 여부를 판단하고 필요시 갱신하는 함수
-async function checkAndRefreshToken(): Promise<void> {
-  console.log('checkAndRefreshToken');
-  if (isTokenExpiringSoon()) {
-    await refreshToken();
-  } else {
-    console.log('[FastAuth] Token not expiring soon, no action needed.');
-  }
-}
-
-let alertTimeout: ReturnType<typeof setTimeout> | null = null;
-
-// setInterval 내부에 있던 로직을 분리한 도우미 함수
-function handleTokenExpiryCheck(initialToken: string, isAutoRefresh: boolean) {
-  const { isStaleOrInvalid, exp, remain } = getAccessTokenInfo(initialToken);
-
-  if (isStaleOrInvalid) {
-    clearInterval(tokenWatchInterval!);
-    tokenWatchInterval = null;
-    startTokenExpiryWatcher(); // 새로운 토큰으로 타이머 재설정 시도
-    return;
+    return await join(params);
   }
   
-  if (!exp) {
-    clearInterval(tokenWatchInterval!);
-    tokenWatchInterval = null;
-    return;
-  }
-  
-  const alertBeforeSec = getSessionExpiryAlertSec();
-  if (isAutoRefresh) {
-  } else {
-    if (!alertShownForThisSession && remain !== null && remain <= alertBeforeSec) {
-      showSessionExpiryAlert(); // enableAlertShown 호출 제거
-    }
-  }
-  if (remain !== null && remain <= 0) {
-    clearInterval(tokenWatchInterval!);
-    tokenWatchInterval = null;
-  }
-}
-
-function startTokenExpiryWatcher() {
-  console.log("startTokenExpiryWatcher");
-  if (tokenWatchInterval) clearInterval(tokenWatchInterval);
-  if (!validateToken().isValid) return;
-  
-  const initialToken = getAccessToken() as string; // setInterval이 시작될 때의 토큰 스냅샷
-  const config = getConfig(); // 항상 최신 설정을 가져오기 위해 getConfig() 직접 사용
-
-  tokenWatchInterval = setInterval(() => handleTokenExpiryCheck(initialToken, config.autoRefresh), 2000);
-}
-
-function setupNextRefresh() {
-  if (refreshTimeout) clearTimeout(refreshTimeout);
-  if (alertTimeout) clearTimeout(alertTimeout);
-  
-  // 항상 최신 설정을 가져오기 위해 getConfig() 강제 새로고침 사용
-  const config = getConfig(true); // 강제 새로고침으로 최신 설정 가져오기
-  console.log('[FastAuth] setupNextRefresh - 현재 설정:', {
-    autoRefresh: config.autoRefresh,
-    sessionExpiryAlertEnabled: config.sessionExpiryAlertEnabled,
-    sessionExpiryAlertSec: config.sessionExpiryAlertSec,
-    refreshBeforeExpirySec: config.refreshBeforeExpirySec
-  });
-  
-  if (!validateToken().isValid) return;
-  const exp = getAccessTokenExpiration();
-  if (!exp) return;
-  const now = Date.now();
-  if (exp - now <= 0) {
-    // 이미 만료된 토큰이면 아무것도 하지 않음
-    return;
+  static async resetPassword(accessToken: string, newPassword: string) {
+    return await resetPassword(accessToken, newPassword);
   }
 
-  startTokenExpiryWatcher();
-  const refreshBeforeSec = getRefreshBeforeExpirySec();
-  const alertBeforeSec = getSessionExpiryAlertSec();
-  const alertEnabled = getSessionExpiryAlertEnabled();
+  static async logout() {
+    logout();
+    disableAlertShown();
+    if (refreshTimeout) clearTimeout(refreshTimeout);
 
+    // 초기화 플래그 리셋 (다음 로그인 시 정상 초기화를 위해)
+    setInitialized(false);
 
-  if(config.autoRefresh){
-    const remainingTimeToRefresh =  exp - now - refreshBeforeSec * 1000 ;
-  
-    if (remainingTimeToRefresh !== null && remainingTimeToRefresh > 0) {
-      refreshTimeout = setTimeout(checkAndRefreshToken, remainingTimeToRefresh);
-    } else if (remainingTimeToRefresh !== null) {
-      checkAndRefreshToken();
-    }
-  }
-  
-  if((!config.autoRefresh && alertEnabled)){
-    const msToAlert = exp - now - alertBeforeSec * 1000;
-  
-    if(msToAlert !== null){
-      if (msToAlert > 1000) {
-        console.log('[fast-auth] 알림 타이머 설정:', msToAlert, 'ms 후 (설정값:', alertBeforeSec, '초)');
-        alertTimeout = setTimeout(showSessionExpiryAlert, msToAlert);
-      } else if (msToAlert <= 1000) {
-        console.log('[fast-auth] 알림 즉시 실행 (설정값:', alertBeforeSec, '초)');
-        showSessionExpiryAlert();
+    const config = getConfig();
+    if (config.onTokenExpiredRedirect) {
+      if (getOnTokenExpiredNavigate()) {
+        setOnTokenExpiredNavigate(()=>config.onTokenExpiredRedirect);
+      } else {
+        window.location.href = config.onTokenExpiredRedirect;
       }
     }
+    
   }
 
+  
+
+  static async findPassword(params: { email?: string; username?: string }): Promise<any> {
+    return await findPassword(params);
+  }
 }
-
-function showSessionExpiryAlert() {
-  console.log('[FastAuth] showSessionExpiryAlert 진입, alertShownForThisSession:', alertShownForThisSession);
-
-  if (alertShownForThisSession) {
-    console.log('[FastAuth] 이미 알림을 띄웠으므로 return');
-    return;
-  }
-  
-  FastAuthProvider.enableAlertShown();
-  console.log('[FastAuth] enableAlertShown 호출 완료');
-  
-  if (tokenWatchInterval) {
-    clearInterval(tokenWatchInterval);
-    tokenWatchInterval = null;
-  }
-  
-  // 전역 상태로 다이얼로그 표시
-  setSessionExpiryDialogState(true, refreshToken, FastAuthProvider.handleTokenExpired);
-  console.log('[FastAuth] 다이얼로그 상태 설정 완료');
-}
-
-// 앱이 시작될 때 accessToken이 있으면 만료 전까지 로그만 출력 (초기화 여부와 무관)
-startTokenExpiryWatcher();
 
 // validator 함수들 export
 export * from './validator';
@@ -556,5 +134,9 @@ export {
   checkAndRefreshToken, 
   refreshToken,
   validateToken,
-  validateAuthCode
+  validateAuthCode,
+  addDialogStateListener,
+  setSessionExpiryDialogState,
+  removeDialogStateListener,
+  disableAlertShown
 }; 
