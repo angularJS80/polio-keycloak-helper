@@ -4,7 +4,7 @@ import {
   validateToken
 } from './validator';
 import {login, loginByCode , resetPassword, logout, changePassword, join, findPassword} from './api'
-import {cleanTimers,  setupNextRefresh, disablePublish, setOnTokenExpiredNavigate, getOnTokenExpiredNavigate} from './sessionManager'
+import {cleanTimers,  setupNextRefresh, disablePublish, setOnTokenExpiredNavigate, handleTokenExpired} from './sessionManager'
 
 export type FastAuthConfig = {
   baseUrl: string;
@@ -102,15 +102,7 @@ export class FastAuthProvider {
       disablePublish();
       if (refreshTimeout) clearTimeout(refreshTimeout);
       // 초기화 플래그 리셋 (다음 로그인 시 정상 초기화를 위해)
-      setInitialized(false);
-      const config = getConfig();
-      if (config.onTokenExpiredRedirect) {
-        if (getOnTokenExpiredNavigate()) {
-          setOnTokenExpiredNavigate(()=>config.onTokenExpiredRedirect);
-        } else {
-          window.location.href = config.onTokenExpiredRedirect;
-        }
-      }
+      handleTokenExpired()
       
     }
   
