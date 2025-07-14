@@ -1,3 +1,37 @@
+# polio-keycloak-helper
+
+## 2024년 7월 30일 업데이트 - 패키지 분리 및 관리 예정 (Work in Progress)
+
+본 프로젝트는 `packages/fast-auth-with-keycloak` 내부에 Keycloak 인증 헬퍼 패키지를 포함하고 있습니다. 현재는 이 패키지가 메인 프로젝트와 함께 관리되고 있으나, 향후 다음과 같은 방향으로 분리하여 관리할 예정입니다.
+
+### 1. `fast-auth-with-keycloak` 패키지 분리
+
+`packages/fast-auth-with-keycloak` 디렉토리의 내용을 별도의 Git 리포지토리로 분리하여 독립적인 오픈소스 패키지로 관리할 예정입니다. 이는 다음과 같은 이점을 제공합니다.
+
+*   **모듈성 강화:** 인증 로직과 관련된 코드를 핵심 프로젝트로부터 완전히 분리하여 재사용성과 독립성을 높입니다.
+*   **독립적인 버전 관리:** `fast-auth-with-keycloak` 패키지 자체의 버전 관리를 독립적으로 수행할 수 있게 됩니다.
+*   **배포 용이성:** npm 또는 GitHub Package Registry를 통해 패키지를 발행하여 다른 프로젝트에서도 쉽게 의존성으로 추가하여 사용할 수 있습니다.
+
+### 2. 패키지 발행 및 참조 방식 변경
+
+`fast-auth-with-keycloak` 패키지를 별도 리포지토리에서 관리하게 되면, 메인 `polio-keycloak-helper` 프로젝트에서 이 패키지를 다음과 같은 방식으로 참조하게 됩니다.
+
+*   **패키지 발행 준비:**
+    *   `fast-auth-with-keycloak` 리포지토리 내의 `package.json` 파일에 `exports` 필드를 올바르게 정의하여 패키지 모듈들이 외부로 노출되도록 설정합니다. (예: 기본 진입점(`.`) 및 필요한 경우 서브 경로).
+    *   패키지의 `name` 필드를 적절하게 설정합니다. (예: `@your-scope/fast-auth-with-keycloak` 또는 `fast-auth-with-keycloak`).
+    *   패키지 발행을 위한 `publishConfig` (GitHub Package Registry 사용 시) 등을 설정합니다.
+*   **패키지 빌드:**
+    *   별도 리포지토리에서 `npm run build` 명령을 통해 패키지를 빌드합니다.
+*   **패키지 발행:**
+    *   빌드된 패키지를 npm (npmjs.com) 또는 GitHub Package Registry와 같은 공개/비공개 패키지 레지스트리에 발행합니다.
+*   **메인 프로젝트의 의존성 변경:**
+    *   `polio-keycloak-helper` 프로젝트의 루트 `package.json` 파일에서 `fast-auth-with-keycloak` 의존성을 `git+https://...` 형태의 참조 대신 발행된 패키지의 이름과 버전으로 변경합니다.
+    *   예: `"fast-auth-with-keycloak": "^1.0.0"` 또는 `"@angularJS80/fast-auth-with-keycloak": "^1.0.0"`
+
+이러한 변경을 통해 프로젝트의 아키텍처를 개선하고, `fast-auth-with-keycloak` 패키지를 더 유연하게 사용할 수 있도록 할 예정입니다.
+
+---
+
 # keycloak-helper
 
 이 프로젝트는 Keycloak 백엔드와 통합되는 React 애플리케이션의 예시 및 개발 환경입니다. 주요 인증 로직은 `fast-auth-with-keycloak`라는 별도의 NPM 패키지로 분리되어 관리됩니다.
