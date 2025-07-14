@@ -2,7 +2,7 @@
 
 import {addSessionExpiryStateListener, setSessionExpiryState,removeSessionExpiryStateListener, disablePublish} from './sessionManager'
 import {FastAuthProvider} from './provider'
-import { getConfig,getRedirectConfig,clearConfigCache } from './config';
+import { getConfig,getRedirectConfig,clearConfigCache,setConfig } from './config';
 import {getUserName, getEmail}from './token'
 
 // validator 함수들 export
@@ -14,6 +14,7 @@ export {
   removeSessionExpiryStateListener,
   disablePublish,
   getConfig,
+  setConfig,
   getRedirectConfig,
   clearConfigCache,
   getEmail,

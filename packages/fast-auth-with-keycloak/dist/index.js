@@ -239,6 +239,10 @@ function _config() {
     console.log('[Config] 저장된 설정 없음, 기본값 사용');
     return { ...DEFAULT_INIT_AUTH_CONFIG };
 }
+// 설정 저장
+function setConfig(config) {
+    setItem('local', 'fast-auth-config', JSON.stringify(config));
+}
 function getConfig(forceRefresh = false) {
     if (_cachedConfig && !forceRefresh) {
         return _cachedConfig;
@@ -853,6 +857,7 @@ exports.getEmail = getEmail;
 exports.getRedirectConfig = getRedirectConfig;
 exports.getUserName = getUserName;
 exports.removeSessionExpiryStateListener = removeSessionExpiryStateListener;
+exports.setConfig = setConfig;
 exports.setSessionExpiryState = setSessionExpiryState;
 exports.validateApiRequestOptions = validateApiRequestOptions;
 exports.validateAuthCode = validateAuthCode;

@@ -47,6 +47,7 @@ export declare const DEFAULT_INIT_AUTH_CONFIG: {
 export type EndpointType = 'login' | 'passwordChange' | 'passwordReset' | 'passwordFind' | 'join' | 'logout' | 'refresh' | 'socialLogin' | 'loginByCode';
 export declare const endpointMeta: Record<EndpointType, EndpointMeta>;
 export declare function clearConfigCache(): void;
+export declare function setConfig(config: string): void;
 export declare function getConfig(forceRefresh?: boolean): Config;
 export declare function getRefreshBeforeExpirySec(): number;
 export declare function getSessionExpiryPublishSec(): number;

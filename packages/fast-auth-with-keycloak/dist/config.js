@@ -1,4 +1,4 @@
-import { getItem } from './storage';
+import { getItem, setItem } from './storage';
 let initialized = false;
 export function setInitialized(enable) {
     initialized = enable;
@@ -59,6 +59,10 @@ function _config() {
     // 저장된 설정이 없으면 기본값 반환
     console.log('[Config] 저장된 설정 없음, 기본값 사용');
     return { ...DEFAULT_INIT_AUTH_CONFIG };
+}
+// 설정 저장
+export function setConfig(config) {
+    setItem('local', 'fast-auth-config', JSON.stringify(config));
 }
 export function getConfig(forceRefresh = false) {
     if (_cachedConfig && !forceRefresh) {

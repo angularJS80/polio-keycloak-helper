@@ -69,6 +69,7 @@ interface Config {
 }
 type EndpointType = 'login' | 'passwordChange' | 'passwordReset' | 'passwordFind' | 'join' | 'logout' | 'refresh' | 'socialLogin' | 'loginByCode';
 declare function clearConfigCache(): void;
+declare function setConfig(config: string): void;
 declare function getConfig(forceRefresh?: boolean): Config;
 declare function getRedirectConfig(): {
     redirectAfterLogin: boolean;
@@ -106,4 +107,4 @@ declare const validateAuthCode: (code: string | null) => {
     error?: string;
 };
 
-export { FastAuthProvider, addSessionExpiryStateListener, clearConfigCache, disablePublish, getConfig, getEmail, getRedirectConfig, getUserName, removeSessionExpiryStateListener, setSessionExpiryState, validateApiRequestOptions, validateAuthCode, validateEndpoint, validateFastAuthConfig, validateMultiple, validateToken };
+export { FastAuthProvider, addSessionExpiryStateListener, clearConfigCache, disablePublish, getConfig, getEmail, getRedirectConfig, getUserName, removeSessionExpiryStateListener, setConfig, setSessionExpiryState, validateApiRequestOptions, validateAuthCode, validateEndpoint, validateFastAuthConfig, validateMultiple, validateToken };

@@ -1,4 +1,4 @@
-import { getItem } from './storage';
+import { getItem,setItem } from './storage';
 
 
 interface Config {
@@ -109,7 +109,13 @@ function _config(): Config {
   return { ...DEFAULT_INIT_AUTH_CONFIG };
 }
 
+ // 설정 저장
+ 
 
+
+export function setConfig(config:string){
+  setItem('local', 'fast-auth-config', JSON.stringify(config));
+}
 
 export function getConfig(forceRefresh: boolean = false): Config {
   if (_cachedConfig && !forceRefresh) {

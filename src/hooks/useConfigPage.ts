@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider, validateToken } from 'fast-auth-with-keycloak';
-import { getConfig, clearConfigCache } from 'fast-auth-with-keycloak';
-import { setItem } from 'fast-auth-with-keycloak/storage';
+import { setConfig, getConfig, clearConfigCache } from 'fast-auth-with-keycloak';
 import { LOGIN_PATH, DEFAULT_REDIRECT_PATH, CONFIG_PATH } from '../utils/uiUtils';
 
 export function useConfigPage() {
@@ -19,7 +18,7 @@ export function useConfigPage() {
   const handleSave = () => {
     try {
       // 설정 저장
-      setItem('local', 'fast-auth-config', JSON.stringify(config));
+      setConfig(config);
       
       // FastAuthProvider 재초기화
       FastAuthProvider.init(config);
