@@ -1,0 +1,23 @@
+export declare function disablePublish(): void;
+export declare function enablePublish(): void;
+export declare function cleanTimers(): void;
+export declare function checkAndRefreshToken(): Promise<void>;
+export declare function handleTokenExpiryCheck(initialToken: string, isAutoRefresh: boolean): void;
+export declare function startTokenExpiryWatcher(): void;
+export declare function setupNextRefresh(): void;
+export declare function publishSessionExpiry(): void;
+type sessionExpiryState = {
+    show: boolean;
+    onExtend: (() => void) | null;
+    onLogout: (() => void) | null;
+};
+type sessionExpiryStateStateListener = (state: sessionExpiryState) => void;
+export declare function addSessionExpiryStateListener(listener: sessionExpiryStateStateListener): void;
+export declare function removeSessionExpiryStateListener(listener: sessionExpiryStateStateListener): void;
+export declare function notifySessionExpiryStateChange(state: sessionExpiryState): void;
+export declare function checkSessionExpirysessionExpiryState(): sessionExpiryState;
+export declare function setSessionExpiryState(show: boolean, onExtend?: () => void, onLogout?: () => void): void;
+export declare function setOnTokenExpiredNavigate(onTokenExpiredNavigate: (path: string) => void): void;
+export declare function getOnTokenExpiredNavigate(): ((path: string) => void) | undefined;
+export declare function handleTokenExpired(): void;
+export {};

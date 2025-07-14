@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getUserName, getEmail } from 'fast-auth-with-keycloak/token';
+import { getUserName, getEmail } from 'fast-auth-with-keycloak';
 
 export function useProfilePage() {
   const [profile, setProfile] = useState<{ name?: string; email?: string } | null>(null);

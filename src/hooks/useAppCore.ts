@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FastAuthProvider, addSessionExpiryStateListener,removeSessionExpiryStateListener, validateToken } from 'fast-auth-with-keycloak';
-import { getConfig } from 'fast-auth-with-keycloak/config';
+import { getConfig } from 'fast-auth-with-keycloak';
 import { isPublicPaths, LOGIN_PATH, DEFAULT_REDIRECT_PATH } from '../utils/uiUtils';
 
 export function useAppCore() {

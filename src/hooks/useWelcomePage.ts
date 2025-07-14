@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider, validateToken } from 'fast-auth-with-keycloak';
-import { getUserName } from 'fast-auth-with-keycloak/token';
+import { getUserName } from 'fast-auth-with-keycloak';
 import { LOGIN_PATH } from '../utils/uiUtils';
 
 export function useWelcomePage() {

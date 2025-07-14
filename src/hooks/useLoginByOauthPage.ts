@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FastAuthProvider, validateAuthCode } from 'fast-auth-with-keycloak';
-import { getRedirectConfig } from 'fast-auth-with-keycloak/config';
+import { getRedirectConfig } from 'fast-auth-with-keycloak';
 import { handleApiSuccess, handleApiError } from '../utils/apiResponseHandler';
 import { DEFAULT_REDIRECT_PATH, LOGIN_PATH } from '../utils/uiUtils';
 

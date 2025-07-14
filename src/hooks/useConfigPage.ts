@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FastAuthProvider, validateToken } from 'fast-auth-with-keycloak';
-import { getConfig, clearConfigCache } from 'fast-auth-with-keycloak/config';
+import { getConfig, clearConfigCache } from 'fast-auth-with-keycloak';
 import { setItem } from 'fast-auth-with-keycloak/storage';
 import { LOGIN_PATH, DEFAULT_REDIRECT_PATH, CONFIG_PATH } from '../utils/uiUtils';
 
