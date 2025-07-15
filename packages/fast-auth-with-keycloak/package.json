@@ -21,17 +21,17 @@
   ],
   "author": "Your Name",
   "license": "MIT",
-  "dependencies": {
-  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^26.0.1",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
+    "@types/node": "^24.0.14",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "rollup": "^4.18.0",
     "rollup-plugin-dts": "^6.1.1",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "tslib": "^2.6.2"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -47,4 +47,4 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   }
-} 
+}
