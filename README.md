@@ -1,5 +1,10 @@
 # polio-keycloak-helper
 
+
+"fast-auth-with-keycloak": "git+https://github.com/angularJS80/fast-auth-with-keycloak.git#init",
+    
+
+    
 ## 2024년 7월 30일 업데이트 - 패키지 분리 및 관리 예정 (Work in Progress)
 
 본 프로젝트는 `packages/fast-auth-with-keycloak` 내부에 Keycloak 인증 헬퍼 패키지를 포함하고 있습니다. 현재는 이 패키지가 메인 프로젝트와 함께 관리되고 있으나, 향후 다음과 같은 방향으로 분리하여 관리할 예정입니다.

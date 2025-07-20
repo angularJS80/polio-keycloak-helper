@@ -16,7 +16,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "customize-cra": "^1.0.0",
-    "fast-auth-with-keycloak": "file:./packages/fast-auth-with-keycloak",
+    "fast-auth-with-keycloak": "file:../fast-auth-with-keycloak",
     "react": "^19.1.0",
     "react-app-rewired": "^2.2.1",
     "react-canvas-confetti": "^2.0.7",

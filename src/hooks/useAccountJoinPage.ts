@@ -41,7 +41,7 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
       
       handleApiSuccess({ showSuccess, setLoading, /* resetForm */ }, successMessage);
     } catch (err: any) {
-    
+      
       handleApiError(err, { showError, setLoading }, err.message || failureMessage); // err.message를 직접 전달
     } finally {
       setLoading(false);

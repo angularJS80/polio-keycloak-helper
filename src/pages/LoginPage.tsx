@@ -17,15 +17,21 @@ import CommonMessageDialog from '../components/CommonMessageDialog';
 
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+
+  const { message, clearMessage, showError} = useMessage();
+
   const {
     loginState,
     setLoginState,
     handleLogin,
     handleSocialLogin,
-  } = useLoginPage();
-  const { message, clearMessage } = useMessage();
-  const navigate = useNavigate();
-
+    loading
+  } = useLoginPage(showError);
+  
+  
+  
+  
   return (
     <Layout>
       <PageHeader 
@@ -59,11 +65,11 @@ export default function LoginPage() {
         color="primary"
         size="large"
         sx={{ mt: 2, mb: 1, fontWeight: 700 }}
-        disabled={loginState.loading}
+        disabled={loading}
         onClick={() => handleLogin('로그인에 성공하였습니다!', '로그인에 실패하였습니다.')}
         startIcon={<LoginIcon />}
       >
-        {loginState.loading ? '로그인 중...' : '로그인'}
+        {loading ? '로그인 중...' : '로그인'}
       </Button>
       <Button
         fullWidth
