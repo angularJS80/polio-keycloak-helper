@@ -32,23 +32,17 @@ export function useAccountJoinPage(showSuccess?: (msg: string) => void, showErro
     }
 
     try {
-      const response = await fastAuthApiRequest(getJoinEndpoint(), {
+      await fastAuthApiRequest(getJoinEndpoint(), {
         method: 'POST',
-        body: JSON.stringify({ username, email, password }),
+        body: { username, email, password },
         withToken: false,
         endpointType: 'join',
       });
 
-      if (response.ok) {
-        handleApiSuccess({ 
-          showSuccess, 
-          resetForm: () => resetFormState([setUsername, setEmail, setPassword, setConfirmPassword]) 
-        }, '계정 등록이 성공적으로 완료되었습니다!');
-      } else {
-        const errorData = await response.json();
-        const errorMessage = errorData.message || response.statusText || '계정 등록 실패';
-        handleApiError(new Error(errorMessage), { showError, setLoading }, '계정 등록 실패');
-      }
+      handleApiSuccess({
+        showSuccess,
+        resetForm: () => resetFormState([setUsername, setEmail, setPassword, setConfirmPassword]),
+      }, '계정 등록이 성공적으로 완료되었습니다!');
     } catch (err: any) {
       handleApiError(err, { showError, setLoading }, '계정 등록 실패');
     }

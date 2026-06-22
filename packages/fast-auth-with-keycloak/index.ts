@@ -360,13 +360,12 @@ export async function fastAuthApiRequest(
     body: body ? JSON.stringify(body) : undefined,
   });
   try {
-
-    
-    return (await handleApiResponse(res, '로그아웃')).body;
+    return (await handleApiResponse(res, endpoint)).body;
   } catch (error) {
+    if (!res.ok) throw error;
     // 응답 본문이 있지만 JSON 파싱에 실패한 경우 (예: 빈 본문이 아니지만 유효한 JSON이 아님)
     console.warn(`[FastAuth] Failed to parse JSON for successful response (status: ${res.status}):`, error);
-    return {}; // 이 경우에도 빈 객체를 반환하여 클라이언트에서 오류를 받지 않도록 함
+    return {};
   }
 }
 
