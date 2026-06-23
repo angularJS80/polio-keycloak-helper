@@ -9,6 +9,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import PasswordFindPage from './pages/PasswordFindPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginByOauthPage from './pages/LoginByOauthPage';
+import FilePage from './pages/FilePage';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import SessionExpiryDialog from './components/SessionExpiryDialog';
@@ -97,6 +98,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/find-password" element={<PasswordFindPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/file" element={<FilePage />} />
         {/* 필요시 환영 페이지 등 추가 라우트 */}
       </Routes>
       {dialogState.show && (
